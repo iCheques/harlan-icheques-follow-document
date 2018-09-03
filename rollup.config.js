@@ -5,7 +5,7 @@ export default {
   external: ['harlan', 'jquery'],
   output: {
     file: 'index.js',
-    name: 'HarlanIChequesRefin',
+    name: 'HarlanIChequesVeiculos',
     format: 'iife',
     globals: {
       harlan: 'harlan',

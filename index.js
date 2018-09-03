@@ -5,25 +5,25 @@
   $ = $ && $.hasOwnProperty('default') ? $['default'] : $;
 
   harlan.addPlugin(function (controller) {
-    controller.registerCall('icheques::consulta::refin', function (result, doc, refinButton) { return controller.call('credits::has', 250, function () { return controller.server.call('SELECT FROM \'PROTESTOS\'.\'REFIN\'',
+    controller.registerCall('icheques::consulta::veiculos', function (result, doc, veiculosButton) { return controller.call('credits::has', 1000, function () { return controller.server.call('SELECT FROM \'VEICULOS\'.\'CONSULTA\'',
       controller.call('loader::ajax', controller.call('error::ajax',
         {
-          dataType: 'json',
           data: {
             documento: doc.replace(/[^0-9]/g, ''),
           },
 
           success: function (data) {
-            refinButton.remove();
+            veiculosButton.remove();
 
             var firstCall = true;
-            var addItem = function (name, value) { return value && result.addItem(name, value); };
 
-            data.spc.forEach(function (spc) {
-              var separatorElement = result.addSeparator('Restrição no Refin/Pefin',
-                'Apontamentos e Restrições Financeiras e Comerciais',
-                'Pendências e restrições financeiras nos bureaus de crédito Refin e Pefin')
-                .addClass('error');
+            $('veiculos registro', data).each(function (idx, element) {
+              debugger;
+              var node = $(element);
+              var separatorElement = result.addSeparator('Veículo Registrado no CPF/CNPJ',
+                'Informações de Veículo Registrado no CPF/CNPJ.',
+                'Dados de veículo automotor registrado na pessoa física ou jurídica.');
+
               if (firstCall) {
                 $('html, body').animate({
                   scrollTop: separatorElement.offset().top,
@@ -31,45 +31,40 @@
                 firstCall = false;
               }
 
-              addItem('Associado', spc.NomeAssociado);
-              addItem('Valor', ("R$ " + (spc.Valor)));
-              addItem('Data da Inclusão', spc.DataDeInclusao);
-              addItem('Data do Vencimento', spc.DataDoVencimento);
-              addItem('Entidade', spc.Entidade);
-              addItem('Número do Contrato', spc.NumeroContrato);
-              addItem('Comprador, Fiador ou Avalista', spc.CompradorFiadorAvalista);
-              addItem('Telefone Associado', spc.TelefoneAssociado);
-              addItem('Cidade Associado', spc.CidadeAssociado);
-              addItem('UF Associado', spc.UfAssociado);
+              var addItem = function (name, value) {
+                var information = $(value, node).text();
+                if (!information) { return; }
+                result.addItem(name, information);
+              };
+
+              addItem('Placa', 'placa');
+              addItem('Município', 'municipio');
+              addItem('Estado', 'uf');
+              addItem('Renavam', 'renavam');
+              addItem('Chassi', 'chassi');
+              addItem('Motor', 'motor');
+              addItem('Ano de Fabricação', 'ano_fabricacao');
+              addItem('Ano do Modelo', 'ano_modelo');
+              addItem('Marca / Modelo', 'marca_modelo');
+              addItem('Procedência', 'procedencia');
+              addItem('Espécie', 'especie');
+              addItem('Combustível', 'combustivel');
+              addItem('Cor', 'cor');
             });
-
-            if (data.consultaRealizada.length) {
-              result.addSeparator('Consulta Realizada por Associado do Refin e Pefin',
-                'Consulta Realizada por Associado do Refin/Pefin',
-                'Um associado do Refin/Pefin consultou este CNPJ/CPF a procura de apontamentos e restrições financeiras e comerciais');
-
-              data.consultaRealizada.forEach(function (consultaRealizada) {
-                addItem('Nome Associado', consultaRealizada.NomeAssociado);
-                addItem('CPF/CNPJ', consultaRealizada.CpfCnpj);
-                addItem('Data da Consulta', consultaRealizada.DataDaConsulta);
-                addItem('Cidade Associado', consultaRealizada.CidadeAssociado);
-                addItem('UF Associado', consultaRealizada.UfAssociado);
-              });
-            }
           },
         }))); }); });
 
-    controller.registerTrigger('ccbusca::parser', 'refin', function (ref, cb) {
+    controller.registerTrigger('ccbusca::parser', 'veiculos', function (ref, cb) {
       var result = ref.result;
       var doc = ref.doc;
 
-      var refinButton = null;
-      refinButton = $('<button />')
-        .text('Consultar Refin')
+      var veiculosButton = null;
+      veiculosButton = $('<button />')
+        .text('Consultar Veículos')
         .addClass('button');
 
-      refinButton.click(controller.click('icheques::consulta::refin', result, doc, refinButton));
-      result.addItem().prepend(refinButton);
+      veiculosButton.click(controller.click('icheques::consulta::veiculos', result, doc, veiculosButton));
+      result.addItem().prepend(veiculosButton);
       cb();
     });
   });

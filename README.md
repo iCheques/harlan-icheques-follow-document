@@ -1,6 +1,6 @@
-# harlan-icheques-refin@1.0.0
+# harlan-icheques-veiculos@1.0.0
 
-Extensão que habilita o consumo de REFIN na iCheques.
+Extensão que habilita o consumo de VEICULOS na iCheques.
 
 ## Installation
 Download node at [nodejs.org](http://nodejs.org) and install it, if you haven't already.

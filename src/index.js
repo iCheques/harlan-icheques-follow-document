@@ -2,25 +2,25 @@ import harlan from 'harlan';
 import $ from 'jquery';
 
 harlan.addPlugin((controller) => {
-  controller.registerCall('icheques::consulta::refin', (result, doc, refinButton) => controller.call('credits::has', 250, () => controller.server.call('SELECT FROM \'PROTESTOS\'.\'REFIN\'',
+  controller.registerCall('icheques::consulta::veiculos', (result, doc, veiculosButton) => controller.call('credits::has', 1000, () => controller.server.call('SELECT FROM \'VEICULOS\'.\'CONSULTA\'',
     controller.call('loader::ajax', controller.call('error::ajax',
       {
-        dataType: 'json',
         data: {
           documento: doc.replace(/[^0-9]/g, ''),
         },
 
         success: (data) => {
-          refinButton.remove();
+          veiculosButton.remove();
 
           let firstCall = true;
-          const addItem = (name, value) => value && result.addItem(name, value);
 
-          data.spc.forEach((spc) => {
-            const separatorElement = result.addSeparator('Restrição no Refin/Pefin',
-              'Apontamentos e Restrições Financeiras e Comerciais',
-              'Pendências e restrições financeiras nos bureaus de crédito Refin e Pefin')
-              .addClass('error');
+          $('veiculos registro', data).each((idx, element) => {
+            debugger;
+            const node = $(element);
+            const separatorElement = result.addSeparator('Veículo Registrado no CPF/CNPJ',
+              'Informações de Veículo Registrado no CPF/CNPJ.',
+              'Dados de veículo automotor registrado na pessoa física ou jurídica.');
+
             if (firstCall) {
               $('html, body').animate({
                 scrollTop: separatorElement.offset().top,
@@ -28,42 +28,37 @@ harlan.addPlugin((controller) => {
               firstCall = false;
             }
 
-            addItem('Associado', spc.NomeAssociado);
-            addItem('Valor', `R$ ${spc.Valor}`);
-            addItem('Data da Inclusão', spc.DataDeInclusao);
-            addItem('Data do Vencimento', spc.DataDoVencimento);
-            addItem('Entidade', spc.Entidade);
-            addItem('Número do Contrato', spc.NumeroContrato);
-            addItem('Comprador, Fiador ou Avalista', spc.CompradorFiadorAvalista);
-            addItem('Telefone Associado', spc.TelefoneAssociado);
-            addItem('Cidade Associado', spc.CidadeAssociado);
-            addItem('UF Associado', spc.UfAssociado);
+            const addItem = (name, value) => {
+              const information = $(value, node).text();
+              if (!information) return;
+              result.addItem(name, information);
+            };
+
+            addItem('Placa', 'placa');
+            addItem('Município', 'municipio');
+            addItem('Estado', 'uf');
+            addItem('Renavam', 'renavam');
+            addItem('Chassi', 'chassi');
+            addItem('Motor', 'motor');
+            addItem('Ano de Fabricação', 'ano_fabricacao');
+            addItem('Ano do Modelo', 'ano_modelo');
+            addItem('Marca / Modelo', 'marca_modelo');
+            addItem('Procedência', 'procedencia');
+            addItem('Espécie', 'especie');
+            addItem('Combustível', 'combustivel');
+            addItem('Cor', 'cor');
           });
-
-          if (data.consultaRealizada.length) {
-            result.addSeparator('Consulta Realizada por Associado do Refin e Pefin',
-              'Consulta Realizada por Associado do Refin/Pefin',
-              'Um associado do Refin/Pefin consultou este CNPJ/CPF a procura de apontamentos e restrições financeiras e comerciais');
-
-            data.consultaRealizada.forEach((consultaRealizada) => {
-              addItem('Nome Associado', consultaRealizada.NomeAssociado);
-              addItem('CPF/CNPJ', consultaRealizada.CpfCnpj);
-              addItem('Data da Consulta', consultaRealizada.DataDaConsulta);
-              addItem('Cidade Associado', consultaRealizada.CidadeAssociado);
-              addItem('UF Associado', consultaRealizada.UfAssociado);
-            });
-          }
         },
       })))));
 
-  controller.registerTrigger('ccbusca::parser', 'refin', ({ result, doc }, cb) => {
-    let refinButton = null;
-    refinButton = $('<button />')
-      .text('Consultar Refin')
+  controller.registerTrigger('ccbusca::parser', 'veiculos', ({ result, doc }, cb) => {
+    let veiculosButton = null;
+    veiculosButton = $('<button />')
+      .text('Consultar Veículos')
       .addClass('button');
 
-    refinButton.click(controller.click('icheques::consulta::refin', result, doc, refinButton));
-    result.addItem().prepend(refinButton);
+    veiculosButton.click(controller.click('icheques::consulta::veiculos', result, doc, veiculosButton));
+    result.addItem().prepend(veiculosButton);
     cb();
   });
 });
