@@ -1,4 +1,4 @@
-# harlan-icheques-veiculos@1.0.3
+# harlan-icheques-veiculos@1.0.4
 
 Extensão que habilita o consumo de VEICULOS na iCheques.
 

@@ -206,7 +206,7 @@
 
 	          var veiculosNodes = $('veiculos registro', data);
 
-	          if (!data.spc.length) {
+	          if (!veiculosNodes.length) {
 	            controller.call('alert', {
 	              title: 'Não foram encontrados registros de Veículos',
 	              subtitle: 'O sistema não encontrou nenhum registro de Veículos para o documento informado.',
