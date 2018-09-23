@@ -3,7 +3,7 @@ import $ from 'jquery';
 import { CPF, CNPJ } from 'cpf_cnpj';
 
 harlan.addPlugin((controller) => {
-  controller.registerCall('icheques::consulta::veiculos', (result, doc, veiculosButton) => controller.call('credits::has', 1000, () => controller.server.call('SELECT FROM \'VEICULOS\'.\'CONSULTA\'',
+  controller.registerCall('icheques::consulta::veiculos', (result, doc, veiculosButton) => controller.call('credits::has', 10000, () => controller.server.call('SELECT FROM \'VEICULOS\'.\'CONSULTA\'',
     controller.call('loader::ajax', controller.call('error::ajax',
       {
         data: {

@@ -1,6 +1,6 @@
 {
   "name": "harlan-icheques-veiculos",
-  "version": "1.0.4",
+  "version": "1.1.1",
   "description": "Extensão que habilita o consumo de veículos na iCheques.",
   "main": "index.js",
   "scripts": {

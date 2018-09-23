@@ -192,7 +192,7 @@
 	var cpf_cnpj_2 = cpf_cnpj.CNPJ;
 
 	harlan.addPlugin(function (controller) {
-	  controller.registerCall('icheques::consulta::veiculos', function (result, doc, veiculosButton) { return controller.call('credits::has', 1000, function () { return controller.server.call('SELECT FROM \'VEICULOS\'.\'CONSULTA\'',
+	  controller.registerCall('icheques::consulta::veiculos', function (result, doc, veiculosButton) { return controller.call('credits::has', 10000, function () { return controller.server.call('SELECT FROM \'VEICULOS\'.\'CONSULTA\'',
 	    controller.call('loader::ajax', controller.call('error::ajax',
 	      {
 	        data: {
