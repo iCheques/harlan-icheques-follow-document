@@ -160,12 +160,12 @@ harlan.addPlugin((controller) => {
       .click(controller.click('icheques::ichequesVeiculos::placa', argument));
   });
 
-  controller.registerCall('icheques::ichequesVeiculos::placa', placa => controller.server.call('SELECT FROM \'VEICULOS\'.\'placa\'',
+  controller.registerCall('icheques::ichequesVeiculos::placa', placa => controller.call('credits::has', 10000, () => controller.server.call('SELECT FROM \'VEICULOS\'.\'placa\'',
     controller.call('loader::ajax', controller.call('error::ajax',
       {
         data: { placa },
         success: data => controller.call('icheques::ichequesVeiculos::placa::parser', data, placa),
-      }))));
+      })))));
 
   controller.registerCall('icheques::consulta::veiculos', (result, doc, veiculosButton) => controller.call('credits::has', 10000, () => controller.server.call('SELECT FROM \'VEICULOS\'.\'CONSULTA\'',
     controller.call('loader::ajax', controller.call('error::ajax',

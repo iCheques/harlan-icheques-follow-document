@@ -369,12 +369,12 @@
 	      .click(controller.click('icheques::ichequesVeiculos::placa', argument));
 	  });
 
-	  controller.registerCall('icheques::ichequesVeiculos::placa', function (placa) { return controller.server.call('SELECT FROM \'VEICULOS\'.\'placa\'',
+	  controller.registerCall('icheques::ichequesVeiculos::placa', function (placa) { return controller.call('credits::has', 10000, function () { return controller.server.call('SELECT FROM \'VEICULOS\'.\'placa\'',
 	    controller.call('loader::ajax', controller.call('error::ajax',
 	      {
 	        data: { placa: placa },
 	        success: function (data) { return controller.call('icheques::ichequesVeiculos::placa::parser', data, placa); },
-	      }))); });
+	      }))); }); });
 
 	  controller.registerCall('icheques::consulta::veiculos', function (result, doc, veiculosButton) { return controller.call('credits::has', 10000, function () { return controller.server.call('SELECT FROM \'VEICULOS\'.\'CONSULTA\'',
 	    controller.call('loader::ajax', controller.call('error::ajax',
