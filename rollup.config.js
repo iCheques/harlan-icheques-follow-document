@@ -4,7 +4,7 @@ import commonjs from 'rollup-plugin-commonjs';
 
 export default {
   input: 'src/index.js',
-  external: ['harlan', 'jquery'],
+  external: ['harlan', 'jquery', 'numeral', 'moment'],
   output: {
     file: 'index.js',
     name: 'HarlanIChequesVeiculos',
@@ -12,6 +12,8 @@ export default {
     globals: {
       harlan: 'harlan',
       jquery: '$',
+      numeral: 'numeral',
+      moment: 'moment',
     },
   },
   plugins: [
