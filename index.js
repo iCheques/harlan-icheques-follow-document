@@ -212,6 +212,9 @@
 
 	    body.append(juntaEmpresaHTML);
 	    $('.app-content').prepend(element);
+	    $('html, body').animate({
+	      scrollTop: element.offset().top,
+	    }, 2000);
 	  });
 
 	  controller.importXMLDocument.register('VEICULOS', 'PLACA', function (document) {
