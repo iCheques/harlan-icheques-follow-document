@@ -1,12 +1,12 @@
-# harlan-icheques-veiculos@1.1.2
+# harlan-follow-document@1.0.0
 
-Extensão que habilita o consumo de VEICULOS na iCheques.
+Extensão que habilita o acompanhamento de CPF/CNPJ na BIPBOP.
 
 ## Installation
 Download node at [nodejs.org](http://nodejs.org) and install it, if you haven't already.
 
 ```sh
-npm install harlan-icheques-refin --save
+npm install harlan-follow-document --save
 ```
 
 This package is provided in these module formats:

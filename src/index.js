@@ -1,242 +1,350 @@
-import harlan from 'harlan';
-import numeral from 'numeral';
 import $ from 'jquery';
+import harlan from 'harlan';
 import { CPF, CNPJ } from 'cpf_cnpj';
+import moment from 'moment';
+import Chart from 'chart.js';
+import Color from 'color';
 
-const isPlaca = /[a-z]{3}[0-9]{4}/i;
+import difference from 'lodash/difference';
+import groupBy from 'lodash/groupBy';
+import map from 'lodash/map';
+import values from 'lodash/values';
+import meanBy from 'lodash/meanBy';
+import pickBy from 'lodash/pickBy';
+
+import { Harmonizer } from 'color-harmony';
+
+const harmonizer = new Harmonizer();
+const colorMix = 'neutral';
+
+
+const followedDocuments = {};
+let renderedReport = null;
+
+const reference = {
+  markers: {
+    'has-ccf': 'consta cheque sem fundo',
+    'has-protesto': 'consta protesto',
+    'rfb-invalid': 'situação irregular na Receita Federal',
+  },
+  state: {
+    ccf: 'Cheques sem Fundo (CCF)',
+    protestos: 'Protestos',
+  },
+};
+
+let filterConfiguration = {
+  state: 'ccf',
+  markers: null,
+};
+
+let chart = null;
+let chartCanvas = null;
+let chartReport = null;
+let graphicResults = null;
 
 harlan.addPlugin((controller) => {
-  controller.registerCall('icheques::ichequesVeiculos::placa::parser', (data, placa) => {
-    const [element, body] = controller.call('section', 'Pesquisa de Veículo',
-      `Informações do veículo ${placa} através da placa.`,
-      'Informa dono, débitos e respectivos dados do veículo.');
+  function modalFilter() {
+    controller.call('form', (data) => {
+      const filter = filterConfiguration;
+      filterConfiguration = data;
+      if (!generateData()) {
+        filterConfiguration = filter;
+        controller.call('alert', {
+          title: 'Infelizmente não há nenhum CPF ou CNPJ para exibir. ;(',
+          subtitle: 'Experimente alterar os filtros não há nenhum CPF/CNPJ cadastrado para exibição.',
+        });
+      } else {
+        updateChart();
+      }
+    }).configure({
+      title: 'Acompanhamento de CPF ou CNPJ',
+      subtitle: 'Preencha as informações corretamente para filtrar seus acompanhamentos.',
+      paragraph: 'Diariamente, verificamos por alterações junto a instituições de crédito no documento e o alertaremos caso algo mude.',
+      gamification: 'checkPoint',
+      magicLabel: true,
+      screens: [{
+        nextButton: 'Filtrar',
+        fields: [
+          {
+            name: 'document',
+            type: 'text',
+            placeholder: 'CPF ou CNPJ',
+            labelText: 'CPF/CNPJ',
+            mask: '000.000.000-00',
+            optional: true,
+            maskOptions: {
+              onKeyPress(value, e, field, options) {
+                const masks = ['000.000.000-000', '00.000.000/0000-00'];
+                const mask = (value.length > 14) ? masks[1] : masks[0];
+                field.mask(mask, options);
+              },
+              reverse: false,
+            },
+            validate({ element }) {
+              const val = element.val();
+              if (val) { return CPF.isValid(val) || CNPJ.isValid(val); }
+              return true;
+            },
+          },
+          [{
+            name: 'state',
+            type: 'select',
+            optional: false,
+            value: filterConfiguration.state,
+            labelText: 'Filtro',
+            placeholder: 'Filtro',
+            list: {
+              '': 'Escolha um filtro',
+              ...reference.state,
+            },
+          },
+          {
+            name: 'markers',
+            type: 'text',
+            optional: true,
+            labelText: 'Marcadores',
+            placeholder: 'Marcadores (Opcional)',
+          }],
+          {
+            name: 'rfb-invalid',
+            type: 'checkbox',
+            optional: true,
+            value: 'true',
+            labelText: 'Apenas irregulares junto a Receita Federal',
+          },
+        ],
+      }],
+    });
+  }
 
-    const juntaEmpresaHTML = controller.call('xmlDocument', data, 'VEICULOS', 'PLACA');
-    juntaEmpresaHTML.find('.container').first().addClass('xml2html')
-      .data('document', $(data))
-      .data('form', [{
-        name: 'placa',
-        value: placa,
-      }]);
+  function createChartReport() {
+    if (chartReport) return;
+    chartReport = controller.call('report',
+      'Relatório de Monitoramento',
+      'Veja a situação dos CPFs e CNPJs acompanhados por você.',
+      'Com o recurso de relatório você consegue identificar os comportamentos de risco dos cedentes e sacados, '
+        + 'reconhecendo os mais propícios a inadimplência. As informações são atualizadas diáriamente, '
+        + 'junto aos órgãos de crédito responsáveis.', false);
+    chartReport.button('Alterar Filtros', () => modalFilter());
+    chartReport.newContent();
+    chartCanvas = chartReport.canvas(250, 350);
+    if (!renderedReport) {
+      $('.app-content').prepend(chartReport.element());
+    } else {
+      chartReport.element().insertAfter(renderedReport);
+    }
+  }
 
-    body.append(juntaEmpresaHTML);
-    $('.app-content').prepend(element);
-    $('html, body').animate({
-      scrollTop: element.offset().top,
-    }, 2000);
-  });
+  function generateData() {
+    const {
+      state, markers, document, rfbInvalid,
+    } = filterConfiguration;
+    const validMarkers = markers
+      ? markers.split(',').map(value => value.trim()).filter(str => !!str)
+      : null;
 
-  controller.importXMLDocument.register('VEICULOS', 'PLACA', (document) => {
-    const main = $(document);
-    const result = controller.call('result');
+    const database = groupBy(pickBy(values(followedDocuments),
+      ({ markers: userMarkers, document: userDocument }) => {
+        if (document && userDocument !== document.replace(/[^0-9]/g, '')) return false;
+        if (rfbInvalid && !('rfb-invalid' in userMarkers)) return false;
+        if (!validMarkers) return true;
+        return !difference(validMarkers, userMarkers).length;
+      }), (doc) => {
+      const qtde = doc.state[state];
+      const stateReference = reference.state[state];
+      if (qtde <= 0) return `Sem ${stateReference}`;
+      if (qtde <= 2) return `Até 2 ${stateReference}`;
+      if (qtde <= 5) return `Até 5 ${stateReference}`;
+      if (qtde <= 10) return `Até 10 ${stateReference}`;
+      return `Mais de 10 ${stateReference}`;
+    });
 
-    const addSeparator = (...args) => {
-      const title = args.shift();
-      const fields = args.pop();
-      const subtitle = args.shift();
-      const description = args.shift();
-
-      const items = fields
-        .map(([query, name, fnc]) => [name, main.find(query).text(), fnc])
-        .filter(([, content]) => !!content);
-
-      if (!items.length) return;
-
-      result.addSeparator(title, subtitle, description);
-      items.forEach(([name, content, fnc]) => result.addItem(name, fnc ? fnc(content) : content));
-    };
-
-    addSeparator('Proprietário', 'Proprietário do Veículo', 'Dados do Proprietário do Veículo', [
-      ['proprietario cnpj_cpf', 'CNPJ CPF'],
-      ['proprietario nome', 'Nome']]);
-
-    addSeparator('Dados do Veículo', 'Dados de Identificação do Veículo', 'Dados para identificação rápida do veículo.', [
-      ['dados_do_veiculo ano_fabricacao', 'Ano de Fabricação'],
-      ['dados_do_veiculo ano_modelo', 'Ano Modelo'],
-      ['dados_do_veiculo capacidade_de_carga', 'Capacidade de Carga'],
-      ['dados_do_veiculo capacidade_maxtracao', 'Tração Máxima'],
-      ['dados_do_veiculo capacidade_passageiro', 'Capacidade de Passageiros'],
-      ['dados_do_veiculo categoria', 'Categoria'],
-      ['dados_do_veiculo chassi', 'Chassi'],
-      ['dados_do_veiculo cilindradas', 'Cilindradas'],
-      ['dados_do_veiculo cnpj_faturado', 'CNPJ Faturado'],
-      ['dados_do_veiculo codigo_marca', 'Código Marca'],
-      ['dados_do_veiculo combustivel', 'Combustível'],
-      ['dados_do_veiculo cor', 'Cor'],
-      ['dados_do_veiculo eixo_traseiro_diferencial', 'Eixo Traseiro Diferencial'],
-      ['dados_do_veiculo especie', 'Espécie'],
-      ['dados_do_veiculo marca', 'Marca'],
-      ['dados_do_veiculo municipio', 'Município'],
-      ['dados_do_veiculo nr_caixacambio', 'Número da Caixa de Câmbio'],
-      ['dados_do_veiculo nr_carroceria', 'Número da Carroceria'],
-      ['dados_do_veiculo numero_eixos', 'Número de Eixos'],
-      ['dados_do_veiculo numero_motor', 'Número Motor'],
-      ['dados_do_veiculo pesobruto_total', 'Peso Bruto Total'],
-      ['dados_do_veiculo placa', 'Placa'],
-      ['dados_do_veiculo potencia', 'Potência'],
-      ['dados_do_veiculo procedencia', 'Procedência'],
-      ['dados_do_veiculo renavam', 'Renavam'],
-      ['dados_do_veiculo situacao', 'Situação'],
-      ['dados_do_veiculo terceiro_eixo', 'Terceiro Eixo'],
-      ['dados_do_veiculo tipo', 'Tipo'],
-      ['dados_do_veiculo tipo_carroceria', 'Tipo Carroceria'],
-      ['dados_do_veiculo tipo_montagem', 'Tipo Montagem'],
-      ['dados_do_veiculo tipo_remarcacao', 'Tipo Remarcação'],
-      ['dados_do_veiculo uf', 'Estado'],
-      ['dados_do_veiculo uf_faturado', 'Estado do Faturamento'],
-      ['dados_do_veiculo ultima_atualizacao', 'Última Atualização']]);
-
-
-    addSeparator('Comunicação de Vendas', 'Presença de Comunicação de Vendas', 'Quando um veículo possui GRAVAME, o seu proprietário está impedido de preparar qualquer transferência.', [
-      ['comunicacao_de_vendas cnpj_cpf_comprador', 'CNPJ/CPF Comprador'],
-      ['comunicacao_de_vendas comunicacao_de_vendas', 'Comunicação de Vendas'],
-      ['comunicacao_de_vendas inclusao', 'Inclusão'],
-      ['comunicacao_de_vendas nota_fiscal', 'Nota Fiscal'],
-      ['comunicacao_de_vendas protocolo_detran', 'Detran'],
-      ['comunicacao_de_vendas tipo_doc_comprador', 'Tipo de Documento Comprador'],
-      ['comunicacao_de_vendas venda', 'Venda']]);
-
-    addSeparator('Proprietário Anterior', 'Proprietário Anterior do Veículo', 'Dados do Proprietário Anterior do Veículo', [
-      ['proprietario_anterior nome', 'Nome'],
-    ]);
-
-    const money = x => numeral(x).format('$0,0.00');
-    addSeparator('Débitos e Multas', 'Débitos e Multas Pendentes', 'Débitos pendentes para garantir a regularidade do veículo e permitir seu licenciamento.', [
-      ['debitos_e_multas CETESB', 'CETESB', money],
-      ['debitos_e_multas DER', 'DER', money],
-      ['debitos_e_multas DERSA', 'DERSA', money],
-      ['debitos_e_multas DETRAN', 'DETRAN', money],
-      ['debitos_e_multas DPVAT', 'DPVAT', money],
-      ['debitos_e_multas IPVA', 'IPVA', money],
-      ['debitos_e_multas Licenciamento', 'Licenciamento', money],
-      ['debitos_e_multas Municipais', 'Municipais', money],
-      ['debitos_e_multas PRF', 'Polícia Rodoviária Federal', money],
-      ['debitos_e_multas Renainf', 'Renainf', money]]);
-
-    addSeparator('Restrições', 'Bloqueios e Restrições do Veículo', 'Lista de Restrições e Bloqueios do Veículo', [
-      ['restricoes bloqueio_guincho', 'Bloqueio Guincho'],
-      ['restricoes bloqueios_renajud', 'Bloqueio Guincho'],
-      ['restricoes inspecao_ambiental', 'Bloqueio Guincho'],
-      ['restricoes restricoes_administrativas', 'Bloqueio Guincho'],
-      ['restricoes restricoes_furto', 'Bloqueio Guincho'],
-      ['restricoes restricoes_judicial', 'Bloqueio Guincho'],
-      ['restricoes restricoes_tributaria', 'Restrições Tributárias'],
-    ]);
-
-    addSeparator('Gravame', 'SNG - Sistema Nacional de Gravames', 'Quando um veículo possui GRAVAME, o seu proprietário está impedido de preparar qualquer transferência.', [
-      ['gravame agente_financeiro', 'Agente Financeiro'],
-      ['gravame cnpj_cpf_financiado', 'CNPJ CPF Financiado'],
-      ['gravame data_inclusao', 'Data de Inclusão'],
-      ['gravame nome_financiado', 'Nome Financiado'],
-      ['gravame restricao_financeira', 'Restrição Financeira'],
-      ['gravame tipo_transacao', 'Tipo de Transação'],
-      ['intencao_de_gravame intencao_de_gravame', 'Intenção de Gravame'],
-      ['intencao_de_gravame agente_financeiro', 'Agente Financeiro'],
-      ['intencao_de_gravame cnpj_cpf_financiado', 'CNPJ CPF Financiado'],
-      ['intencao_de_gravame data_inclusao', 'Data de Inclusão'],
-      ['intencao_de_gravame nome_do_financiado', 'Nome do Financiado'],
-      ['intencao_de_gravame restricao_financeira', 'Restrição Financeira'],
-      ['intencao_de_gravame intencao_de_gravame', 'Intenção de Gravame']]);
-
-
-    addSeparator('CRV e CRLV', 'Certificado de Registro do Veículo e Certificado de Registro e Licenciamento de Veículo',
-      'O CRV é entregue ao proprietário do veículo no momento em que é realizado o emplacamento.', [
-        ['crv_crvl_atualizacao data_emissao', 'Data de Emissão'],
-        ['crv_crvl_atualizacao exercicio_licenciamento', 'Exercício Licenciamento'],
-        ['crv_crvl_atualizacao licenciamento', 'Licenciamento']]);
-
-    return result.element();
-  });
-
-
-  controller.registerTrigger('findDatabase::instantSearch', 'ichequesVeiculos', (args, callback) => {
-    callback();
-    const [argument, autocomplete] = args;
-    if (!isPlaca.test(argument)) {
-      return;
+    if (!Object.keys(database).length) {
+      return null;
     }
 
-    autocomplete.item('Pesquisa de Veículos',
-      'Realiza uma consulta de veículos através da placa.',
-      'Informa dono do veículo, débitos e respectivo endereço.')
-      .addClass('admin-company admin-new-company')
-      .click(controller.click('icheques::ichequesVeiculos::placa', argument));
+    const colors = {
+      error: harmonizer.harmonize('#ff1a53', colorMix),
+      warning: harmonizer.harmonize('#ffe500', colorMix),
+      success: harmonizer.harmonize('#00ff6b', colorMix),
+    };
+
+    const backgroundColor = map(database, v => meanBy(v, `state.${state}`)).map((qtde) => {
+      if (qtde === 0) return colors.success.shift();
+      if (qtde <= 2) return colors.warning.shift();
+      if (qtde <= 5) return colors.warning.shift();
+      if (qtde <= 10) return colors.error.shift();
+      return colors.error.shift();
+    });
+
+    const data = {
+      labels: Object.keys(database),
+      datasets: [{
+        data: map(database, v => v.length),
+        backgroundColor,
+        hoverBackgroundColor: backgroundColor
+          .map(color => new Color(color).lighten(0.1).toString()),
+      }],
+    };
+    graphicResults = map(database, value => value);
+    return data;
+  }
+
+  function updateChart() {
+    const data = generateData();
+    if (!data) return;
+    createChartReport();
+
+    if (!chart) {
+      chart = new Chart(chartCanvas.getContext('2d'), {
+        type: 'doughnut',
+        data,
+        options: {
+          onClick(event, [chartItem]) {
+            if (!chartItem) { return; }
+            const { _datasetIndex: idx } = chartItem;
+            const maxResults = 5;
+            const results = graphicResults[idx].slice();
+
+            controller.call('moreResults', maxResults)
+              .callback(cb => Promise.all(results.splice(0, maxResults)
+                .map(({ document }) => new Promise(resolve => controller.call('ccbusca', document, element => resolve(element)))))
+                .then(elements => cb(elements))).appendTo(chartReport.element()).show();
+          },
+          legend: {
+            display: true,
+            position: 'bottom',
+          },
+        },
+      });
+    } else {
+      chart.data = data;
+      chart.update();
+    }
+  }
+
+  function modalFollow() {
+    controller.call('form', (data) => {
+      controller.server.call("INSERT INTO 'FOLLOWDOCUMENT'.'DOCUMENT'", controller.call('error::ajax', {
+        dataType: 'json',
+        data,
+        success: () => controller.alert({
+          icon: 'pass',
+          title: 'Parabéns! O documento foi enviado para monitoramento.',
+          subtitle: 'Dentro de instantes será possível extrair um relatório de seus cedentes e sacados com este documento incluso.',
+          paragraph: 'Caso haja qualquer alteração no documento junto as instituições de crédito você será avisado.',
+        }),
+      }));
+    }).configure({
+      title: 'Acompanhamento de CPF ou CNPJ',
+      subtitle: 'Preencha as informações corretamente para criar seu acompanhamento.',
+      paragraph: 'Diariamente, verificamos por alterações junto a instituições de crédito no documento e o alertaremos caso algo mude.',
+      gamification: 'checkPoint',
+      magicLabel: true,
+      screens: [{
+        nextButton: 'Acompanhar',
+        fields: [
+          {
+            name: 'documento',
+            type: 'text',
+            placeholder: 'CPF ou CNPJ',
+            labelText: 'CPF/CNPJ',
+            mask: '000.000.000-00',
+            optional: false,
+            maskOptions: {
+              onKeyPress(value, e, field, options) {
+                const masks = ['000.000.000-000', '00.000.000/0000-00'];
+                const mask = (value.length > 14) ? masks[1] : masks[0];
+                field.mask(mask, options);
+              },
+              reverse: false,
+            },
+            validate({ element }) {
+              const val = element.val();
+              if (val) { return CPF.isValid(val) || CNPJ.isValid(val); }
+              return true;
+            },
+          },
+          [{
+            name: 'nascimento',
+            type: 'text',
+            labelText: 'Nascimento',
+            optional: true,
+            placeholder: 'Nascimento (Opcional)',
+            mask: '00/00/0000',
+            pikaday: true,
+            validate({ element }) {
+              if (element.val()) { return moment(element.val(), 'DD/MM/YYYY').isValid(); }
+              return true;
+            },
+          },
+          {
+            name: 'Marcadores',
+            type: 'text',
+            optional: true,
+            labelText: 'Marcadores',
+            placeholder: 'Marcadores (Opcional)',
+          }],
+        ],
+      }],
+    });
+  }
+
+  function drawReport() {
+    if (renderedReport) renderedReport.remove();
+    const report = controller.call('report',
+      'Que tal monitorar um CPF ou CNPJ?',
+      'No dia em que seus cedentes e sacados apresentarem ocorrência você será notificado.',
+      'O monitoramento auxilia na manutenção regular de seus clientes e fornecedores. Diariamente, nosso sistema verifica por alterações relevantes nas informações de cheques sem fundo, protestos e Receita Federal. Caso haja uma alteração, nós lhe enviaremos um e-mail para que fique por dentro de tudo.',
+      false);
+
+    report.button('Abrir Filtro', () => updateChart());
+    report.button('Monitorar Documento', () => modalFollow());
+    report.gamification('brilliantIdea');
+
+    const reportElement = report.element();
+    $('.app-content').prepend(reportElement);
+    renderedReport = reportElement;
+  }
+
+  function changeDocument(args, callback) {
+    callback();
+    const { document } = args;
+    followedDocuments[document] = args;
+    updateChart();
+  }
+
+  function deleteDocument(args, callback) {
+    callback();
+    const { document } = args;
+    delete followedDocuments[document];
+    updateChart();
+  }
+
+  function fromList(list) {
+    list.forEach((item) => {
+      const { document } = item;
+      followedDocuments[document] = item;
+    });
+    updateChart();
+  }
+
+  function updateList() {
+    controller.server.call("SELECT FROM 'FOLLOWDOCUMENT'.'LIST'", {
+      dataType: 'json',
+      success: list => fromList(list),
+    });
+  }
+
+  controller.registerTrigger('call::authentication::loggedin', '', (args, callback) => {
+    callback();
+    updateList();
   });
 
-  controller.registerCall('icheques::ichequesVeiculos::placa', placa => controller.call('credits::has', 10000, () => controller.server.call('SELECT FROM \'VEICULOS\'.\'placa\'',
-    controller.call('loader::ajax', controller.call('error::ajax',
-      {
-        data: { placa },
-        success: data => controller.call('icheques::ichequesVeiculos::placa::parser', data, placa),
-      })))));
+  controller.registerTrigger('serverCommunication::websocket::followDocument::insert', 'icheques::ban::register', changeDocument);
+  controller.registerTrigger('serverCommunication::websocket::followDocument::update', 'icheques::ban::register', changeDocument);
+  controller.registerTrigger('serverCommunication::websocket::followDocument::insert', 'icheques::ban::register', deleteDocument);
 
-  controller.registerCall('icheques::consulta::veiculos', (result, doc, veiculosButton) => controller.call('credits::has', 10000, () => controller.server.call('SELECT FROM \'VEICULOS\'.\'CONSULTA\'',
-    controller.call('loader::ajax', controller.call('error::ajax',
-      {
-        data: {
-          documento: doc.replace(/[^0-9]/g, ''),
-        },
-
-        success: (data) => {
-          veiculosButton.remove();
-
-          let firstCall = true;
-
-          const veiculosNodes = $('veiculos registro', data);
-
-          if (!veiculosNodes.length) {
-            controller.call('alert', {
-              title: 'Não foram encontrados registros de Veículos',
-              subtitle: 'O sistema não encontrou nenhum registro de Veículos para o documento informado.',
-              paragraph: `Para o documento ${CPF.isValid(doc) ? CPF.format(doc) : CNPJ.format(doc)} não foram encontrados registros de Veículos.`,
-            });
-            return;
-          }
-
-          veiculosNodes.each((idx, element) => {
-            const node = $(element);
-            const separatorElement = result.addSeparator('Veículo Registrado no CPF/CNPJ',
-              'Informações de Veículo Registrado no CPF/CNPJ.',
-              'Dados de veículo automotor registrado na pessoa física ou jurídica.');
-
-            if (firstCall) {
-              $('html, body').animate({
-                scrollTop: separatorElement.offset().top,
-              }, 2000);
-              firstCall = false;
-            }
-
-            const addItem = (name, value) => {
-              const information = $(value, node).text();
-              if (!information) return;
-              result.addItem(name, information);
-            };
-
-            addItem('Placa', 'placa');
-            addItem('Município', 'municipio');
-            addItem('Estado', 'uf');
-            addItem('Renavam', 'renavam');
-            addItem('Chassi', 'chassi');
-            addItem('Motor', 'motor');
-            addItem('Ano de Fabricação', 'ano_fabricacao');
-            addItem('Ano do Modelo', 'ano_modelo');
-            addItem('Marca / Modelo', 'marca_modelo');
-            addItem('Procedência', 'procedencia');
-            addItem('Espécie', 'especie');
-            addItem('Combustível', 'combustivel');
-            addItem('Cor', 'cor');
-          });
-        },
-      })))));
-
-  controller.registerTrigger('ccbusca::parser', 'veiculos', ({ result, doc }, cb) => {
-    let veiculosButton = null;
-    veiculosButton = $('<button />')
-      .text('Consultar Veículos')
-      .addClass('button');
-
-    veiculosButton.click(controller.click('icheques::consulta::veiculos', result, doc, veiculosButton));
-    result.addItem().prepend(veiculosButton);
-    cb();
-  });
+  drawReport();
 });
