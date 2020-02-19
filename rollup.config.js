@@ -12,7 +12,7 @@ export default {
   ],
   output: {
     file: 'index.js',
-    name: 'HarlanIChequesVeiculos',
+    name: 'HarlanFollowDocument',
     format: 'iife',
     globals: {
       harlan: 'harlan',
