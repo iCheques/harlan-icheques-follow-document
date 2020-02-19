@@ -20,6 +20,11 @@ import meanBy from 'lodash/meanBy';
 import pickBy from 'lodash/pickBy';
 
 import './list';
+// import modalChooseFile from './modules/modal-choose-file';
+import { insertDocument, deleteDocument as monitoreDeleteDocument, listDocuments } from './modules/monitore-crud';
+import csvGenerator from './modules/csv-generator';
+import { timelineGenerator, createLine } from './modules/timeline-generator';
+import hasCredits from './modules/has-credits';
 
 const harmonizer = new Harmonizer();
 const colorMix = 'neutral';
@@ -191,22 +196,22 @@ harlan.addPlugin((controller) => {
         if (!validMarkers) return true;
         return !difference(validMarkers, userMarkers).length;
       }), (doc) => {
-        if (filterConfiguration.aggregateMarker) {
-          return uniq(doc.markers.filter(marker => /(^has-|-invalid$)/.test(marker)))
-            .map(marker => reference.markers[marker])
-            .sort()
-            .join(', ') || 'Nada Consta';
-        }
+      if (filterConfiguration.aggregateMarker) {
+        return uniq(doc.markers.filter(marker => /(^has-|-invalid$)/.test(marker)))
+          .map(marker => reference.markers[marker])
+          .sort()
+          .join(', ') || 'Nada Consta';
+      }
 
-        const qtde = doc.state[state];
-        const stateReference = reference.state[state];
-        if (typeof qtde !== 'number') return 'Aguardando processamento';
-        if (qtde <= 0) return `Sem ${stateReference}`;
-        if (qtde <= 2) return `Até 2 ${stateReference}`;
-        if (qtde <= 5) return `Até 5 ${stateReference}`;
-        if (qtde <= 10) return `Até 10 ${stateReference}`;
-        return `Mais de 10 ${stateReference}`;
-      });
+      const qtde = doc.state[state];
+      const stateReference = reference.state[state];
+      if (typeof qtde !== 'number') return 'Aguardando processamento';
+      if (qtde <= 0) return `Sem ${stateReference}`;
+      if (qtde <= 2) return `Até 2 ${stateReference}`;
+      if (qtde <= 5) return `Até 5 ${stateReference}`;
+      if (qtde <= 10) return `Até 10 ${stateReference}`;
+      return `Mais de 10 ${stateReference}`;
+    });
 
     if (!Object.keys(database).length) {
       return null;
@@ -369,6 +374,11 @@ harlan.addPlugin((controller) => {
 
     report.button('Monitorar Documento', () => modalFollow());
     report.gamification('brilliantIdea');
+    if (!$.isEmptyObject(localStorage.relatorios)) {
+      const timeline = controller.call('timeline');
+      timelineGenerator(timeline);
+      timeline.element().insertBefore($('.open:contains(Monitorar Documento)', report.element()));
+    }
 
     const reportElement = report.element();
     $('.app-content').prepend(reportElement);
@@ -444,6 +454,7 @@ harlan.addPlugin((controller) => {
       const documents = result
         .match(/(\d{2}(.)?\d{3}(.)?\d{3}(\/)?\d{4}(.)?\d{2}|\d{3}(.)?\d{3}(.)?\d{3}(-)?\d{2})/g)
         .filter(cpfCnpj => CPF.isValid(cpfCnpj) || CNPJ.isValid(cpfCnpj));
+
       if (!documents.length) {
         controller.alert({
           title: 'Não foi recebido nenhum documento para monitoramento.',
@@ -452,42 +463,117 @@ harlan.addPlugin((controller) => {
         });
         return;
       }
-      const modal = controller.call('modal');
-      modal.title('Progresso de Envio de Monitoramento');
-      modal.subtitle('O monitoramento está sendo enviado, por favor aguarde.');
-      modal.paragraph('Experimente tomar um café enquanto nossos servidores recebem seus CPFs e CNPJs.');
-      const progress = modal.addProgress();
-      let sended = 0;
-      try {
-        await documents.reduce(async (promise, documento) => {
-          await promise;
-          await new Promise((resolve, reject) => controller.server.call("INSERT INTO 'FOLLOWDOCUMENT'.'DOCUMENT'", controller.call('error::ajax', {
-            dataType: 'json',
-            data: { documento },
-            success: () => {
-              sended += 1;
-              progress(sended / documents.length);
-              resolve();
-            },
-            error: (_1, _2, errorThrown) => reject(new Error(errorThrown)),
-          })));
-        }, Promise.resolve());
-      } catch (e) {
-        controller.alert({
-          title: 'Uoh! Não foi possível enviar todos os documentos para monitoramento.',
-          subtitle: 'Sua conexão com a internet pode estar com problemas, impedindo o envio de documentos.',
-          paragraph: `Tente enviar menos documentos para que possamos realizar esta operação (${e.toString()}).`,
+
+      const modalConfirmation = controller.call('modal');
+      modalConfirmation.title('Envio de Monitoramento');
+      modalConfirmation.subtitle('Você deseja fazer um bate-rápido(Relatório com protestos e cheques sem fundos, somente 1 vez) '
+      + 'ou monitorar todos os documentos?');
+      const formConfirmation = modalConfirmation.createForm();
+      formConfirmation.addSubmit('bate-rapido', 'Bate-rápido').addClass('credithub-button');
+      formConfirmation.addSubmit('monitorar', 'Monitorar').addClass('credithub-button');
+      modalConfirmation.createActions().cancel();
+
+      $('input[name=bate-rapido]').on('click', (ev) => {
+        ev.preventDefault();
+        console.log(documents);
+        hasCredits(500 * documents.length, async () => {
+          modalConfirmation.close();
+          const loader = harlan.call('ccbusca::loader');
+          loader.setTitle('Bate-Rápido');
+          loader.setActiveStatus('Enviando Documentos');
+          $('.card-progress').remove();
+          // const insertDocumentPromises = await documents.map(insertDocument);
+          // await listDocuments().then((documentsData) => {});
+          const delay = async ms => new Promise(resolve => setTimeout(resolve, ms));
+
+          const listarDocumentos = async () => {
+            await delay(5000);
+            const resultado = await listDocuments();
+
+            return resultado;
+          };
+
+          const documentsData = await Promise.all(
+            documents.map(insertDocument),
+          ).then(() => listarDocumentos());
+
+          documents.forEach(monitoreDeleteDocument);
+          const uri = csvGenerator(documentsData);
+
+          const relatorios = localStorage.relatorios ? JSON.parse(localStorage.relatorios) : [];
+
+          const date = moment();
+          const relatorio = {
+            name: `Relatório de ${date.format('LLL')}`,
+            link: uri,
+            expireDate: date.add(1, 'day'),
+          };
+
+          console.log('Relatorio', relatorio);
+
+          relatorios.push(relatorio);
+
+          const timeline = controller.call('timeline');
+          createLine(relatorio, timeline);
+          const $timeline = $('.timeline', $('.content:contains(Que tal monitorar um CPF ou CNPJ?)'));
+          if ($.isEmptyObject(localStorage.relatorios)) timeline.element().insertBefore($('.open:contains(Monitorar Documento)'));
+          if (!$.isEmptyObject(localStorage.relatorios)) $timeline.append(timeline.element().find('li')[0]);
+
+          localStorage.relatorios = JSON.stringify(relatorios);
+
+          loader.searchCompleted();
+
+          controller.alert({
+            icon: 'pass',
+            title: `Parabéns! Os documentos (${documents.length}) foram recebidos com sucesso!`,
+            subtitle: 'Foi gerado um relatório bate-rápido de seus cedentes e sacados.',
+            paragraph: 'Você já pode conferir os protestos e cheques sem fundos dos documentos enviados.',
+          });
+          $(window).scrollTop($(".report:contains('Que tal monitorar um CPF ou CNPJ?'):last").offset().top);
+          // Promise.all(insertDocumentPromises).then();
         });
-        return;
-      }
-      finally {
-        modal.close();
-      }
-      controller.alert({
-        icon: 'pass',
-        title: `Parabéns! Os documentos (${documents.length}) foram enviados para monitoramento.`,
-        subtitle: 'Dentro de instantes será possível extrair um relatório de seus cedentes e sacados com este documento incluso.',
-        paragraph: 'Caso haja qualquer alteração no documento junto as instituições de crédito você será avisado.',
+      });
+
+      $('input[name=monitorar]').on('click', async (ev) => {
+        ev.preventDefault();
+        const modal = controller.call('modal');
+        modal.title('Progresso de Envio de Monitoramento');
+        modal.subtitle('O monitoramento está sendo enviado, por favor aguarde.');
+        modal.paragraph('Experimente tomar um café enquanto nossos servidores recebem seus CPFs e CNPJs.');
+        const progress = modal.addProgress();
+        let sended = 0;
+
+        try {
+          await documents.reduce(async (promise, documento) => {
+            await promise;
+            await new Promise((resolve, reject) => controller.server.call("INSERT INTO 'FOLLOWDOCUMENT'.'DOCUMENT'", controller.call('error::ajax', {
+              dataType: 'json',
+              data: { documento },
+              success: () => {
+                sended += 1;
+                progress(sended / documents.length);
+                resolve();
+              },
+              error: (_1, _2, errorThrown) => reject(new Error(errorThrown)),
+            })));
+          }, Promise.resolve());
+        } catch (e) {
+          controller.alert({
+            title: 'Uoh! Não foi possível enviar todos os documentos para monitoramento.',
+            subtitle: 'Sua conexão com a internet pode estar com problemas, impedindo o envio de documentos.',
+            paragraph: `Tente enviar menos documentos para que possamos realizar esta operação (${e.toString()}).`,
+          });
+          return;
+        } finally {
+          modal.close();
+        }
+        controller.alert({
+          icon: 'pass',
+          title: `Parabéns! Os documentos (${documents.length}) foram enviados para monitoramento.`,
+          subtitle: 'Dentro de instantes será possível extrair um relatório de seus cedentes e sacados com este documento incluso.',
+          paragraph: 'Caso haja qualquer alteração no documento junto as instituições de crédito você será avisado.',
+        });
+        modalConfirmation.close();
       });
     };
     reader.readAsText(file);

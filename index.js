@@ -1,9 +1,9 @@
-(function ($, harlan, moment) {
+(function ($, harlan$1, moment$1) {
   'use strict';
 
   $ = $ && $.hasOwnProperty('default') ? $['default'] : $;
-  harlan = harlan && harlan.hasOwnProperty('default') ? harlan['default'] : harlan;
-  moment = moment && moment.hasOwnProperty('default') ? moment['default'] : moment;
+  harlan$1 = harlan$1 && harlan$1.hasOwnProperty('default') ? harlan$1['default'] : harlan$1;
+  moment$1 = moment$1 && moment$1.hasOwnProperty('default') ? moment$1['default'] : moment$1;
 
   function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
     try {
@@ -56,20 +56,35 @@
     return obj;
   }
 
-  function _objectSpread(target) {
+  function ownKeys(object, enumerableOnly) {
+    var keys = Object.keys(object);
+
+    if (Object.getOwnPropertySymbols) {
+      var symbols = Object.getOwnPropertySymbols(object);
+      if (enumerableOnly) symbols = symbols.filter(function (sym) {
+        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+      });
+      keys.push.apply(keys, symbols);
+    }
+
+    return keys;
+  }
+
+  function _objectSpread2(target) {
     for (var i = 1; i < arguments.length; i++) {
       var source = arguments[i] != null ? arguments[i] : {};
-      var ownKeys = Object.keys(source);
 
-      if (typeof Object.getOwnPropertySymbols === 'function') {
-        ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) {
-          return Object.getOwnPropertyDescriptor(source, sym).enumerable;
-        }));
+      if (i % 2) {
+        ownKeys(Object(source), true).forEach(function (key) {
+          _defineProperty(target, key, source[key]);
+        });
+      } else if (Object.getOwnPropertyDescriptors) {
+        Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+      } else {
+        ownKeys(Object(source)).forEach(function (key) {
+          Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+        });
       }
-
-      ownKeys.forEach(function (key) {
-        _defineProperty(target, key, source[key]);
-      });
     }
 
     return target;
@@ -84,6 +99,10 @@
   }
 
   function _iterableToArrayLimit(arr, i) {
+    if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) {
+      return;
+    }
+
     var _arr = [];
     var _n = true;
     var _d = false;
@@ -119,15 +138,13 @@
   	return module = { exports: {} }, fn(module, module.exports), module.exports;
   }
 
-  var O = 'object';
-
   var check = function (it) {
     return it && it.Math == Math && it;
   }; // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
 
 
   var global_1 = // eslint-disable-next-line no-undef
-  check(typeof globalThis == O && globalThis) || check(typeof window == O && window) || check(typeof self == O && self) || check(typeof commonjsGlobal == O && commonjsGlobal) || // eslint-disable-next-line no-new-func
+  check(typeof globalThis == 'object' && globalThis) || check(typeof window == 'object' && window) || check(typeof self == 'object' && self) || check(typeof commonjsGlobal == 'object' && commonjsGlobal) || // eslint-disable-next-line no-new-func
   Function('return this')();
 
   var fails = function (exec) {
@@ -139,11 +156,11 @@
   };
 
   var descriptors = !fails(function () {
-    return Object.defineProperty({}, 'a', {
+    return Object.defineProperty({}, 1, {
       get: function () {
         return 7;
       }
-    }).a != 7;
+    })[1] != 7;
   });
 
   var nativePropertyIsEnumerable = {}.propertyIsEnumerable;
@@ -282,7 +299,7 @@
     f: f$2
   };
 
-  var hide = descriptors ? function (object, key, value) {
+  var createNonEnumerableProperty = descriptors ? function (object, key, value) {
     return objectDefineProperty.f(object, key, createPropertyDescriptor(1, value));
   } : function (object, key, value) {
     object[key] = value;
@@ -291,7 +308,7 @@
 
   var setGlobal = function (key, value) {
     try {
-      hide(global_1, key, value);
+      createNonEnumerableProperty(global_1, key, value);
     } catch (error) {
       global_1[key] = value;
     }
@@ -299,24 +316,34 @@
     return value;
   };
 
+  var SHARED = '__core-js_shared__';
+  var store = global_1[SHARED] || setGlobal(SHARED, {});
+  var sharedStore = store;
+
+  var functionToString = Function.toString; // this helper broken in `3.4.1-3.4.4`, so we can't use `shared` helper
+
+  if (typeof sharedStore.inspectSource != 'function') {
+    sharedStore.inspectSource = function (it) {
+      return functionToString.call(it);
+    };
+  }
+
+  var inspectSource = sharedStore.inspectSource;
+
+  var WeakMap = global_1.WeakMap;
+  var nativeWeakMap = typeof WeakMap === 'function' && /native code/.test(inspectSource(WeakMap));
+
   var isPure = false;
 
   var shared = createCommonjsModule(function (module) {
-    var SHARED = '__core-js_shared__';
-    var store = global_1[SHARED] || setGlobal(SHARED, {});
     (module.exports = function (key, value) {
-      return store[key] || (store[key] = value !== undefined ? value : {});
+      return sharedStore[key] || (sharedStore[key] = value !== undefined ? value : {});
     })('versions', []).push({
-      version: '3.1.3',
+      version: '3.6.4',
       mode:  'global',
-      copyright: '© 2019 Denis Pushkarev (zloirock.ru)'
+      copyright: '© 2020 Denis Pushkarev (zloirock.ru)'
     });
   });
-
-  var functionToString = shared('native-function-to-string', Function.toString);
-
-  var WeakMap = global_1.WeakMap;
-  var nativeWeakMap = typeof WeakMap === 'function' && /native code/.test(functionToString.call(WeakMap));
 
   var id = 0;
   var postfix = Math.random();
@@ -353,29 +380,29 @@
   };
 
   if (nativeWeakMap) {
-    var store = new WeakMap$1();
-    var wmget = store.get;
-    var wmhas = store.has;
-    var wmset = store.set;
+    var store$1 = new WeakMap$1();
+    var wmget = store$1.get;
+    var wmhas = store$1.has;
+    var wmset = store$1.set;
 
     set = function (it, metadata) {
-      wmset.call(store, it, metadata);
+      wmset.call(store$1, it, metadata);
       return metadata;
     };
 
     get = function (it) {
-      return wmget.call(store, it) || {};
+      return wmget.call(store$1, it) || {};
     };
 
     has$1 = function (it) {
-      return wmhas.call(store, it);
+      return wmhas.call(store$1, it);
     };
   } else {
     var STATE = sharedKey('state');
     hiddenKeys[STATE] = true;
 
     set = function (it, metadata) {
-      hide(it, STATE, metadata);
+      createNonEnumerableProperty(it, STATE, metadata);
       return metadata;
     };
 
@@ -399,17 +426,14 @@
   var redefine = createCommonjsModule(function (module) {
     var getInternalState = internalState.get;
     var enforceInternalState = internalState.enforce;
-    var TEMPLATE = String(functionToString).split('toString');
-    shared('inspectSource', function (it) {
-      return functionToString.call(it);
-    });
+    var TEMPLATE = String(String).split('String');
     (module.exports = function (O, key, value, options) {
       var unsafe = options ? !!options.unsafe : false;
       var simple = options ? !!options.enumerable : false;
       var noTargetGet = options ? !!options.noTargetGet : false;
 
       if (typeof value == 'function') {
-        if (typeof key == 'string' && !has(value, 'name')) hide(value, 'name', key);
+        if (typeof key == 'string' && !has(value, 'name')) createNonEnumerableProperty(value, 'name', key);
         enforceInternalState(value).source = TEMPLATE.join(typeof key == 'string' ? key : '');
       }
 
@@ -422,9 +446,9 @@
         simple = true;
       }
 
-      if (simple) O[key] = value;else hide(O, key, value); // add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
+      if (simple) O[key] = value;else createNonEnumerableProperty(O, key, value); // add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
     })(Function.prototype, 'toString', function toString() {
-      return typeof this == 'function' && getInternalState(this).source || functionToString.call(this);
+      return typeof this == 'function' && getInternalState(this).source || inspectSource(this);
     });
   });
 
@@ -456,7 +480,7 @@
   var max = Math.max;
   var min$1 = Math.min; // Helper for a popular repeating case of the spec:
   // Let integer be ? ToInteger(index).
-  // If integer < 0, let result be max((length + integer), 0); else let result be min(length, length).
+  // If integer < 0, let result be max((length + integer), 0); else let result be min(integer, length).
 
   var toAbsoluteIndex = function (index, length) {
     var integer = toInteger(index);
@@ -528,14 +552,14 @@
     f: f$4
   };
 
-  var ownKeys = getBuiltIn('Reflect', 'ownKeys') || function ownKeys(it) {
+  var ownKeys$1 = getBuiltIn('Reflect', 'ownKeys') || function ownKeys(it) {
     var keys = objectGetOwnPropertyNames.f(anObject(it));
     var getOwnPropertySymbols = objectGetOwnPropertySymbols.f;
     return getOwnPropertySymbols ? keys.concat(getOwnPropertySymbols(it)) : keys;
   };
 
   var copyConstructorProperties = function (target, source) {
-    var keys = ownKeys(source);
+    var keys = ownKeys$1(source);
     var defineProperty = objectDefineProperty.f;
     var getOwnPropertyDescriptor = objectGetOwnPropertyDescriptor.f;
 
@@ -608,7 +632,7 @@
 
 
       if (options.sham || targetProperty && targetProperty.sham) {
-        hide(sourceProperty, 'sham', true);
+        createNonEnumerableProperty(sourceProperty, 'sham', true);
       } // extend global
 
 
@@ -621,6 +645,10 @@
     // eslint-disable-next-line no-undef
     return !String(Symbol());
   });
+
+  var useSymbolAsUid = nativeSymbol // eslint-disable-next-line no-undef
+  && !Symbol.sham // eslint-disable-next-line no-undef
+  && typeof Symbol.iterator == 'symbol';
 
   // https://tc39.github.io/ecma262/#sec-isarray
 
@@ -656,54 +684,86 @@
 
   var html = getBuiltIn('document', 'documentElement');
 
-  var IE_PROTO = sharedKey('IE_PROTO');
+  var GT = '>';
+  var LT = '<';
   var PROTOTYPE = 'prototype';
+  var SCRIPT = 'script';
+  var IE_PROTO = sharedKey('IE_PROTO');
 
-  var Empty = function () {
+  var EmptyConstructor = function () {
     /* empty */
+  };
+
+  var scriptTag = function (content) {
+    return LT + SCRIPT + GT + content + LT + '/' + SCRIPT + GT;
+  }; // Create object with fake `null` prototype: use ActiveX Object with cleared prototype
+
+
+  var NullProtoObjectViaActiveX = function (activeXDocument) {
+    activeXDocument.write(scriptTag(''));
+    activeXDocument.close();
+    var temp = activeXDocument.parentWindow.Object;
+    activeXDocument = null; // avoid memory leak
+
+    return temp;
   }; // Create object with fake `null` prototype: use iframe Object with cleared prototype
 
 
-  var createDict = function () {
+  var NullProtoObjectViaIFrame = function () {
     // Thrash, waste and sodomy: IE GC bug
     var iframe = documentCreateElement('iframe');
-    var length = enumBugKeys.length;
-    var lt = '<';
-    var script = 'script';
-    var gt = '>';
-    var js = 'java' + script + ':';
+    var JS = 'java' + SCRIPT + ':';
     var iframeDocument;
     iframe.style.display = 'none';
-    html.appendChild(iframe);
-    iframe.src = String(js);
+    html.appendChild(iframe); // https://github.com/zloirock/core-js/issues/475
+
+    iframe.src = String(JS);
     iframeDocument = iframe.contentWindow.document;
     iframeDocument.open();
-    iframeDocument.write(lt + script + gt + 'document.F=Object' + lt + '/' + script + gt);
+    iframeDocument.write(scriptTag('document.F=Object'));
     iframeDocument.close();
-    createDict = iframeDocument.F;
+    return iframeDocument.F;
+  }; // Check for document.domain and active x support
+  // No need to use active x approach when document.domain is not set
+  // see https://github.com/es-shims/es5-shim/issues/150
+  // variation of https://github.com/kitcambridge/es5-shim/commit/4f738ac066346
+  // avoid IE GC bug
 
-    while (length--) delete createDict[PROTOTYPE][enumBugKeys[length]];
 
-    return createDict();
-  }; // `Object.create` method
+  var activeXDocument;
+
+  var NullProtoObject = function () {
+    try {
+      /* global ActiveXObject */
+      activeXDocument = document.domain && new ActiveXObject('htmlfile');
+    } catch (error) {
+      /* ignore */
+    }
+
+    NullProtoObject = activeXDocument ? NullProtoObjectViaActiveX(activeXDocument) : NullProtoObjectViaIFrame();
+    var length = enumBugKeys.length;
+
+    while (length--) delete NullProtoObject[PROTOTYPE][enumBugKeys[length]];
+
+    return NullProtoObject();
+  };
+
+  hiddenKeys[IE_PROTO] = true; // `Object.create` method
   // https://tc39.github.io/ecma262/#sec-object.create
-
 
   var objectCreate = Object.create || function create(O, Properties) {
     var result;
 
     if (O !== null) {
-      Empty[PROTOTYPE] = anObject(O);
-      result = new Empty();
-      Empty[PROTOTYPE] = null; // add "__proto__" for Object.getPrototypeOf polyfill
+      EmptyConstructor[PROTOTYPE] = anObject(O);
+      result = new EmptyConstructor();
+      EmptyConstructor[PROTOTYPE] = null; // add "__proto__" for Object.getPrototypeOf polyfill
 
       result[IE_PROTO] = O;
-    } else result = createDict();
+    } else result = NullProtoObject();
 
     return Properties === undefined ? result : objectDefineProperties(result, Properties);
   };
-
-  hiddenKeys[IE_PROTO] = true;
 
   var nativeGetOwnPropertyNames = objectGetOwnPropertyNames.f;
   var toString$1 = {}.toString;
@@ -726,15 +786,20 @@
     f: f$5
   };
 
+  var WellKnownSymbolsStore = shared('wks');
   var Symbol$1 = global_1.Symbol;
-  var store$1 = shared('wks');
+  var createWellKnownSymbol = useSymbolAsUid ? Symbol$1 : Symbol$1 && Symbol$1.withoutSetter || uid;
 
   var wellKnownSymbol = function (name) {
-    return store$1[name] || (store$1[name] = nativeSymbol && Symbol$1[name] || (nativeSymbol ? Symbol$1 : uid)('Symbol.' + name));
+    if (!has(WellKnownSymbolsStore, name)) {
+      if (nativeSymbol && has(Symbol$1, name)) WellKnownSymbolsStore[name] = Symbol$1[name];else WellKnownSymbolsStore[name] = createWellKnownSymbol('Symbol.' + name);
+    }
+
+    return WellKnownSymbolsStore[name];
   };
 
   var f$6 = wellKnownSymbol;
-  var wrappedWellKnownSymbol = {
+  var wellKnownSymbolWrapped = {
     f: f$6
   };
 
@@ -743,7 +808,7 @@
   var defineWellKnownSymbol = function (NAME) {
     var Symbol = path.Symbol || (path.Symbol = {});
     if (!has(Symbol, NAME)) defineProperty(Symbol, NAME, {
-      value: wrappedWellKnownSymbol.f(NAME)
+      value: wellKnownSymbolWrapped.f(NAME)
     });
   };
 
@@ -767,7 +832,7 @@
     return it;
   };
 
-  var bindContext = function (fn, that, length) {
+  var functionBindContext = function (fn, that, length) {
     aFunction$1(fn);
     if (that === undefined) return fn;
 
@@ -830,7 +895,7 @@
     return function ($this, callbackfn, that, specificCreate) {
       var O = toObject($this);
       var self = indexedObject(O);
-      var boundFunction = bindContext(callbackfn, that, 3);
+      var boundFunction = functionBindContext(callbackfn, that, 3);
       var length = toLength(self.length);
       var index = 0;
       var create = specificCreate || arraySpeciesCreate;
@@ -900,8 +965,7 @@
   var getInternalState = internalState.getterFor(SYMBOL);
   var ObjectPrototype = Object[PROTOTYPE$1];
   var $Symbol = global_1.Symbol;
-  var JSON$1 = global_1.JSON;
-  var nativeJSONStringify = JSON$1 && JSON$1.stringify;
+  var $stringify = getBuiltIn('JSON', 'stringify');
   var nativeGetOwnPropertyDescriptor$1 = objectGetOwnPropertyDescriptor.f;
   var nativeDefineProperty$1 = objectDefineProperty.f;
   var nativeGetOwnPropertyNames$1 = objectGetOwnPropertyNamesExternal.f;
@@ -910,7 +974,7 @@
   var ObjectPrototypeSymbols = shared('op-symbols');
   var StringToSymbolRegistry = shared('string-to-symbol-registry');
   var SymbolToStringRegistry = shared('symbol-to-string-registry');
-  var WellKnownSymbolsStore = shared('wks');
+  var WellKnownSymbolsStore$1 = shared('wks');
   var QObject = global_1.QObject; // Don't use setters in Qt Script, https://github.com/zloirock/core-js/issues/173
 
   var USE_SETTER = !QObject || !QObject[PROTOTYPE$1] || !QObject[PROTOTYPE$1].findChild; // fallback for old Android, https://code.google.com/p/v8/issues/detail?id=687
@@ -944,7 +1008,7 @@
     return symbol;
   };
 
-  var isSymbol = nativeSymbol && typeof $Symbol.iterator == 'symbol' ? function (it) {
+  var isSymbol = useSymbolAsUid ? function (it) {
     return typeof it == 'symbol';
   } : function (it) {
     return Object(it) instanceof $Symbol;
@@ -1052,11 +1116,18 @@
     redefine($Symbol[PROTOTYPE$1], 'toString', function toString() {
       return getInternalState(this).tag;
     });
+    redefine($Symbol, 'withoutSetter', function (description) {
+      return wrap(uid(description), description);
+    });
     objectPropertyIsEnumerable.f = $propertyIsEnumerable;
     objectDefineProperty.f = $defineProperty;
     objectGetOwnPropertyDescriptor.f = $getOwnPropertyDescriptor;
     objectGetOwnPropertyNames.f = objectGetOwnPropertyNamesExternal.f = $getOwnPropertyNames;
     objectGetOwnPropertySymbols.f = $getOwnPropertySymbols;
+
+    wellKnownSymbolWrapped.f = function (name) {
+      return wrap(wellKnownSymbol(name), name);
+    };
 
     if (descriptors) {
       // https://github.com/tc39/proposal-Symbol-description
@@ -1073,10 +1144,6 @@
         });
       }
     }
-
-    wrappedWellKnownSymbol.f = function (name) {
-      return wrap(wellKnownSymbol(name), name);
-    };
   }
 
   _export({
@@ -1087,7 +1154,7 @@
   }, {
     Symbol: $Symbol
   });
-  $forEach(objectKeys(WellKnownSymbolsStore), function (name) {
+  $forEach(objectKeys(WellKnownSymbolsStore$1), function (name) {
     defineWellKnownSymbol(name);
   });
   _export({
@@ -1164,41 +1231,49 @@
   }); // `JSON.stringify` method behavior with symbols
   // https://tc39.github.io/ecma262/#sec-json.stringify
 
-  JSON$1 && _export({
-    target: 'JSON',
-    stat: true,
-    forced: !nativeSymbol || fails(function () {
+  if ($stringify) {
+    var FORCED_JSON_STRINGIFY = !nativeSymbol || fails(function () {
       var symbol = $Symbol(); // MS Edge converts symbol values to JSON as {}
 
-      return nativeJSONStringify([symbol]) != '[null]' // WebKit converts symbol values to JSON as null
-      || nativeJSONStringify({
+      return $stringify([symbol]) != '[null]' // WebKit converts symbol values to JSON as null
+      || $stringify({
         a: symbol
       }) != '{}' // V8 throws on boxed symbols
-      || nativeJSONStringify(Object(symbol)) != '{}';
-    })
-  }, {
-    stringify: function stringify(it) {
-      var args = [it];
-      var index = 1;
-      var replacer, $replacer;
+      || $stringify(Object(symbol)) != '{}';
+    });
+    _export({
+      target: 'JSON',
+      stat: true,
+      forced: FORCED_JSON_STRINGIFY
+    }, {
+      // eslint-disable-next-line no-unused-vars
+      stringify: function stringify(it, replacer, space) {
+        var args = [it];
+        var index = 1;
+        var $replacer;
 
-      while (arguments.length > index) args.push(arguments[index++]);
+        while (arguments.length > index) args.push(arguments[index++]);
 
-      $replacer = replacer = args[1];
-      if (!isObject(replacer) && it === undefined || isSymbol(it)) return; // IE8 returns string on undefined
+        $replacer = replacer;
+        if (!isObject(replacer) && it === undefined || isSymbol(it)) return; // IE8 returns string on undefined
 
-      if (!isArray(replacer)) replacer = function (key, value) {
-        if (typeof $replacer == 'function') value = $replacer.call(this, key, value);
-        if (!isSymbol(value)) return value;
-      };
-      args[1] = replacer;
-      return nativeJSONStringify.apply(JSON$1, args);
-    }
-  }); // `Symbol.prototype[@@toPrimitive]` method
+        if (!isArray(replacer)) replacer = function (key, value) {
+          if (typeof $replacer == 'function') value = $replacer.call(this, key, value);
+          if (!isSymbol(value)) return value;
+        };
+        args[1] = replacer;
+        return $stringify.apply(null, args);
+      }
+    });
+  } // `Symbol.prototype[@@toPrimitive]` method
   // https://tc39.github.io/ecma262/#sec-symbol.prototype-@@toprimitive
 
-  if (!$Symbol[PROTOTYPE$1][TO_PRIMITIVE]) hide($Symbol[PROTOTYPE$1], TO_PRIMITIVE, $Symbol[PROTOTYPE$1].valueOf); // `Symbol.prototype[@@toStringTag]` property
+
+  if (!$Symbol[PROTOTYPE$1][TO_PRIMITIVE]) {
+    createNonEnumerableProperty($Symbol[PROTOTYPE$1], TO_PRIMITIVE, $Symbol[PROTOTYPE$1].valueOf);
+  } // `Symbol.prototype[@@toStringTag]` property
   // https://tc39.github.io/ecma262/#sec-symbol.prototype-@@tostringtag
+
 
   setToStringTag($Symbol, SYMBOL);
   hiddenKeys[HIDDEN] = true;
@@ -1292,11 +1367,26 @@
 
   defineWellKnownSymbol('unscopables');
 
-  var nativeAssign = Object.assign; // `Object.assign` method
+  var nativeAssign = Object.assign;
+  var defineProperty$3 = Object.defineProperty; // `Object.assign` method
   // https://tc39.github.io/ecma262/#sec-object.assign
-  // should work with symbols and should have deterministic property order (V8 bug)
 
   var objectAssign = !nativeAssign || fails(function () {
+    // should have correct order of operations (Edge bug)
+    if (descriptors && nativeAssign({
+      b: 1
+    }, nativeAssign(defineProperty$3({}, 'a', {
+      enumerable: true,
+      get: function () {
+        defineProperty$3(this, 'b', {
+          value: 3,
+          enumerable: false
+        });
+      }
+    }), {
+      b: 2
+    })).b !== 1) return true; // should work with symbols and should have deterministic property order (V8 bug)
+
     var A = {};
     var B = {}; // eslint-disable-next-line no-undef
 
@@ -1516,7 +1606,12 @@
     return it !== undefined && (iterators.Array === it || ArrayPrototype[ITERATOR] === it);
   };
 
-  var TO_STRING_TAG$1 = wellKnownSymbol('toStringTag'); // ES3 wrong here
+  var TO_STRING_TAG$1 = wellKnownSymbol('toStringTag');
+  var test = {};
+  test[TO_STRING_TAG$1] = 'z';
+  var toStringTagSupport = String(test) === '[object z]';
+
+  var TO_STRING_TAG$2 = wellKnownSymbol('toStringTag'); // ES3 wrong here
 
   var CORRECT_ARGUMENTS = classofRaw(function () {
     return arguments;
@@ -1531,10 +1626,10 @@
   }; // getting tag from ES6+ `Object.prototype.toString`
 
 
-  var classof = function (it) {
+  var classof = toStringTagSupport ? classofRaw : function (it) {
     var O, tag, result;
     return it === undefined ? 'Undefined' : it === null ? 'Null' // @@toStringTag case
-    : typeof (tag = tryGet(O = Object(it), TO_STRING_TAG$1)) == 'string' ? tag // builtinTag case
+    : typeof (tag = tryGet(O = Object(it), TO_STRING_TAG$2)) == 'string' ? tag // builtinTag case
     : CORRECT_ARGUMENTS ? classofRaw(O) // ES3 arguments fallback
     : (result = classofRaw(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : result;
   };
@@ -1562,8 +1657,8 @@
     };
 
     var iterate = module.exports = function (iterable, fn, that, AS_ENTRIES, IS_ITERATOR) {
-      var boundFunction = bindContext(fn, that, AS_ENTRIES ? 2 : 1);
-      var iterator, iterFn, index, length, result, step;
+      var boundFunction = functionBindContext(fn, that, AS_ENTRIES ? 2 : 1);
+      var iterator, iterFn, index, length, result, next, step;
 
       if (IS_ITERATOR) {
         iterator = iterable;
@@ -1583,9 +1678,11 @@
         iterator = iterFn.call(iterable);
       }
 
-      while (!(step = iterator.next()).done) {
+      next = iterator.next;
+
+      while (!(step = next.call(iterator)).done) {
         result = callWithSafeIterationClosing(iterator, boundFunction, step.value, AS_ENTRIES);
-        if (result && result instanceof Result) return result;
+        if (typeof result == 'object' && result && result instanceof Result) return result;
       }
 
       return new Result(false);
@@ -1644,7 +1741,7 @@
     getOwnPropertyDescriptors: function getOwnPropertyDescriptors(object) {
       var O = toIndexedObject(object);
       var getOwnPropertyDescriptor = objectGetOwnPropertyDescriptor.f;
-      var keys = ownKeys(O);
+      var keys = ownKeys$1(O);
       var result = {};
       var index = 0;
       var key, descriptor;
@@ -1882,25 +1979,22 @@
     }
   });
 
-  var TO_STRING_TAG$2 = wellKnownSymbol('toStringTag');
-  var test = {};
-  test[TO_STRING_TAG$2] = 'z'; // `Object.prototype.toString` method implementation
   // https://tc39.github.io/ecma262/#sec-object.prototype.tostring
 
-  var objectToString = String(test) !== '[object z]' ? function toString() {
+
+  var objectToString = toStringTagSupport ? {}.toString : function toString() {
     return '[object ' + classof(this) + ']';
-  } : test.toString;
+  };
 
-  var ObjectPrototype$2 = Object.prototype; // `Object.prototype.toString` method
   // https://tc39.github.io/ecma262/#sec-object.prototype.tostring
 
-  if (objectToString !== ObjectPrototype$2.toString) {
-    redefine(ObjectPrototype$2, 'toString', objectToString, {
+  if (!toStringTagSupport) {
+    redefine(Object.prototype, 'toString', objectToString, {
       unsafe: true
     });
   }
 
-  var forcedObjectPrototypeAccessorsMethods =  !fails(function () {
+  var objectPrototypeAccessorsForced =  !fails(function () {
     var key = Math.random(); // In FF throws only define methods
     // eslint-disable-next-line no-undef, no-useless-call
 
@@ -1918,7 +2012,7 @@
     _export({
       target: 'Object',
       proto: true,
-      forced: forcedObjectPrototypeAccessorsMethods
+      forced: objectPrototypeAccessorsForced
     }, {
       __defineGetter__: function __defineGetter__(P, getter) {
         objectDefineProperty.f(toObject(this), P, {
@@ -1937,7 +2031,7 @@
     _export({
       target: 'Object',
       proto: true,
-      forced: forcedObjectPrototypeAccessorsMethods
+      forced: objectPrototypeAccessorsForced
     }, {
       __defineSetter__: function __defineSetter__(P, setter) {
         objectDefineProperty.f(toObject(this), P, {
@@ -1956,7 +2050,7 @@
     _export({
       target: 'Object',
       proto: true,
-      forced: forcedObjectPrototypeAccessorsMethods
+      forced: objectPrototypeAccessorsForced
     }, {
       __lookupGetter__: function __lookupGetter__(P) {
         var O = toObject(this);
@@ -1977,7 +2071,7 @@
     _export({
       target: 'Object',
       proto: true,
-      forced: forcedObjectPrototypeAccessorsMethods
+      forced: objectPrototypeAccessorsForced
     }, {
       __lookupSetter__: function __lookupSetter__(P) {
         var O = toObject(this);
@@ -2033,7 +2127,7 @@
     bind: functionBind
   });
 
-  var defineProperty$3 = objectDefineProperty.f;
+  var defineProperty$4 = objectDefineProperty.f;
   var FunctionPrototype = Function.prototype;
   var FunctionPrototypeToString = FunctionPrototype.toString;
   var nameRE = /^\s*function ([^ (]*)/;
@@ -2041,7 +2135,7 @@
   // https://tc39.github.io/ecma262/#sec-function-instances-name
 
   if (descriptors && !(NAME in FunctionPrototype)) {
-    defineProperty$3(FunctionPrototype, NAME, {
+    defineProperty$4(FunctionPrototype, NAME, {
       configurable: true,
       get: function () {
         try {
@@ -2070,6 +2164,14 @@
     });
   }
 
+  // https://github.com/tc39/proposal-global
+
+  _export({
+    global: true
+  }, {
+    globalThis: global_1
+  });
+
   // https://tc39.github.io/ecma262/#sec-array.from
 
 
@@ -2081,24 +2183,27 @@
     var argumentsLength = arguments.length;
     var mapfn = argumentsLength > 1 ? arguments[1] : undefined;
     var mapping = mapfn !== undefined;
-    var index = 0;
     var iteratorMethod = getIteratorMethod(O);
-    var length, result, step, iterator;
-    if (mapping) mapfn = bindContext(mapfn, argumentsLength > 2 ? arguments[2] : undefined, 2); // if the target is not iterable or it's an array with the default iterator - use a simple case
+    var index = 0;
+    var length, result, step, iterator, next, value;
+    if (mapping) mapfn = functionBindContext(mapfn, argumentsLength > 2 ? arguments[2] : undefined, 2); // if the target is not iterable or it's an array with the default iterator - use a simple case
 
     if (iteratorMethod != undefined && !(C == Array && isArrayIteratorMethod(iteratorMethod))) {
       iterator = iteratorMethod.call(O);
+      next = iterator.next;
       result = new C();
 
-      for (; !(step = iterator.next()).done; index++) {
-        createProperty(result, index, mapping ? callWithSafeIterationClosing(iterator, mapfn, [step.value, index], true) : step.value);
+      for (; !(step = next.call(iterator)).done; index++) {
+        value = mapping ? callWithSafeIterationClosing(iterator, mapfn, [step.value, index], true) : step.value;
+        createProperty(result, index, value);
       }
     } else {
       length = toLength(O.length);
       result = new C(length);
 
       for (; length > index; index++) {
-        createProperty(result, index, mapping ? mapfn(O[index], index) : O[index]);
+        value = mapping ? mapfn(O[index], index) : O[index];
+        createProperty(result, index, value);
       }
     }
 
@@ -2210,10 +2315,34 @@
     }
   });
 
+  var engineUserAgent = getBuiltIn('navigator', 'userAgent') || '';
+
+  var process = global_1.process;
+  var versions = process && process.versions;
+  var v8 = versions && versions.v8;
+  var match, version;
+
+  if (v8) {
+    match = v8.split('.');
+    version = match[0] + match[1];
+  } else if (engineUserAgent) {
+    match = engineUserAgent.match(/Edge\/(\d+)/);
+
+    if (!match || match[1] >= 74) {
+      match = engineUserAgent.match(/Chrome\/(\d+)/);
+      if (match) version = match[1];
+    }
+  }
+
+  var engineV8Version = version && +version;
+
   var SPECIES$1 = wellKnownSymbol('species');
 
   var arrayMethodHasSpeciesSupport = function (METHOD_NAME) {
-    return !fails(function () {
+    // We can't use this feature detection in V8 since it causes
+    // deoptimization and serious performance degradation
+    // https://github.com/zloirock/core-js/issues/677
+    return engineV8Version >= 51 || !fails(function () {
       var array = [];
       var constructor = array.constructor = {};
 
@@ -2229,8 +2358,11 @@
 
   var IS_CONCAT_SPREADABLE = wellKnownSymbol('isConcatSpreadable');
   var MAX_SAFE_INTEGER = 0x1FFFFFFFFFFFFF;
-  var MAXIMUM_ALLOWED_INDEX_EXCEEDED = 'Maximum allowed index exceeded';
-  var IS_CONCAT_SPREADABLE_SUPPORT = !fails(function () {
+  var MAXIMUM_ALLOWED_INDEX_EXCEEDED = 'Maximum allowed index exceeded'; // We can't use this feature detection in V8 since it causes
+  // deoptimization and serious performance degradation
+  // https://github.com/zloirock/core-js/issues/679
+
+  var IS_CONCAT_SPREADABLE_SUPPORT = engineV8Version >= 51 || !fails(function () {
     var array = [];
     array[IS_CONCAT_SPREADABLE] = false;
     return array.concat()[0] !== array;
@@ -2314,7 +2446,10 @@
   // https://tc39.github.io/ecma262/#sec-array.prototype-@@unscopables
 
   if (ArrayPrototype$1[UNSCOPABLES] == undefined) {
-    hide(ArrayPrototype$1, UNSCOPABLES, objectCreate(null));
+    objectDefineProperty.f(ArrayPrototype$1, UNSCOPABLES, {
+      configurable: true,
+      value: objectCreate(null)
+    });
   } // add a key to Array.prototype[@@unscopables]
 
 
@@ -2333,9 +2468,9 @@
 
   addToUnscopables('copyWithin');
 
-  var sloppyArrayMethod = function (METHOD_NAME, argument) {
+  var arrayMethodIsStrict = function (METHOD_NAME, argument) {
     var method = [][METHOD_NAME];
-    return !method || !fails(function () {
+    return !!method && fails(function () {
       // eslint-disable-next-line no-useless-call,no-throw-literal
       method.call(null, argument || function () {
         throw 1;
@@ -2343,13 +2478,42 @@
     });
   };
 
-  var $every = arrayIteration.every; // `Array.prototype.every` method
+  var defineProperty$5 = Object.defineProperty;
+  var cache = {};
+
+  var thrower = function (it) {
+    throw it;
+  };
+
+  var arrayMethodUsesToLength = function (METHOD_NAME, options) {
+    if (has(cache, METHOD_NAME)) return cache[METHOD_NAME];
+    if (!options) options = {};
+    var method = [][METHOD_NAME];
+    var ACCESSORS = has(options, 'ACCESSORS') ? options.ACCESSORS : false;
+    var argument0 = has(options, 0) ? options[0] : thrower;
+    var argument1 = has(options, 1) ? options[1] : undefined;
+    return cache[METHOD_NAME] = !!method && !fails(function () {
+      if (ACCESSORS && !descriptors) return true;
+      var O = {
+        length: -1
+      };
+      if (ACCESSORS) defineProperty$5(O, 1, {
+        enumerable: true,
+        get: thrower
+      });else O[1] = 1;
+      method.call(O, argument0, argument1);
+    });
+  };
+
+  var $every = arrayIteration.every;
+  var STRICT_METHOD = arrayMethodIsStrict('every');
+  var USES_TO_LENGTH = arrayMethodUsesToLength('every'); // `Array.prototype.every` method
   // https://tc39.github.io/ecma262/#sec-array.prototype.every
 
   _export({
     target: 'Array',
     proto: true,
-    forced: sloppyArrayMethod('every')
+    forced: !STRICT_METHOD || !USES_TO_LENGTH
   }, {
     every: function every(callbackfn
     /* , thisArg */
@@ -2387,14 +2551,17 @@
 
   addToUnscopables('fill');
 
-  var $filter = arrayIteration.filter; // `Array.prototype.filter` method
+  var $filter = arrayIteration.filter;
+  var HAS_SPECIES_SUPPORT = arrayMethodHasSpeciesSupport('filter'); // Edge 14- issue
+
+  var USES_TO_LENGTH$1 = arrayMethodUsesToLength('filter'); // `Array.prototype.filter` method
   // https://tc39.github.io/ecma262/#sec-array.prototype.filter
   // with adding support of @@species
 
   _export({
     target: 'Array',
     proto: true,
-    forced: !arrayMethodHasSpeciesSupport('filter')
+    forced: !HAS_SPECIES_SUPPORT || !USES_TO_LENGTH$1
   }, {
     filter: function filter(callbackfn
     /* , thisArg */
@@ -2405,7 +2572,8 @@
 
   var $find = arrayIteration.find;
   var FIND = 'find';
-  var SKIPS_HOLES = true; // Shouldn't skip holes
+  var SKIPS_HOLES = true;
+  var USES_TO_LENGTH$2 = arrayMethodUsesToLength(FIND); // Shouldn't skip holes
 
   if (FIND in []) Array(1)[FIND](function () {
     SKIPS_HOLES = false;
@@ -2415,7 +2583,7 @@
   _export({
     target: 'Array',
     proto: true,
-    forced: SKIPS_HOLES
+    forced: SKIPS_HOLES || !USES_TO_LENGTH$2
   }, {
     find: function find(callbackfn
     /* , that = undefined */
@@ -2428,7 +2596,8 @@
 
   var $findIndex = arrayIteration.findIndex;
   var FIND_INDEX = 'findIndex';
-  var SKIPS_HOLES$1 = true; // Shouldn't skip holes
+  var SKIPS_HOLES$1 = true;
+  var USES_TO_LENGTH$3 = arrayMethodUsesToLength(FIND_INDEX); // Shouldn't skip holes
 
   if (FIND_INDEX in []) Array(1)[FIND_INDEX](function () {
     SKIPS_HOLES$1 = false;
@@ -2438,7 +2607,7 @@
   _export({
     target: 'Array',
     proto: true,
-    forced: SKIPS_HOLES$1
+    forced: SKIPS_HOLES$1 || !USES_TO_LENGTH$3
   }, {
     findIndex: function findIndex(callbackfn
     /* , that = undefined */
@@ -2455,7 +2624,7 @@
   var flattenIntoArray = function (target, original, source, sourceLen, start, depth, mapper, thisArg) {
     var targetIndex = start;
     var sourceIndex = 0;
-    var mapFn = mapper ? bindContext(mapper, thisArg, 3) : false;
+    var mapFn = mapper ? functionBindContext(mapper, thisArg, 3) : false;
     var element;
 
     while (sourceIndex < sourceLen) {
@@ -2519,10 +2688,12 @@
     }
   });
 
-  var $forEach$1 = arrayIteration.forEach; // `Array.prototype.forEach` method implementation
+  var $forEach$1 = arrayIteration.forEach;
+  var STRICT_METHOD$1 = arrayMethodIsStrict('forEach');
+  var USES_TO_LENGTH$4 = arrayMethodUsesToLength('forEach'); // `Array.prototype.forEach` method implementation
   // https://tc39.github.io/ecma262/#sec-array.prototype.foreach
 
-  var arrayForEach = sloppyArrayMethod('forEach') ? function forEach(callbackfn
+  var arrayForEach = !STRICT_METHOD$1 || !USES_TO_LENGTH$4 ? function forEach(callbackfn
   /* , thisArg */
   ) {
     return $forEach$1(this, callbackfn, arguments.length > 1 ? arguments[1] : undefined);
@@ -2539,12 +2710,17 @@
     forEach: arrayForEach
   });
 
-  var $includes = arrayIncludes.includes; // `Array.prototype.includes` method
+  var $includes = arrayIncludes.includes;
+  var USES_TO_LENGTH$5 = arrayMethodUsesToLength('indexOf', {
+    ACCESSORS: true,
+    1: 0
+  }); // `Array.prototype.includes` method
   // https://tc39.github.io/ecma262/#sec-array.prototype.includes
 
   _export({
     target: 'Array',
-    proto: true
+    proto: true,
+    forced: !USES_TO_LENGTH$5
   }, {
     includes: function includes(el
     /* , fromIndex = 0 */
@@ -2558,13 +2734,17 @@
   var $indexOf = arrayIncludes.indexOf;
   var nativeIndexOf = [].indexOf;
   var NEGATIVE_ZERO = !!nativeIndexOf && 1 / [1].indexOf(1, -0) < 0;
-  var SLOPPY_METHOD = sloppyArrayMethod('indexOf'); // `Array.prototype.indexOf` method
+  var STRICT_METHOD$2 = arrayMethodIsStrict('indexOf');
+  var USES_TO_LENGTH$6 = arrayMethodUsesToLength('indexOf', {
+    ACCESSORS: true,
+    1: 0
+  }); // `Array.prototype.indexOf` method
   // https://tc39.github.io/ecma262/#sec-array.prototype.indexof
 
   _export({
     target: 'Array',
     proto: true,
-    forced: NEGATIVE_ZERO || SLOPPY_METHOD
+    forced: NEGATIVE_ZERO || !STRICT_METHOD$2 || !USES_TO_LENGTH$6
   }, {
     indexOf: function indexOf(searchElement
     /* , fromIndex = 0 */
@@ -2576,13 +2756,13 @@
 
   var nativeJoin = [].join;
   var ES3_STRINGS = indexedObject != Object;
-  var SLOPPY_METHOD$1 = sloppyArrayMethod('join', ','); // `Array.prototype.join` method
+  var STRICT_METHOD$3 = arrayMethodIsStrict('join', ','); // `Array.prototype.join` method
   // https://tc39.github.io/ecma262/#sec-array.prototype.join
 
   _export({
     target: 'Array',
     proto: true,
-    forced: ES3_STRINGS || SLOPPY_METHOD$1
+    forced: ES3_STRINGS || !STRICT_METHOD$3
   }, {
     join: function join(separator) {
       return nativeJoin.call(toIndexedObject(this), separator === undefined ? ',' : separator);
@@ -2592,10 +2772,16 @@
   var min$3 = Math.min;
   var nativeLastIndexOf = [].lastIndexOf;
   var NEGATIVE_ZERO$1 = !!nativeLastIndexOf && 1 / [1].lastIndexOf(1, -0) < 0;
-  var SLOPPY_METHOD$2 = sloppyArrayMethod('lastIndexOf'); // `Array.prototype.lastIndexOf` method implementation
+  var STRICT_METHOD$4 = arrayMethodIsStrict('lastIndexOf'); // For preventing possible almost infinite loop in non-standard implementations, test the forward version of the method
+
+  var USES_TO_LENGTH$7 = arrayMethodUsesToLength('indexOf', {
+    ACCESSORS: true,
+    1: 0
+  });
+  var FORCED$2 = NEGATIVE_ZERO$1 || !STRICT_METHOD$4 || !USES_TO_LENGTH$7; // `Array.prototype.lastIndexOf` method implementation
   // https://tc39.github.io/ecma262/#sec-array.prototype.lastindexof
 
-  var arrayLastIndexOf = NEGATIVE_ZERO$1 || SLOPPY_METHOD$2 ? function lastIndexOf(searchElement
+  var arrayLastIndexOf = FORCED$2 ? function lastIndexOf(searchElement
   /* , fromIndex = @[*-1] */
   ) {
     // convert -0 to +0
@@ -2621,14 +2807,17 @@
     lastIndexOf: arrayLastIndexOf
   });
 
-  var $map = arrayIteration.map; // `Array.prototype.map` method
+  var $map = arrayIteration.map;
+  var HAS_SPECIES_SUPPORT$1 = arrayMethodHasSpeciesSupport('map'); // FF49- issue
+
+  var USES_TO_LENGTH$8 = arrayMethodUsesToLength('map'); // `Array.prototype.map` method
   // https://tc39.github.io/ecma262/#sec-array.prototype.map
   // with adding support of @@species
 
   _export({
     target: 'Array',
     proto: true,
-    forced: !arrayMethodHasSpeciesSupport('map')
+    forced: !HAS_SPECIES_SUPPORT$1 || !USES_TO_LENGTH$8
   }, {
     map: function map(callbackfn
     /* , thisArg */
@@ -2676,13 +2865,17 @@
     right: createMethod$3(true)
   };
 
-  var $reduce = arrayReduce.left; // `Array.prototype.reduce` method
+  var $reduce = arrayReduce.left;
+  var STRICT_METHOD$5 = arrayMethodIsStrict('reduce');
+  var USES_TO_LENGTH$9 = arrayMethodUsesToLength('reduce', {
+    1: 0
+  }); // `Array.prototype.reduce` method
   // https://tc39.github.io/ecma262/#sec-array.prototype.reduce
 
   _export({
     target: 'Array',
     proto: true,
-    forced: sloppyArrayMethod('reduce')
+    forced: !STRICT_METHOD$5 || !USES_TO_LENGTH$9
   }, {
     reduce: function reduce(callbackfn
     /* , initialValue */
@@ -2691,13 +2884,18 @@
     }
   });
 
-  var $reduceRight = arrayReduce.right; // `Array.prototype.reduceRight` method
+  var $reduceRight = arrayReduce.right;
+  var STRICT_METHOD$6 = arrayMethodIsStrict('reduceRight'); // For preventing possible almost infinite loop in non-standard implementations, test the forward version of the method
+
+  var USES_TO_LENGTH$a = arrayMethodUsesToLength('reduce', {
+    1: 0
+  }); // `Array.prototype.reduceRight` method
   // https://tc39.github.io/ecma262/#sec-array.prototype.reduceright
 
   _export({
     target: 'Array',
     proto: true,
-    forced: sloppyArrayMethod('reduceRight')
+    forced: !STRICT_METHOD$6 || !USES_TO_LENGTH$a
   }, {
     reduceRight: function reduceRight(callbackfn
     /* , initialValue */
@@ -2718,11 +2916,18 @@
     forced: String(test$1) === String(test$1.reverse())
   }, {
     reverse: function reverse() {
+      // eslint-disable-next-line no-self-assign
       if (isArray(this)) this.length = this.length;
       return nativeReverse.call(this);
     }
   });
 
+  var HAS_SPECIES_SUPPORT$2 = arrayMethodHasSpeciesSupport('slice');
+  var USES_TO_LENGTH$b = arrayMethodUsesToLength('slice', {
+    ACCESSORS: true,
+    0: 0,
+    1: 2
+  });
   var SPECIES$2 = wellKnownSymbol('species');
   var nativeSlice = [].slice;
   var max$1 = Math.max; // `Array.prototype.slice` method
@@ -2732,7 +2937,7 @@
   _export({
     target: 'Array',
     proto: true,
-    forced: !arrayMethodHasSpeciesSupport('slice')
+    forced: !HAS_SPECIES_SUPPORT$2 || !USES_TO_LENGTH$b
   }, {
     slice: function slice(start, end) {
       var O = toIndexedObject(this);
@@ -2766,13 +2971,15 @@
     }
   });
 
-  var $some = arrayIteration.some; // `Array.prototype.some` method
+  var $some = arrayIteration.some;
+  var STRICT_METHOD$7 = arrayMethodIsStrict('some');
+  var USES_TO_LENGTH$c = arrayMethodUsesToLength('some'); // `Array.prototype.some` method
   // https://tc39.github.io/ecma262/#sec-array.prototype.some
 
   _export({
     target: 'Array',
     proto: true,
-    forced: sloppyArrayMethod('some')
+    forced: !STRICT_METHOD$7 || !USES_TO_LENGTH$c
   }, {
     some: function some(callbackfn
     /* , thisArg */
@@ -2781,8 +2988,8 @@
     }
   });
 
-  var nativeSort = [].sort;
-  var test$2 = [1, 2, 3]; // IE8-
+  var test$2 = [];
+  var nativeSort = test$2.sort; // IE8-
 
   var FAILS_ON_UNDEFINED = fails(function () {
     test$2.sort(undefined);
@@ -2792,20 +2999,26 @@
     test$2.sort(null);
   }); // Old WebKit
 
-  var SLOPPY_METHOD$3 = sloppyArrayMethod('sort');
-  var FORCED$2 = FAILS_ON_UNDEFINED || !FAILS_ON_NULL || SLOPPY_METHOD$3; // `Array.prototype.sort` method
+  var STRICT_METHOD$8 = arrayMethodIsStrict('sort');
+  var FORCED$3 = FAILS_ON_UNDEFINED || !FAILS_ON_NULL || !STRICT_METHOD$8; // `Array.prototype.sort` method
   // https://tc39.github.io/ecma262/#sec-array.prototype.sort
 
   _export({
     target: 'Array',
     proto: true,
-    forced: FORCED$2
+    forced: FORCED$3
   }, {
     sort: function sort(comparefn) {
       return comparefn === undefined ? nativeSort.call(toObject(this)) : nativeSort.call(toObject(this), aFunction$1(comparefn));
     }
   });
 
+  var HAS_SPECIES_SUPPORT$3 = arrayMethodHasSpeciesSupport('splice');
+  var USES_TO_LENGTH$d = arrayMethodUsesToLength('splice', {
+    ACCESSORS: true,
+    0: 0,
+    1: 2
+  });
   var max$2 = Math.max;
   var min$4 = Math.min;
   var MAX_SAFE_INTEGER$1 = 0x1FFFFFFFFFFFFF;
@@ -2816,7 +3029,7 @@
   _export({
     target: 'Array',
     proto: true,
-    forced: !arrayMethodHasSpeciesSupport('splice')
+    forced: !HAS_SPECIES_SUPPORT$3 || !USES_TO_LENGTH$d
   }, {
     splice: function splice(start, deleteCount
     /* , ...items */
@@ -2925,7 +3138,10 @@
 
   if (IteratorPrototype == undefined) IteratorPrototype = {}; // 25.1.2.1.1 %IteratorPrototype%[@@iterator]()
 
-  if ( !has(IteratorPrototype, ITERATOR$3)) hide(IteratorPrototype, ITERATOR$3, returnThis);
+  if ( !has(IteratorPrototype, ITERATOR$3)) {
+    createNonEnumerableProperty(IteratorPrototype, ITERATOR$3, returnThis);
+  }
+
   var iteratorsCore = {
     IteratorPrototype: IteratorPrototype,
     BUGGY_SAFARI_ITERATORS: BUGGY_SAFARI_ITERATORS
@@ -3003,7 +3219,7 @@
           if (objectSetPrototypeOf) {
             objectSetPrototypeOf(CurrentIteratorPrototype, IteratorPrototype$2);
           } else if (typeof CurrentIteratorPrototype[ITERATOR$4] != 'function') {
-            hide(CurrentIteratorPrototype, ITERATOR$4, returnThis$2);
+            createNonEnumerableProperty(CurrentIteratorPrototype, ITERATOR$4, returnThis$2);
           }
         } // Set @@toStringTag to native iterators
 
@@ -3023,7 +3239,7 @@
 
 
     if ( IterablePrototype[ITERATOR$4] !== defaultIterator) {
-      hide(IterablePrototype, ITERATOR$4, defaultIterator);
+      createNonEnumerableProperty(IterablePrototype, ITERATOR$4, defaultIterator);
     }
 
     iterators[NAME] = defaultIterator; // export additional methods
@@ -3226,14 +3442,21 @@
     return false;
   };
 
+  var getOwnPropertyDescriptor$4 = objectGetOwnPropertyDescriptor.f;
   var nativeEndsWith = ''.endsWith;
-  var min$5 = Math.min; // `String.prototype.endsWith` method
+  var min$5 = Math.min;
+  var CORRECT_IS_REGEXP_LOGIC = correctIsRegexpLogic('endsWith'); // https://github.com/zloirock/core-js/pull/702
+
+  var MDN_POLYFILL_BUG =  !CORRECT_IS_REGEXP_LOGIC && !!function () {
+    var descriptor = getOwnPropertyDescriptor$4(String.prototype, 'endsWith');
+    return descriptor && !descriptor.writable;
+  }(); // `String.prototype.endsWith` method
   // https://tc39.github.io/ecma262/#sec-string.prototype.endswith
 
   _export({
     target: 'String',
     proto: true,
-    forced: !correctIsRegexpLogic('endsWith')
+    forced: !MDN_POLYFILL_BUG && !CORRECT_IS_REGEXP_LOGIC
   }, {
     endsWith: function endsWith(searchString
     /* , endPosition = @length */
@@ -3278,6 +3501,30 @@
     return result;
   };
 
+  // so we use an intermediate function.
+
+
+  function RE(s, f) {
+    return RegExp(s, f);
+  }
+
+  var UNSUPPORTED_Y = fails(function () {
+    // babel-minify transpiles RegExp('a', 'y') -> /a/y and it causes SyntaxError
+    var re = RE('a', 'y');
+    re.lastIndex = 2;
+    return re.exec('abcd') != null;
+  });
+  var BROKEN_CARET = fails(function () {
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=773687
+    var re = RE('^r', 'gy');
+    re.lastIndex = 2;
+    return re.exec('str') != null;
+  });
+  var regexpStickyHelpers = {
+    UNSUPPORTED_Y: UNSUPPORTED_Y,
+    BROKEN_CARET: BROKEN_CARET
+  };
+
   var nativeExec = RegExp.prototype.exec; // This always refers to the native implementation, because the
   // String#replace polyfill uses ./fix-regexp-well-known-symbol-logic.js,
   // which loads this file before patching the method.
@@ -3291,25 +3538,58 @@
     nativeExec.call(re1, 'a');
     nativeExec.call(re2, 'a');
     return re1.lastIndex !== 0 || re2.lastIndex !== 0;
-  }(); // nonparticipating capturing group, copied from es5-shim's String#split patch.
+  }();
 
+  var UNSUPPORTED_Y$1 = regexpStickyHelpers.UNSUPPORTED_Y || regexpStickyHelpers.BROKEN_CARET; // nonparticipating capturing group, copied from es5-shim's String#split patch.
 
   var NPCG_INCLUDED = /()??/.exec('')[1] !== undefined;
-  var PATCH = UPDATES_LAST_INDEX_WRONG || NPCG_INCLUDED;
+  var PATCH = UPDATES_LAST_INDEX_WRONG || NPCG_INCLUDED || UNSUPPORTED_Y$1;
 
   if (PATCH) {
     patchedExec = function exec(str) {
       var re = this;
       var lastIndex, reCopy, match, i;
+      var sticky = UNSUPPORTED_Y$1 && re.sticky;
+      var flags = regexpFlags.call(re);
+      var source = re.source;
+      var charsAdded = 0;
+      var strCopy = str;
+
+      if (sticky) {
+        flags = flags.replace('y', '');
+
+        if (flags.indexOf('g') === -1) {
+          flags += 'g';
+        }
+
+        strCopy = String(str).slice(re.lastIndex); // Support anchored sticky behavior.
+
+        if (re.lastIndex > 0 && (!re.multiline || re.multiline && str[re.lastIndex - 1] !== '\n')) {
+          source = '(?: ' + source + ')';
+          strCopy = ' ' + strCopy;
+          charsAdded++;
+        } // ^(? + rx + ) is needed, in combination with some str slicing, to
+        // simulate the 'y' flag.
+
+
+        reCopy = new RegExp('^(?:' + source + ')', flags);
+      }
 
       if (NPCG_INCLUDED) {
-        reCopy = new RegExp('^' + re.source + '$(?!\\s)', regexpFlags.call(re));
+        reCopy = new RegExp('^' + source + '$(?!\\s)', flags);
       }
 
       if (UPDATES_LAST_INDEX_WRONG) lastIndex = re.lastIndex;
-      match = nativeExec.call(re, str);
+      match = nativeExec.call(sticky ? reCopy : re, strCopy);
 
-      if (UPDATES_LAST_INDEX_WRONG && match) {
+      if (sticky) {
+        if (match) {
+          match.input = match.input.slice(charsAdded);
+          match[0] = match[0].slice(charsAdded);
+          match.index = re.lastIndex;
+          re.lastIndex += match[0].length;
+        } else re.lastIndex = 0;
+      } else if (UPDATES_LAST_INDEX_WRONG && match) {
         re.lastIndex = re.global ? match.index + match[0].length : lastIndex;
       }
 
@@ -3329,6 +3609,14 @@
 
   var regexpExec = patchedExec;
 
+  _export({
+    target: 'RegExp',
+    proto: true,
+    forced: /./.exec !== regexpExec
+  }, {
+    exec: regexpExec
+  });
+
   var SPECIES$4 = wellKnownSymbol('species');
   var REPLACE_SUPPORTS_NAMED_GROUPS = !fails(function () {
     // #replace needs built-in support for named groups.
@@ -3345,8 +3633,24 @@
     };
 
     return ''.replace(re, '$<a>') !== '7';
-  }); // Chrome 51 has a buggy "split" implementation when RegExp#exec !== nativeExec
+  }); // IE <= 11 replaces $0 with the whole match, as if it was $&
+  // https://stackoverflow.com/questions/6024666/getting-ie-to-replace-a-regex-with-the-literal-string-0
+
+  var REPLACE_KEEPS_$0 = function () {
+    return 'a'.replace(/./, '$0') === '$0';
+  }();
+
+  var REPLACE = wellKnownSymbol('replace'); // Safari <= 13.0.3(?) substitutes nth capture where n>m with an empty string
+
+  var REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE = function () {
+    if (/./[REPLACE]) {
+      return /./[REPLACE]('a', '$0') === '';
+    }
+
+    return false;
+  }(); // Chrome 51 has a buggy "split" implementation when RegExp#exec !== nativeExec
   // Weex JS has frozen built-in prototypes, so use try / catch wrapper
+
 
   var SPLIT_WORKS_WITH_OVERWRITTEN_EXEC = !fails(function () {
     var re = /(?:)/;
@@ -3377,26 +3681,33 @@
       var execCalled = false;
       var re = /a/;
 
-      re.exec = function () {
-        execCalled = true;
-        return null;
-      };
-
       if (KEY === 'split') {
-        // RegExp[@@split] doesn't call the regex's exec method, but first creates
+        // We can't use real regex here since it causes deoptimization
+        // and serious performance degradation in V8
+        // https://github.com/zloirock/core-js/issues/306
+        re = {}; // RegExp[@@split] doesn't call the regex's exec method, but first creates
         // a new one. We need to return the patched regex when creating the new one.
+
         re.constructor = {};
 
         re.constructor[SPECIES$4] = function () {
           return re;
         };
+
+        re.flags = '';
+        re[SYMBOL] = /./[SYMBOL];
       }
+
+      re.exec = function () {
+        execCalled = true;
+        return null;
+      };
 
       re[SYMBOL]('');
       return !execCalled;
     });
 
-    if (!DELEGATES_TO_SYMBOL || !DELEGATES_TO_EXEC || KEY === 'replace' && !REPLACE_SUPPORTS_NAMED_GROUPS || KEY === 'split' && !SPLIT_WORKS_WITH_OVERWRITTEN_EXEC) {
+    if (!DELEGATES_TO_SYMBOL || !DELEGATES_TO_EXEC || KEY === 'replace' && !(REPLACE_SUPPORTS_NAMED_GROUPS && REPLACE_KEEPS_$0 && !REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE) || KEY === 'split' && !SPLIT_WORKS_WITH_OVERWRITTEN_EXEC) {
       var nativeRegExpMethod = /./[SYMBOL];
       var methods = exec(SYMBOL, ''[KEY], function (nativeMethod, regexp, str, arg2, forceStringMethod) {
         if (regexp.exec === regexpExec) {
@@ -3419,6 +3730,9 @@
         return {
           done: false
         };
+      }, {
+        REPLACE_KEEPS_$0: REPLACE_KEEPS_$0,
+        REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE: REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE
       });
       var stringMethod = methods[0];
       var regexMethod = methods[1];
@@ -3432,8 +3746,9 @@
       : function (string) {
         return regexMethod.call(string, this);
       });
-      if (sham) hide(RegExp.prototype[SYMBOL], 'sham', true);
     }
+
+    if (sham) createNonEnumerableProperty(RegExp.prototype[SYMBOL], 'sham', true);
   };
 
   var charAt = stringMultibyte.charAt; // `AdvanceStringIndex` abstract operation
@@ -3513,6 +3828,10 @@
   var getInternalState$2 = internalState.getterFor(REGEXP_STRING_ITERATOR);
   var RegExpPrototype = RegExp.prototype;
   var regExpBuiltinExec = RegExpPrototype.exec;
+  var nativeMatchAll = ''.matchAll;
+  var WORKS_WITH_NON_GLOBAL_REGEX = !!nativeMatchAll && !fails(function () {
+    'a'.matchAll(/./);
+  });
 
   var regExpExec = function (R, S) {
     var exec = R.exec;
@@ -3589,24 +3908,31 @@
 
   _export({
     target: 'String',
-    proto: true
+    proto: true,
+    forced: WORKS_WITH_NON_GLOBAL_REGEX
   }, {
     matchAll: function matchAll(regexp) {
       var O = requireObjectCoercible(this);
-      var S, matcher, rx;
+      var flags, S, matcher, rx;
 
       if (regexp != null) {
+        if (isRegexp(regexp)) {
+          flags = String(requireObjectCoercible('flags' in RegExpPrototype ? regexp.flags : regexpFlags.call(regexp)));
+          if (!~flags.indexOf('g')) throw TypeError('`.matchAll` does not allow non-global regexes');
+        }
+
+        if (WORKS_WITH_NON_GLOBAL_REGEX) return nativeMatchAll.apply(O, arguments);
         matcher = regexp[MATCH_ALL];
-        if (matcher === undefined && isPure && classof(regexp) == 'RegExp') matcher = $matchAll;
+        if (matcher === undefined && isPure && classofRaw(regexp) == 'RegExp') matcher = $matchAll;
         if (matcher != null) return aFunction$1(matcher).call(regexp, O);
-      }
+      } else if (WORKS_WITH_NON_GLOBAL_REGEX) return nativeMatchAll.apply(O, arguments);
 
       S = String(O);
       rx = new RegExp(regexp, 'g');
       return  rx[MATCH_ALL](S);
     }
   });
-   MATCH_ALL in RegExpPrototype || hide(RegExpPrototype, MATCH_ALL, $matchAll);
+   MATCH_ALL in RegExpPrototype || createNonEnumerableProperty(RegExpPrototype, MATCH_ALL, $matchAll);
 
   // https://tc39.github.io/ecma262/#sec-string.prototype.repeat
 
@@ -3648,11 +3974,9 @@
     end: createMethod$5(true)
   };
 
-  var userAgent = getBuiltIn('navigator', 'userAgent') || '';
-
   // eslint-disable-next-line unicorn/no-unsafe-regex
 
-  var webkitStringPadBug = /Version\/10\.\d+(\.\d+)?( Mobile\/\w+)? Safari\//.test(userAgent);
+  var stringPadWebkitBug = /Version\/10\.\d+(\.\d+)?( Mobile\/\w+)? Safari\//.test(engineUserAgent);
 
   var $padEnd = stringPad.end; // `String.prototype.padEnd` method
   // https://tc39.github.io/ecma262/#sec-string.prototype.padend
@@ -3660,7 +3984,7 @@
   _export({
     target: 'String',
     proto: true,
-    forced: webkitStringPadBug
+    forced: stringPadWebkitBug
   }, {
     padEnd: function padEnd(maxLength
     /* , fillString = ' ' */
@@ -3675,7 +3999,7 @@
   _export({
     target: 'String',
     proto: true,
-    forced: webkitStringPadBug
+    forced: stringPadWebkitBug
   }, {
     padStart: function padStart(maxLength
     /* , fillString = ' ' */
@@ -3704,7 +4028,10 @@
   }; // @@replace logic
 
 
-  fixRegexpWellKnownSymbolLogic('replace', 2, function (REPLACE, nativeReplace, maybeCallNative) {
+  fixRegexpWellKnownSymbolLogic('replace', 2, function (REPLACE, nativeReplace, maybeCallNative, reason) {
+    var REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE = reason.REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE;
+    var REPLACE_KEEPS_$0 = reason.REPLACE_KEEPS_$0;
+    var UNSAFE_SUBSTITUTE = REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE ? '$' : '$0';
     return [// `String.prototype.replace` method
     // https://tc39.github.io/ecma262/#sec-string.prototype.replace
     function replace(searchValue, replaceValue) {
@@ -3714,8 +4041,11 @@
     }, // `RegExp.prototype[@@replace]` method
     // https://tc39.github.io/ecma262/#sec-regexp.prototype-@@replace
     function (regexp, replaceValue) {
-      var res = maybeCallNative(nativeReplace, regexp, this, replaceValue);
-      if (res.done) return res.value;
+      if (!REGEXP_REPLACE_SUBSTITUTES_UNDEFINED_CAPTURE && REPLACE_KEEPS_$0 || typeof replaceValue === 'string' && replaceValue.indexOf(UNSAFE_SUBSTITUTE) === -1) {
+        var res = maybeCallNative(nativeReplace, regexp, this, replaceValue);
+        if (res.done) return res.value;
+      }
+
       var rx = anObject(regexp);
       var S = String(this);
       var functionalReplace = typeof replaceValue === 'function';
@@ -3955,14 +4285,21 @@
     }];
   }, !SUPPORTS_Y);
 
+  var getOwnPropertyDescriptor$5 = objectGetOwnPropertyDescriptor.f;
   var nativeStartsWith = ''.startsWith;
-  var min$8 = Math.min; // `String.prototype.startsWith` method
+  var min$8 = Math.min;
+  var CORRECT_IS_REGEXP_LOGIC$1 = correctIsRegexpLogic('startsWith'); // https://github.com/zloirock/core-js/pull/702
+
+  var MDN_POLYFILL_BUG$1 =  !CORRECT_IS_REGEXP_LOGIC$1 && !!function () {
+    var descriptor = getOwnPropertyDescriptor$5(String.prototype, 'startsWith');
+    return descriptor && !descriptor.writable;
+  }(); // `String.prototype.startsWith` method
   // https://tc39.github.io/ecma262/#sec-string.prototype.startswith
 
   _export({
     target: 'String',
     proto: true,
-    forced: !correctIsRegexpLogic('startsWith')
+    forced: !MDN_POLYFILL_BUG$1 && !CORRECT_IS_REGEXP_LOGIC$1
   }, {
     startsWith: function startsWith(searchString
     /* , position = 0 */
@@ -4007,7 +4344,7 @@
   var non = '\u200B\u0085\u180E'; // check that a method works with the correct list
   // of whitespaces and has a correct name
 
-  var forcedStringTrimMethod = function (METHOD_NAME) {
+  var stringTrimForced = function (METHOD_NAME) {
     return fails(function () {
       return !!whitespaces[METHOD_NAME]() || non[METHOD_NAME]() != non || whitespaces[METHOD_NAME].name !== METHOD_NAME;
     });
@@ -4019,7 +4356,7 @@
   _export({
     target: 'String',
     proto: true,
-    forced: forcedStringTrimMethod('trim')
+    forced: stringTrimForced('trim')
   }, {
     trim: function trim() {
       return $trim(this);
@@ -4027,8 +4364,8 @@
   });
 
   var $trimStart = stringTrim.start;
-  var FORCED$3 = forcedStringTrimMethod('trimStart');
-  var trimStart = FORCED$3 ? function trimStart() {
+  var FORCED$4 = stringTrimForced('trimStart');
+  var trimStart = FORCED$4 ? function trimStart() {
     return $trimStart(this);
   } : ''.trimStart; // `String.prototype.{ trimStart, trimLeft }` methods
   // https://github.com/tc39/ecmascript-string-left-right-trim
@@ -4036,15 +4373,15 @@
   _export({
     target: 'String',
     proto: true,
-    forced: FORCED$3
+    forced: FORCED$4
   }, {
     trimStart: trimStart,
     trimLeft: trimStart
   });
 
   var $trimEnd = stringTrim.end;
-  var FORCED$4 = forcedStringTrimMethod('trimEnd');
-  var trimEnd = FORCED$4 ? function trimEnd() {
+  var FORCED$5 = stringTrimForced('trimEnd');
+  var trimEnd = FORCED$5 ? function trimEnd() {
     return $trimEnd(this);
   } : ''.trimEnd; // `String.prototype.{ trimEnd, trimRight }` methods
   // https://github.com/tc39/ecmascript-string-left-right-trim
@@ -4052,7 +4389,7 @@
   _export({
     target: 'String',
     proto: true,
-    forced: FORCED$4
+    forced: FORCED$5
   }, {
     trimEnd: trimEnd,
     trimRight: trimEnd
@@ -4100,7 +4437,7 @@
 
   // of a tag and escaping quotes in arguments
 
-  var forcedStringHtmlMethod = function (METHOD_NAME) {
+  var stringHtmlForced = function (METHOD_NAME) {
     return fails(function () {
       var test = ''[METHOD_NAME]('"');
       return test !== test.toLowerCase() || test.split('"').length > 3;
@@ -4113,7 +4450,7 @@
   _export({
     target: 'String',
     proto: true,
-    forced: forcedStringHtmlMethod('anchor')
+    forced: stringHtmlForced('anchor')
   }, {
     anchor: function anchor(name) {
       return createHtml(this, 'a', 'name', name);
@@ -4126,7 +4463,7 @@
   _export({
     target: 'String',
     proto: true,
-    forced: forcedStringHtmlMethod('big')
+    forced: stringHtmlForced('big')
   }, {
     big: function big() {
       return createHtml(this, 'big', '', '');
@@ -4139,7 +4476,7 @@
   _export({
     target: 'String',
     proto: true,
-    forced: forcedStringHtmlMethod('blink')
+    forced: stringHtmlForced('blink')
   }, {
     blink: function blink() {
       return createHtml(this, 'blink', '', '');
@@ -4152,7 +4489,7 @@
   _export({
     target: 'String',
     proto: true,
-    forced: forcedStringHtmlMethod('bold')
+    forced: stringHtmlForced('bold')
   }, {
     bold: function bold() {
       return createHtml(this, 'b', '', '');
@@ -4165,7 +4502,7 @@
   _export({
     target: 'String',
     proto: true,
-    forced: forcedStringHtmlMethod('fixed')
+    forced: stringHtmlForced('fixed')
   }, {
     fixed: function fixed() {
       return createHtml(this, 'tt', '', '');
@@ -4178,7 +4515,7 @@
   _export({
     target: 'String',
     proto: true,
-    forced: forcedStringHtmlMethod('fontcolor')
+    forced: stringHtmlForced('fontcolor')
   }, {
     fontcolor: function fontcolor(color) {
       return createHtml(this, 'font', 'color', color);
@@ -4191,7 +4528,7 @@
   _export({
     target: 'String',
     proto: true,
-    forced: forcedStringHtmlMethod('fontsize')
+    forced: stringHtmlForced('fontsize')
   }, {
     fontsize: function fontsize(size) {
       return createHtml(this, 'font', 'size', size);
@@ -4204,7 +4541,7 @@
   _export({
     target: 'String',
     proto: true,
-    forced: forcedStringHtmlMethod('italics')
+    forced: stringHtmlForced('italics')
   }, {
     italics: function italics() {
       return createHtml(this, 'i', '', '');
@@ -4217,7 +4554,7 @@
   _export({
     target: 'String',
     proto: true,
-    forced: forcedStringHtmlMethod('link')
+    forced: stringHtmlForced('link')
   }, {
     link: function link(url) {
       return createHtml(this, 'a', 'href', url);
@@ -4230,7 +4567,7 @@
   _export({
     target: 'String',
     proto: true,
-    forced: forcedStringHtmlMethod('small')
+    forced: stringHtmlForced('small')
   }, {
     small: function small() {
       return createHtml(this, 'small', '', '');
@@ -4243,7 +4580,7 @@
   _export({
     target: 'String',
     proto: true,
-    forced: forcedStringHtmlMethod('strike')
+    forced: stringHtmlForced('strike')
   }, {
     strike: function strike() {
       return createHtml(this, 'strike', '', '');
@@ -4256,7 +4593,7 @@
   _export({
     target: 'String',
     proto: true,
-    forced: forcedStringHtmlMethod('sub')
+    forced: stringHtmlForced('sub')
   }, {
     sub: function sub() {
       return createHtml(this, 'sub', '', '');
@@ -4269,7 +4606,7 @@
   _export({
     target: 'String',
     proto: true,
-    forced: forcedStringHtmlMethod('sup')
+    forced: stringHtmlForced('sup')
   }, {
     sup: function sup() {
       return createHtml(this, 'sup', '', '');
@@ -4284,8 +4621,9 @@
     return $this;
   };
 
-  var defineProperty$4 = objectDefineProperty.f;
+  var defineProperty$6 = objectDefineProperty.f;
   var getOwnPropertyNames = objectGetOwnPropertyNames.f;
+  var setInternalState$4 = internalState.set;
   var MATCH$2 = wellKnownSymbol('match');
   var NativeRegExp = global_1.RegExp;
   var RegExpPrototype$1 = NativeRegExp.prototype;
@@ -4293,23 +4631,46 @@
   var re2 = /a/g; // "new" should create a new object, old webkit bug
 
   var CORRECT_NEW = new NativeRegExp(re1) !== re1;
-  var FORCED$5 = descriptors && isForced_1('RegExp', !CORRECT_NEW || fails(function () {
+  var UNSUPPORTED_Y$2 = regexpStickyHelpers.UNSUPPORTED_Y;
+  var FORCED$6 = descriptors && isForced_1('RegExp', !CORRECT_NEW || UNSUPPORTED_Y$2 || fails(function () {
     re2[MATCH$2] = false; // RegExp constructor can alter flags and IsRegExp works correct with @@match
 
     return NativeRegExp(re1) != re1 || NativeRegExp(re2) == re2 || NativeRegExp(re1, 'i') != '/a/i';
   })); // `RegExp` constructor
   // https://tc39.github.io/ecma262/#sec-regexp-constructor
 
-  if (FORCED$5) {
+  if (FORCED$6) {
     var RegExpWrapper = function RegExp(pattern, flags) {
       var thisIsRegExp = this instanceof RegExpWrapper;
       var patternIsRegExp = isRegexp(pattern);
       var flagsAreUndefined = flags === undefined;
-      return !thisIsRegExp && patternIsRegExp && pattern.constructor === RegExpWrapper && flagsAreUndefined ? pattern : inheritIfRequired(CORRECT_NEW ? new NativeRegExp(patternIsRegExp && !flagsAreUndefined ? pattern.source : pattern, flags) : NativeRegExp((patternIsRegExp = pattern instanceof RegExpWrapper) ? pattern.source : pattern, patternIsRegExp && flagsAreUndefined ? regexpFlags.call(pattern) : flags), thisIsRegExp ? this : RegExpPrototype$1, RegExpWrapper);
+      var sticky;
+
+      if (!thisIsRegExp && patternIsRegExp && pattern.constructor === RegExpWrapper && flagsAreUndefined) {
+        return pattern;
+      }
+
+      if (CORRECT_NEW) {
+        if (patternIsRegExp && !flagsAreUndefined) pattern = pattern.source;
+      } else if (pattern instanceof RegExpWrapper) {
+        if (flagsAreUndefined) flags = regexpFlags.call(pattern);
+        pattern = pattern.source;
+      }
+
+      if (UNSUPPORTED_Y$2) {
+        sticky = !!flags && flags.indexOf('y') > -1;
+        if (sticky) flags = flags.replace(/y/g, '');
+      }
+
+      var result = inheritIfRequired(CORRECT_NEW ? new NativeRegExp(pattern, flags) : NativeRegExp(pattern, flags), thisIsRegExp ? this : RegExpPrototype$1, RegExpWrapper);
+      if (UNSUPPORTED_Y$2 && sticky) setInternalState$4(result, {
+        sticky: sticky
+      });
+      return result;
     };
 
     var proxy = function (key) {
-      key in RegExpWrapper || defineProperty$4(RegExpWrapper, key, {
+      key in RegExpWrapper || defineProperty$6(RegExpWrapper, key, {
         configurable: true,
         get: function () {
           return NativeRegExp[key];
@@ -4333,26 +4694,73 @@
 
   setSpecies('RegExp');
 
-  _export({
-    target: 'RegExp',
-    proto: true,
-    forced: /./.exec !== regexpExec
-  }, {
-    exec: regexpExec
-  });
-
+  var UNSUPPORTED_Y$3 = regexpStickyHelpers.UNSUPPORTED_Y; // `RegExp.prototype.flags` getter
   // https://tc39.github.io/ecma262/#sec-get-regexp.prototype.flags
 
-  if (descriptors && /./g.flags != 'g') {
+  if (descriptors && (/./g.flags != 'g' || UNSUPPORTED_Y$3)) {
     objectDefineProperty.f(RegExp.prototype, 'flags', {
       configurable: true,
       get: regexpFlags
     });
   }
 
+  var UNSUPPORTED_Y$4 = regexpStickyHelpers.UNSUPPORTED_Y;
+  var defineProperty$7 = objectDefineProperty.f;
+  var getInternalState$4 = internalState.get;
+  var RegExpPrototype$2 = RegExp.prototype; // `RegExp.prototype.sticky` getter
+
+  if (descriptors && UNSUPPORTED_Y$4) {
+    defineProperty$7(RegExp.prototype, 'sticky', {
+      configurable: true,
+      get: function () {
+        if (this === RegExpPrototype$2) return undefined; // We can't use InternalStateModule.getterFor because
+        // we don't add metadata for regexps created by a literal.
+
+        if (this instanceof RegExp) {
+          return !!getInternalState$4(this).sticky;
+        }
+
+        throw TypeError('Incompatible receiver, RegExp required');
+      }
+    });
+  }
+
+  var DELEGATES_TO_EXEC = function () {
+    var execCalled = false;
+    var re = /[ac]/;
+
+    re.exec = function () {
+      execCalled = true;
+      return /./.exec.apply(this, arguments);
+    };
+
+    return re.test('abc') === true && execCalled;
+  }();
+
+  var nativeTest = /./.test;
+  _export({
+    target: 'RegExp',
+    proto: true,
+    forced: !DELEGATES_TO_EXEC
+  }, {
+    test: function (str) {
+      if (typeof this.exec !== 'function') {
+        return nativeTest.call(this, str);
+      }
+
+      var result = this.exec(str);
+
+      if (result !== null && !isObject(result)) {
+        throw new Error('RegExp exec method returned something other than an Object or null');
+      }
+
+      return !!result;
+    }
+  });
+
   var TO_STRING = 'toString';
-  var RegExpPrototype$2 = RegExp.prototype;
-  var nativeToString = RegExpPrototype$2[TO_STRING];
+  var RegExpPrototype$3 = RegExp.prototype;
+  var nativeToString = RegExpPrototype$3[TO_STRING];
   var NOT_GENERIC = fails(function () {
     return nativeToString.call({
       source: 'a',
@@ -4368,7 +4776,7 @@
       var R = anObject(this);
       var p = String(R.source);
       var rf = R.flags;
-      var f = String(rf === undefined && R instanceof RegExp && !('flags' in RegExpPrototype$2) ? regexpFlags.call(R) : rf);
+      var f = String(rf === undefined && R instanceof RegExp && !('flags' in RegExpPrototype$3) ? regexpFlags.call(R) : rf);
       return '/' + p + '/' + f;
     }, {
       unsafe: true
@@ -4376,48 +4784,48 @@
   }
 
   var trim = stringTrim.trim;
-  var nativeParseInt = global_1.parseInt;
+  var $parseInt = global_1.parseInt;
   var hex = /^[+-]?0[Xx]/;
-  var FORCED$6 = nativeParseInt(whitespaces + '08') !== 8 || nativeParseInt(whitespaces + '0x16') !== 22; // `parseInt` method
+  var FORCED$7 = $parseInt(whitespaces + '08') !== 8 || $parseInt(whitespaces + '0x16') !== 22; // `parseInt` method
   // https://tc39.github.io/ecma262/#sec-parseint-string-radix
 
-  var _parseInt = FORCED$6 ? function parseInt(string, radix) {
+  var numberParseInt = FORCED$7 ? function parseInt(string, radix) {
     var S = trim(String(string));
-    return nativeParseInt(S, radix >>> 0 || (hex.test(S) ? 16 : 10));
-  } : nativeParseInt;
+    return $parseInt(S, radix >>> 0 || (hex.test(S) ? 16 : 10));
+  } : $parseInt;
 
   // https://tc39.github.io/ecma262/#sec-parseint-string-radix
 
   _export({
     global: true,
-    forced: parseInt != _parseInt
+    forced: parseInt != numberParseInt
   }, {
-    parseInt: _parseInt
+    parseInt: numberParseInt
   });
 
   var trim$1 = stringTrim.trim;
-  var nativeParseFloat = global_1.parseFloat;
-  var FORCED$7 = 1 / nativeParseFloat(whitespaces + '-0') !== -Infinity; // `parseFloat` method
+  var $parseFloat = global_1.parseFloat;
+  var FORCED$8 = 1 / $parseFloat(whitespaces + '-0') !== -Infinity; // `parseFloat` method
   // https://tc39.github.io/ecma262/#sec-parsefloat-string
 
-  var _parseFloat = FORCED$7 ? function parseFloat(string) {
+  var numberParseFloat = FORCED$8 ? function parseFloat(string) {
     var trimmedString = trim$1(String(string));
-    var result = nativeParseFloat(trimmedString);
+    var result = $parseFloat(trimmedString);
     return result === 0 && trimmedString.charAt(0) == '-' ? -0 : result;
-  } : nativeParseFloat;
+  } : $parseFloat;
 
   // https://tc39.github.io/ecma262/#sec-parsefloat-string
 
   _export({
     global: true,
-    forced: parseFloat != _parseFloat
+    forced: parseFloat != numberParseFloat
   }, {
-    parseFloat: _parseFloat
+    parseFloat: numberParseFloat
   });
 
   var getOwnPropertyNames$1 = objectGetOwnPropertyNames.f;
-  var getOwnPropertyDescriptor$4 = objectGetOwnPropertyDescriptor.f;
-  var defineProperty$5 = objectDefineProperty.f;
+  var getOwnPropertyDescriptor$6 = objectGetOwnPropertyDescriptor.f;
+  var defineProperty$8 = objectDefineProperty.f;
   var trim$2 = stringTrim.trim;
   var NUMBER = 'Number';
   var NativeNumber = global_1[NUMBER];
@@ -4490,7 +4898,7 @@
     'MAX_VALUE,MIN_VALUE,NaN,NEGATIVE_INFINITY,POSITIVE_INFINITY,' + // ES2015 (in case, if modules with ES2015 Number statics required before):
     'EPSILON,isFinite,isInteger,isNaN,isSafeInteger,MAX_SAFE_INTEGER,' + 'MIN_SAFE_INTEGER,parseFloat,parseInt,isInteger').split(','), j = 0, key; keys$2.length > j; j++) {
       if (has(NativeNumber, key = keys$2[j]) && !has(NumberWrapper, key)) {
-        defineProperty$5(NumberWrapper, key, getOwnPropertyDescriptor$4(NativeNumber, key));
+        defineProperty$8(NumberWrapper, key, getOwnPropertyDescriptor$6(NativeNumber, key));
       }
     }
 
@@ -4587,9 +4995,9 @@
   _export({
     target: 'Number',
     stat: true,
-    forced: Number.parseFloat != _parseFloat
+    forced: Number.parseFloat != numberParseFloat
   }, {
-    parseFloat: _parseFloat
+    parseFloat: numberParseFloat
   });
 
   // https://tc39.github.io/ecma262/#sec-number.parseint
@@ -4597,9 +5005,9 @@
   _export({
     target: 'Number',
     stat: true,
-    forced: Number.parseInt != _parseInt
+    forced: Number.parseInt != numberParseInt
   }, {
-    parseInt: _parseInt
+    parseInt: numberParseInt
   });
 
   // https://tc39.github.io/ecma262/#sec-thisnumbervalue
@@ -4636,7 +5044,7 @@
     return n;
   };
 
-  var FORCED$8 = nativeToFixed && (0.00008.toFixed(3) !== '0.000' || 0.9.toFixed(0) !== '1' || 1.255.toFixed(2) !== '1.25' || 1000000000000000128.0.toFixed(0) !== '1000000000000000128') || !fails(function () {
+  var FORCED$9 = nativeToFixed && (0.00008.toFixed(3) !== '0.000' || 0.9.toFixed(0) !== '1' || 1.255.toFixed(2) !== '1.25' || 1000000000000000128.0.toFixed(0) !== '1000000000000000128') || !fails(function () {
     // V8 ~ Android 4.3-
     nativeToFixed.call({});
   }); // `Number.prototype.toFixed` method
@@ -4645,7 +5053,7 @@
   _export({
     target: 'Number',
     proto: true,
-    forced: FORCED$8
+    forced: FORCED$9
   }, {
     // eslint-disable-next-line max-statements
     toFixed: function toFixed(fractionDigits) {
@@ -4748,7 +5156,7 @@
   });
 
   var nativeToPrecision = 1.0.toPrecision;
-  var FORCED$9 = fails(function () {
+  var FORCED$a = fails(function () {
     // IE7-
     return nativeToPrecision.call(1, undefined) !== '1';
   }) || !fails(function () {
@@ -4760,7 +5168,7 @@
   _export({
     target: 'Number',
     proto: true,
-    forced: FORCED$9
+    forced: FORCED$a
   }, {
     toPrecision: function toPrecision(precision) {
       return precision === undefined ? nativeToPrecision.call(thisNumberValue(this)) : nativeToPrecision.call(thisNumberValue(this), precision);
@@ -4778,7 +5186,7 @@
   var log$2 = Math.log;
   var sqrt = Math.sqrt;
   var LN2 = Math.LN2;
-  var FORCED$a = !nativeAcosh // V8 bug: https://code.google.com/p/v8/issues/detail?id=3509
+  var FORCED$b = !nativeAcosh // V8 bug: https://code.google.com/p/v8/issues/detail?id=3509
   || Math.floor(nativeAcosh(Number.MAX_VALUE)) != 710 // Tor Browser bug: Math.acosh(Infinity) -> NaN
   || nativeAcosh(Infinity) != Infinity; // `Math.acosh` method
   // https://tc39.github.io/ecma262/#sec-math.acosh
@@ -4786,7 +5194,7 @@
   _export({
     target: 'Math',
     stat: true,
-    forced: FORCED$a
+    forced: FORCED$b
   }, {
     acosh: function acosh(x) {
       return (x = +x) < 1 ? NaN : x > 94906265.62425156 ? log$2(x) + LN2 : mathLog1p(x - 1 + sqrt(x - 1) * sqrt(x + 1));
@@ -4931,13 +5339,18 @@
     fround: mathFround
   });
 
+  var $hypot = Math.hypot;
   var abs$4 = Math.abs;
-  var sqrt$2 = Math.sqrt; // `Math.hypot` method
+  var sqrt$2 = Math.sqrt; // Chrome 77 bug
+  // https://bugs.chromium.org/p/v8/issues/detail?id=9546
+
+  var BUGGY = !!$hypot && $hypot(Infinity, NaN) !== Infinity; // `Math.hypot` method
   // https://tc39.github.io/ecma262/#sec-math.hypot
 
   _export({
     target: 'Math',
-    stat: true
+    stat: true,
+    forced: BUGGY
   }, {
     hypot: function hypot(value1, value2) {
       // eslint-disable-line no-unused-vars
@@ -4965,7 +5378,7 @@
   });
 
   var nativeImul = Math.imul;
-  var FORCED$b = fails(function () {
+  var FORCED$c = fails(function () {
     return nativeImul(0xFFFFFFFF, 5) != -5 || nativeImul.length != 2;
   }); // `Math.imul` method
   // https://tc39.github.io/ecma262/#sec-math.imul
@@ -4974,7 +5387,7 @@
   _export({
     target: 'Math',
     stat: true,
-    forced: FORCED$b
+    forced: FORCED$c
   }, {
     imul: function imul(x, y) {
       var UINT16 = 0xFFFF;
@@ -5033,7 +5446,7 @@
   var abs$5 = Math.abs;
   var exp$1 = Math.exp;
   var E$1 = Math.E;
-  var FORCED$c = fails(function () {
+  var FORCED$d = fails(function () {
     return Math.sinh(-2e-17) != -2e-17;
   }); // `Math.sinh` method
   // https://tc39.github.io/ecma262/#sec-math.sinh
@@ -5042,7 +5455,7 @@
   _export({
     target: 'Math',
     stat: true,
-    forced: FORCED$c
+    forced: FORCED$d
   }, {
     sinh: function sinh(x) {
       return abs$5(x = +x) < 1 ? (mathExpm1(x) - mathExpm1(-x)) / 2 : (exp$1(x - 1) - exp$1(-x - 1)) * (E$1 / 2);
@@ -5091,7 +5504,7 @@
     }
   });
 
-  var FORCED$d = fails(function () {
+  var FORCED$e = fails(function () {
     return new Date(NaN).toJSON() !== null || Date.prototype.toJSON.call({
       toISOString: function () {
         return 1;
@@ -5103,7 +5516,7 @@
   _export({
     target: 'Date',
     proto: true,
-    forced: FORCED$d
+    forced: FORCED$e
   }, {
     // eslint-disable-next-line no-unused-vars
     toJSON: function toJSON(key) {
@@ -5172,11 +5585,50 @@
   var DatePrototype$2 = Date.prototype; // `Date.prototype[@@toPrimitive]` method
   // https://tc39.github.io/ecma262/#sec-date.prototype-@@toprimitive
 
-  if (!(TO_PRIMITIVE$1 in DatePrototype$2)) hide(DatePrototype$2, TO_PRIMITIVE$1, dateToPrimitive);
+  if (!(TO_PRIMITIVE$1 in DatePrototype$2)) {
+    createNonEnumerableProperty(DatePrototype$2, TO_PRIMITIVE$1, dateToPrimitive);
+  }
+
+  var $stringify$1 = getBuiltIn('JSON', 'stringify');
+  var re = /[\uD800-\uDFFF]/g;
+  var low = /^[\uD800-\uDBFF]$/;
+  var hi = /^[\uDC00-\uDFFF]$/;
+
+  var fix = function (match, offset, string) {
+    var prev = string.charAt(offset - 1);
+    var next = string.charAt(offset + 1);
+
+    if (low.test(match) && !hi.test(next) || hi.test(match) && !low.test(prev)) {
+      return '\\u' + match.charCodeAt(0).toString(16);
+    }
+
+    return match;
+  };
+
+  var FORCED$f = fails(function () {
+    return $stringify$1('\uDF06\uD834') !== '"\\udf06\\ud834"' || $stringify$1('\uDEAD') !== '"\\udead"';
+  });
+
+  if ($stringify$1) {
+    // https://github.com/tc39/proposal-well-formed-stringify
+    _export({
+      target: 'JSON',
+      stat: true,
+      forced: FORCED$f
+    }, {
+      // eslint-disable-next-line no-unused-vars
+      stringify: function stringify(it, replacer, space) {
+        var result = $stringify$1.apply(null, arguments);
+        return typeof result == 'string' ? result.replace(re, fix) : result;
+      }
+    });
+  }
 
   // https://tc39.github.io/ecma262/#sec-json-@@tostringtag
 
   setToStringTag(global_1.JSON, 'JSON', true);
+
+  var nativePromiseConstructor = global_1.Promise;
 
   var redefineAll = function (target, src, options) {
     for (var key in src) redefine(target, key, src[key], options);
@@ -5192,10 +5644,12 @@
     return it;
   };
 
+  var engineIsIos = /(iphone|ipod|ipad).*applewebkit/i.test(engineUserAgent);
+
   var location = global_1.location;
   var set$1 = global_1.setImmediate;
   var clear = global_1.clearImmediate;
-  var process = global_1.process;
+  var process$1 = global_1.process;
   var MessageChannel = global_1.MessageChannel;
   var Dispatch = global_1.Dispatch;
   var counter = 0;
@@ -5249,21 +5703,22 @@
     }; // Node.js 0.8-
 
 
-    if (classofRaw(process) == 'process') {
+    if (classofRaw(process$1) == 'process') {
       defer = function (id) {
-        process.nextTick(runner(id));
+        process$1.nextTick(runner(id));
       }; // Sphere (JS game engine) Dispatch API
 
     } else if (Dispatch && Dispatch.now) {
       defer = function (id) {
         Dispatch.now(runner(id));
       }; // Browsers with MessageChannel, includes WebWorkers
+      // except iOS - https://github.com/zloirock/core-js/issues/624
 
-    } else if (MessageChannel) {
+    } else if (MessageChannel && !engineIsIos) {
       channel = new MessageChannel();
       port = channel.port2;
       channel.port1.onmessage = listener;
-      defer = bindContext(port.postMessage, port, 1); // Browsers with postMessage, skip WebWorkers
+      defer = functionBindContext(port.postMessage, port, 1); // Browsers with postMessage, skip WebWorkers
       // IE8 has postMessage, but it's sync & typeof its postMessage is 'object'
     } else if (global_1.addEventListener && typeof postMessage == 'function' && !global_1.importScripts && !fails(post)) {
       defer = post;
@@ -5288,21 +5743,21 @@
     clear: clear
   };
 
-  var getOwnPropertyDescriptor$5 = objectGetOwnPropertyDescriptor.f;
+  var getOwnPropertyDescriptor$7 = objectGetOwnPropertyDescriptor.f;
   var macrotask = task.set;
   var MutationObserver = global_1.MutationObserver || global_1.WebKitMutationObserver;
-  var process$1 = global_1.process;
+  var process$2 = global_1.process;
   var Promise$1 = global_1.Promise;
-  var IS_NODE = classofRaw(process$1) == 'process'; // Node.js 11 shows ExperimentalWarning on getting `queueMicrotask`
+  var IS_NODE = classofRaw(process$2) == 'process'; // Node.js 11 shows ExperimentalWarning on getting `queueMicrotask`
 
-  var queueMicrotaskDescriptor = getOwnPropertyDescriptor$5(global_1, 'queueMicrotask');
+  var queueMicrotaskDescriptor = getOwnPropertyDescriptor$7(global_1, 'queueMicrotask');
   var queueMicrotask = queueMicrotaskDescriptor && queueMicrotaskDescriptor.value;
-  var flush, head, last, notify, toggle, node, promise; // modern engines have queueMicrotask method
+  var flush, head, last, notify, toggle, node, promise, then; // modern engines have queueMicrotask method
 
   if (!queueMicrotask) {
     flush = function () {
       var parent, fn;
-      if (IS_NODE && (parent = process$1.domain)) parent.exit();
+      if (IS_NODE && (parent = process$2.domain)) parent.exit();
 
       while (head) {
         fn = head.fn;
@@ -5323,15 +5778,15 @@
 
     if (IS_NODE) {
       notify = function () {
-        process$1.nextTick(flush);
+        process$2.nextTick(flush);
       }; // browsers with MutationObserver, except iOS - https://github.com/zloirock/core-js/issues/339
 
-    } else if (MutationObserver && !/(iphone|ipod|ipad).*applewebkit/i.test(userAgent)) {
+    } else if (MutationObserver && !engineIsIos) {
       toggle = true;
       node = document.createTextNode('');
       new MutationObserver(flush).observe(node, {
         characterData: true
-      }); // eslint-disable-line no-new
+      });
 
       notify = function () {
         node.data = toggle = !toggle;
@@ -5340,9 +5795,10 @@
     } else if (Promise$1 && Promise$1.resolve) {
       // Promise.resolve without an argument throws an error in LG WebOS 2
       promise = Promise$1.resolve(undefined);
+      then = promise.then;
 
       notify = function () {
-        promise.then(flush);
+        then.call(promise, flush);
       }; // for other environments - macrotask based on:
       // - setImmediate
       // - MessageChannel
@@ -5427,19 +5883,17 @@
   var task$1 = task.set;
   var SPECIES$6 = wellKnownSymbol('species');
   var PROMISE = 'Promise';
-  var getInternalState$4 = internalState.get;
-  var setInternalState$4 = internalState.set;
+  var getInternalState$5 = internalState.get;
+  var setInternalState$5 = internalState.set;
   var getInternalPromiseState = internalState.getterFor(PROMISE);
-  var PromiseConstructor = global_1[PROMISE];
+  var PromiseConstructor = nativePromiseConstructor;
   var TypeError$1 = global_1.TypeError;
   var document$2 = global_1.document;
-  var process$2 = global_1.process;
-  var $fetch = global_1.fetch;
-  var versions = process$2 && process$2.versions;
-  var v8 = versions && versions.v8 || '';
+  var process$3 = global_1.process;
+  var $fetch = getBuiltIn('fetch');
   var newPromiseCapability$1 = newPromiseCapability.f;
   var newGenericPromiseCapability = newPromiseCapability$1;
-  var IS_NODE$1 = classofRaw(process$2) == 'process';
+  var IS_NODE$1 = classofRaw(process$3) == 'process';
   var DISPATCH_EVENT = !!(document$2 && document$2.createEvent && global_1.dispatchEvent);
   var UNHANDLED_REJECTION = 'unhandledrejection';
   var REJECTION_HANDLED = 'rejectionhandled';
@@ -5448,26 +5902,40 @@
   var REJECTED = 2;
   var HANDLED = 1;
   var UNHANDLED = 2;
-  var Internal, OwnPromiseCapability, PromiseWrapper;
-  var FORCED$e = isForced_1(PROMISE, function () {
-    // correct subclassing with @@species support
+  var Internal, OwnPromiseCapability, PromiseWrapper, nativeThen;
+  var FORCED$g = isForced_1(PROMISE, function () {
+    var GLOBAL_CORE_JS_PROMISE = inspectSource(PromiseConstructor) !== String(PromiseConstructor);
+
+    if (!GLOBAL_CORE_JS_PROMISE) {
+      // V8 6.6 (Node 10 and Chrome 66) have a bug with resolving custom thenables
+      // https://bugs.chromium.org/p/chromium/issues/detail?id=830565
+      // We can't detect it synchronously, so just check versions
+      if (engineV8Version === 66) return true; // Unhandled rejections tracking support, NodeJS Promise without it fails @@species test
+
+      if (!IS_NODE$1 && typeof PromiseRejectionEvent != 'function') return true;
+    } // We need Promise#finally in the pure version for preventing prototype pollution
+    // deoptimization and performance degradation
+    // https://github.com/zloirock/core-js/issues/679
+
+    if (engineV8Version >= 51 && /native code/.test(PromiseConstructor)) return false; // Detect correctness of subclassing with @@species support
+
     var promise = PromiseConstructor.resolve(1);
 
-    var empty = function () {
-      /* empty */
+    var FakePromise = function (exec) {
+      exec(function () {
+        /* empty */
+      }, function () {
+        /* empty */
+      });
     };
 
-    var FakePromise = (promise.constructor = {})[SPECIES$6] = function (exec) {
-      exec(empty, empty);
-    }; // unhandled rejections tracking support, NodeJS Promise without it fails @@species test
-
-
-    return !((IS_NODE$1 || typeof PromiseRejectionEvent == 'function') && (!isPure || promise['finally']) && promise.then(empty) instanceof FakePromise // v8 6.6 (Node 10 and Chrome 66) have a bug with resolving custom thenables
-    // https://bugs.chromium.org/p/chromium/issues/detail?id=830565
-    // we can't detect it synchronously, so just check versions
-    && v8.indexOf('6.6') !== 0 && userAgent.indexOf('Chrome/66') === -1);
+    var constructor = promise.constructor = {};
+    constructor[SPECIES$6] = FakePromise;
+    return !(promise.then(function () {
+      /* empty */
+    }) instanceof FakePromise);
   });
-  var INCORRECT_ITERATION$1 = FORCED$e || !checkCorrectnessOfIteration(function (iterable) {
+  var INCORRECT_ITERATION$1 = FORCED$g || !checkCorrectnessOfIteration(function (iterable) {
     PromiseConstructor.all(iterable)['catch'](function () {
       /* empty */
     });
@@ -5556,7 +6024,7 @@
       if (IS_UNHANDLED) {
         result = perform(function () {
           if (IS_NODE$1) {
-            process$2.emit('unhandledRejection', value, promise);
+            process$3.emit('unhandledRejection', value, promise);
           } else dispatchEvent(UNHANDLED_REJECTION, promise, value);
         }); // Browsers should not trigger `rejectionHandled` event if it was handled here, NodeJS - should
 
@@ -5573,7 +6041,7 @@
   var onHandleUnhandled = function (promise, state) {
     task$1.call(global_1, function () {
       if (IS_NODE$1) {
-        process$2.emit('rejectionHandled', promise);
+        process$3.emit('rejectionHandled', promise);
       } else dispatchEvent(REJECTION_HANDLED, promise, state.value);
     });
   };
@@ -5627,13 +6095,13 @@
   }; // constructor polyfill
 
 
-  if (FORCED$e) {
+  if (FORCED$g) {
     // 25.4.3.1 Promise(executor)
     PromiseConstructor = function Promise(executor) {
       anInstance(this, PromiseConstructor, PROMISE);
       aFunction$1(executor);
       Internal.call(this);
-      var state = getInternalState$4(this);
+      var state = getInternalState$5(this);
 
       try {
         executor(bind(internalResolve, this, state), bind(internalReject, this, state));
@@ -5644,7 +6112,7 @@
 
 
     Internal = function Promise(executor) {
-      setInternalState$4(this, {
+      setInternalState$5(this, {
         type: PROMISE,
         done: false,
         notified: false,
@@ -5664,7 +6132,7 @@
         var reaction = newPromiseCapability$1(speciesConstructor(this, PromiseConstructor));
         reaction.ok = typeof onFulfilled == 'function' ? onFulfilled : true;
         reaction.fail = typeof onRejected == 'function' && onRejected;
-        reaction.domain = IS_NODE$1 ? process$2.domain : undefined;
+        reaction.domain = IS_NODE$1 ? process$3.domain : undefined;
         state.parent = true;
         state.reactions.push(reaction);
         if (state.state != PENDING) notify$1(this, state, false);
@@ -5679,7 +6147,7 @@
 
     OwnPromiseCapability = function () {
       var promise = new Internal();
-      var state = getInternalState$4(promise);
+      var state = getInternalState$5(promise);
       this.promise = promise;
       this.resolve = bind(internalResolve, promise, state);
       this.reject = bind(internalReject, promise, state);
@@ -5687,36 +6155,50 @@
 
     newPromiseCapability.f = newPromiseCapability$1 = function (C) {
       return C === PromiseConstructor || C === PromiseWrapper ? new OwnPromiseCapability(C) : newGenericPromiseCapability(C);
-    }; // wrap fetch result
+    };
 
+    if ( typeof nativePromiseConstructor == 'function') {
+      nativeThen = nativePromiseConstructor.prototype.then; // wrap native Promise#then for native async functions
 
-    if ( typeof $fetch == 'function') _export({
-      global: true,
-      enumerable: true,
-      forced: true
-    }, {
-      // eslint-disable-next-line no-unused-vars
-      fetch: function fetch(input) {
-        return promiseResolve(PromiseConstructor, $fetch.apply(global_1, arguments));
-      }
-    });
+      redefine(nativePromiseConstructor.prototype, 'then', function then(onFulfilled, onRejected) {
+        var that = this;
+        return new PromiseConstructor(function (resolve, reject) {
+          nativeThen.call(that, resolve, reject);
+        }).then(onFulfilled, onRejected); // https://github.com/zloirock/core-js/issues/640
+      }, {
+        unsafe: true
+      }); // wrap fetch result
+
+      if (typeof $fetch == 'function') _export({
+        global: true,
+        enumerable: true,
+        forced: true
+      }, {
+        // eslint-disable-next-line no-unused-vars
+        fetch: function fetch(input
+        /* , init */
+        ) {
+          return promiseResolve(PromiseConstructor, $fetch.apply(global_1, arguments));
+        }
+      });
+    }
   }
 
   _export({
     global: true,
     wrap: true,
-    forced: FORCED$e
+    forced: FORCED$g
   }, {
     Promise: PromiseConstructor
   });
   setToStringTag(PromiseConstructor, PROMISE, false);
   setSpecies(PROMISE);
-  PromiseWrapper = path[PROMISE]; // statics
+  PromiseWrapper = getBuiltIn(PROMISE); // statics
 
   _export({
     target: PROMISE,
     stat: true,
-    forced: FORCED$e
+    forced: FORCED$g
   }, {
     // `Promise.reject` method
     // https://tc39.github.io/ecma262/#sec-promise.reject
@@ -5729,7 +6211,7 @@
   _export({
     target: PROMISE,
     stat: true,
-    forced:  FORCED$e
+    forced:  FORCED$g
   }, {
     // `Promise.resolve` method
     // https://tc39.github.io/ecma262/#sec-promise.resolve
@@ -5788,13 +6270,69 @@
     }
   });
 
-  // https://tc39.github.io/ecma262/#sec-promise.prototype.finally
+  // https://github.com/tc39/proposal-promise-allSettled
 
 
   _export({
     target: 'Promise',
+    stat: true
+  }, {
+    allSettled: function allSettled(iterable) {
+      var C = this;
+      var capability = newPromiseCapability.f(C);
+      var resolve = capability.resolve;
+      var reject = capability.reject;
+      var result = perform(function () {
+        var promiseResolve = aFunction$1(C.resolve);
+        var values = [];
+        var counter = 0;
+        var remaining = 1;
+        iterate_1(iterable, function (promise) {
+          var index = counter++;
+          var alreadyCalled = false;
+          values.push(undefined);
+          remaining++;
+          promiseResolve.call(C, promise).then(function (value) {
+            if (alreadyCalled) return;
+            alreadyCalled = true;
+            values[index] = {
+              status: 'fulfilled',
+              value: value
+            };
+            --remaining || resolve(values);
+          }, function (e) {
+            if (alreadyCalled) return;
+            alreadyCalled = true;
+            values[index] = {
+              status: 'rejected',
+              reason: e
+            };
+            --remaining || resolve(values);
+          });
+        });
+        --remaining || resolve(values);
+      });
+      if (result.error) reject(result.value);
+      return capability.promise;
+    }
+  });
+
+  var NON_GENERIC = !!nativePromiseConstructor && fails(function () {
+    nativePromiseConstructor.prototype['finally'].call({
+      then: function () {
+        /* empty */
+      }
+    }, function () {
+      /* empty */
+    });
+  }); // `Promise.prototype.finally` method
+  // https://tc39.github.io/ecma262/#sec-promise.prototype.finally
+
+  _export({
+    target: 'Promise',
     proto: true,
-    real: true
+    real: true,
+    forced: NON_GENERIC
   }, {
     'finally': function (onFinally) {
       var C = speciesConstructor(this, getBuiltIn('Promise'));
@@ -5809,28 +6347,34 @@
         });
       } : onFinally);
     }
-  });
+  }); // patch native Promise.prototype for native async functions
 
-  var collection = function (CONSTRUCTOR_NAME, wrapper, common, IS_MAP, IS_WEAK) {
+  if ( typeof nativePromiseConstructor == 'function' && !nativePromiseConstructor.prototype['finally']) {
+    redefine(nativePromiseConstructor.prototype, 'finally', getBuiltIn('Promise').prototype['finally']);
+  }
+
+  var collection = function (CONSTRUCTOR_NAME, wrapper, common) {
+    var IS_MAP = CONSTRUCTOR_NAME.indexOf('Map') !== -1;
+    var IS_WEAK = CONSTRUCTOR_NAME.indexOf('Weak') !== -1;
+    var ADDER = IS_MAP ? 'set' : 'add';
     var NativeConstructor = global_1[CONSTRUCTOR_NAME];
     var NativePrototype = NativeConstructor && NativeConstructor.prototype;
     var Constructor = NativeConstructor;
-    var ADDER = IS_MAP ? 'set' : 'add';
     var exported = {};
 
     var fixMethod = function (KEY) {
       var nativeMethod = NativePrototype[KEY];
-      redefine(NativePrototype, KEY, KEY == 'add' ? function add(a) {
-        nativeMethod.call(this, a === 0 ? 0 : a);
+      redefine(NativePrototype, KEY, KEY == 'add' ? function add(value) {
+        nativeMethod.call(this, value === 0 ? 0 : value);
         return this;
-      } : KEY == 'delete' ? function (a) {
-        return IS_WEAK && !isObject(a) ? false : nativeMethod.call(this, a === 0 ? 0 : a);
-      } : KEY == 'get' ? function get(a) {
-        return IS_WEAK && !isObject(a) ? undefined : nativeMethod.call(this, a === 0 ? 0 : a);
-      } : KEY == 'has' ? function has(a) {
-        return IS_WEAK && !isObject(a) ? false : nativeMethod.call(this, a === 0 ? 0 : a);
-      } : function set(a, b) {
-        nativeMethod.call(this, a === 0 ? 0 : a, b);
+      } : KEY == 'delete' ? function (key) {
+        return IS_WEAK && !isObject(key) ? false : nativeMethod.call(this, key === 0 ? 0 : key);
+      } : KEY == 'get' ? function get(key) {
+        return IS_WEAK && !isObject(key) ? undefined : nativeMethod.call(this, key === 0 ? 0 : key);
+      } : KEY == 'has' ? function has(key) {
+        return IS_WEAK && !isObject(key) ? false : nativeMethod.call(this, key === 0 ? 0 : key);
+      } : function set(key, value) {
+        nativeMethod.call(this, key === 0 ? 0 : key, value);
         return this;
       });
     }; // eslint-disable-next-line max-len
@@ -5845,7 +6389,7 @@
     } else if (isForced_1(CONSTRUCTOR_NAME, true)) {
       var instance = new Constructor(); // early implementations not supports chaining
 
-      var HASNT_CHAINING = instance[ADDER](IS_WEAK ? {} : -0, 1) != instance; // V8 ~  Chromium 40- weak-collections throws on primitives, but should return false
+      var HASNT_CHAINING = instance[ADDER](IS_WEAK ? {} : -0, 1) != instance; // V8 ~ Chromium 40- weak-collections throws on primitives, but should return false
 
       var THROWS_ON_PRIMITIVES = fails(function () {
         instance.has(1);
@@ -5898,15 +6442,15 @@
     return Constructor;
   };
 
-  var defineProperty$6 = objectDefineProperty.f;
+  var defineProperty$9 = objectDefineProperty.f;
   var fastKey = internalMetadata.fastKey;
-  var setInternalState$5 = internalState.set;
+  var setInternalState$6 = internalState.set;
   var internalStateGetterFor = internalState.getterFor;
   var collectionStrong = {
     getConstructor: function (wrapper, CONSTRUCTOR_NAME, IS_MAP, ADDER) {
       var C = wrapper(function (that, iterable) {
         anInstance(that, C, CONSTRUCTOR_NAME);
-        setInternalState$5(that, {
+        setInternalState$6(that, {
           type: CONSTRUCTOR_NAME,
           index: objectCreate(null),
           first: undefined,
@@ -6002,7 +6546,7 @@
         /* , that = undefined */
         ) {
           var state = getInternalState(this);
-          var boundFunction = bindContext(callbackfn, arguments.length > 1 ? arguments[1] : undefined, 3);
+          var boundFunction = functionBindContext(callbackfn, arguments.length > 1 ? arguments[1] : undefined, 3);
           var entry;
 
           while (entry = entry ? entry.next : state.first) {
@@ -6033,7 +6577,7 @@
           return define(this, value = value === 0 ? 0 : value, value);
         }
       });
-      if (descriptors) defineProperty$6(C.prototype, 'size', {
+      if (descriptors) defineProperty$9(C.prototype, 'size', {
         get: function () {
           return getInternalState(this).size;
         }
@@ -6047,7 +6591,7 @@
       // 23.1.3.4, 23.1.3.8, 23.1.3.11, 23.1.3.12, 23.2.3.5, 23.2.3.8, 23.2.3.10, 23.2.3.11
 
       defineIterator(C, CONSTRUCTOR_NAME, function (iterated, kind) {
-        setInternalState$5(this, {
+        setInternalState$6(this, {
           type: ITERATOR_NAME,
           target: iterated,
           state: getInternalCollectionState(iterated),
@@ -6093,23 +6637,23 @@
   // https://tc39.github.io/ecma262/#sec-map-objects
 
 
-  var es_map = collection('Map', function (get) {
+  var es_map = collection('Map', function (init) {
     return function Map() {
-      return get(this, arguments.length ? arguments[0] : undefined);
+      return init(this, arguments.length ? arguments[0] : undefined);
     };
-  }, collectionStrong, true);
+  }, collectionStrong);
 
   // https://tc39.github.io/ecma262/#sec-set-objects
 
 
-  var es_set = collection('Set', function (get) {
+  var es_set = collection('Set', function (init) {
     return function Set() {
-      return get(this, arguments.length ? arguments[0] : undefined);
+      return init(this, arguments.length ? arguments[0] : undefined);
     };
   }, collectionStrong);
 
   var getWeakData = internalMetadata.getWeakData;
-  var setInternalState$6 = internalState.set;
+  var setInternalState$7 = internalState.set;
   var internalStateGetterFor$1 = internalState.getterFor;
   var find = arrayIteration.find;
   var findIndex = arrayIteration.findIndex;
@@ -6153,7 +6697,7 @@
     getConstructor: function (wrapper, CONSTRUCTOR_NAME, IS_MAP, ADDER) {
       var C = wrapper(function (that, iterable) {
         anInstance(that, C, CONSTRUCTOR_NAME);
-        setInternalState$6(that, {
+        setInternalState$7(that, {
           type: CONSTRUCTOR_NAME,
           id: id$1++,
           frozen: undefined
@@ -6221,15 +6765,15 @@
     var isExtensible = Object.isExtensible;
     var InternalWeakMap;
 
-    var wrapper = function (get) {
+    var wrapper = function (init) {
       return function WeakMap() {
-        return get(this, arguments.length ? arguments[0] : undefined);
+        return init(this, arguments.length ? arguments[0] : undefined);
       };
     }; // `WeakMap` constructor
     // https://tc39.github.io/ecma262/#sec-weakmap-constructor
 
 
-    var $WeakMap = module.exports = collection('WeakMap', wrapper, collectionWeak, true, true); // IE11 WeakMap frozen keys fix
+    var $WeakMap = module.exports = collection('WeakMap', wrapper, collectionWeak); // IE11 WeakMap frozen keys fix
     // We can't use feature detection because it crash some old IE builds
     // https://github.com/zloirock/core-js/issues/485
 
@@ -6285,15 +6829,386 @@
   // https://tc39.github.io/ecma262/#sec-weakset-constructor
 
 
-  collection('WeakSet', function (get) {
+  collection('WeakSet', function (init) {
     return function WeakSet() {
-      return get(this, arguments.length ? arguments[0] : undefined);
+      return init(this, arguments.length ? arguments[0] : undefined);
     };
-  }, collectionWeak, false, true);
+  }, collectionWeak);
 
-  var defineProperty$7 = objectDefineProperty.f;
-  var DataView = global_1.DataView;
-  var DataViewPrototype = DataView && DataView.prototype;
+  var arrayBufferNative = typeof ArrayBuffer !== 'undefined' && typeof DataView !== 'undefined';
+
+  // https://tc39.github.io/ecma262/#sec-toindex
+
+  var toIndex = function (it) {
+    if (it === undefined) return 0;
+    var number = toInteger(it);
+    var length = toLength(number);
+    if (number !== length) throw RangeError('Wrong length or index');
+    return length;
+  };
+
+  // IEEE754 conversions based on https://github.com/feross/ieee754
+  // eslint-disable-next-line no-shadow-restricted-names
+  var Infinity$1 = 1 / 0;
+  var abs$7 = Math.abs;
+  var pow$3 = Math.pow;
+  var floor$6 = Math.floor;
+  var log$8 = Math.log;
+  var LN2$2 = Math.LN2;
+
+  var pack = function (number, mantissaLength, bytes) {
+    var buffer = new Array(bytes);
+    var exponentLength = bytes * 8 - mantissaLength - 1;
+    var eMax = (1 << exponentLength) - 1;
+    var eBias = eMax >> 1;
+    var rt = mantissaLength === 23 ? pow$3(2, -24) - pow$3(2, -77) : 0;
+    var sign = number < 0 || number === 0 && 1 / number < 0 ? 1 : 0;
+    var index = 0;
+    var exponent, mantissa, c;
+    number = abs$7(number); // eslint-disable-next-line no-self-compare
+
+    if (number != number || number === Infinity$1) {
+      // eslint-disable-next-line no-self-compare
+      mantissa = number != number ? 1 : 0;
+      exponent = eMax;
+    } else {
+      exponent = floor$6(log$8(number) / LN2$2);
+
+      if (number * (c = pow$3(2, -exponent)) < 1) {
+        exponent--;
+        c *= 2;
+      }
+
+      if (exponent + eBias >= 1) {
+        number += rt / c;
+      } else {
+        number += rt * pow$3(2, 1 - eBias);
+      }
+
+      if (number * c >= 2) {
+        exponent++;
+        c /= 2;
+      }
+
+      if (exponent + eBias >= eMax) {
+        mantissa = 0;
+        exponent = eMax;
+      } else if (exponent + eBias >= 1) {
+        mantissa = (number * c - 1) * pow$3(2, mantissaLength);
+        exponent = exponent + eBias;
+      } else {
+        mantissa = number * pow$3(2, eBias - 1) * pow$3(2, mantissaLength);
+        exponent = 0;
+      }
+    }
+
+    for (; mantissaLength >= 8; buffer[index++] = mantissa & 255, mantissa /= 256, mantissaLength -= 8);
+
+    exponent = exponent << mantissaLength | mantissa;
+    exponentLength += mantissaLength;
+
+    for (; exponentLength > 0; buffer[index++] = exponent & 255, exponent /= 256, exponentLength -= 8);
+
+    buffer[--index] |= sign * 128;
+    return buffer;
+  };
+
+  var unpack = function (buffer, mantissaLength) {
+    var bytes = buffer.length;
+    var exponentLength = bytes * 8 - mantissaLength - 1;
+    var eMax = (1 << exponentLength) - 1;
+    var eBias = eMax >> 1;
+    var nBits = exponentLength - 7;
+    var index = bytes - 1;
+    var sign = buffer[index--];
+    var exponent = sign & 127;
+    var mantissa;
+    sign >>= 7;
+
+    for (; nBits > 0; exponent = exponent * 256 + buffer[index], index--, nBits -= 8);
+
+    mantissa = exponent & (1 << -nBits) - 1;
+    exponent >>= -nBits;
+    nBits += mantissaLength;
+
+    for (; nBits > 0; mantissa = mantissa * 256 + buffer[index], index--, nBits -= 8);
+
+    if (exponent === 0) {
+      exponent = 1 - eBias;
+    } else if (exponent === eMax) {
+      return mantissa ? NaN : sign ? -Infinity$1 : Infinity$1;
+    } else {
+      mantissa = mantissa + pow$3(2, mantissaLength);
+      exponent = exponent - eBias;
+    }
+
+    return (sign ? -1 : 1) * mantissa * pow$3(2, exponent - mantissaLength);
+  };
+
+  var ieee754 = {
+    pack: pack,
+    unpack: unpack
+  };
+
+  var getOwnPropertyNames$2 = objectGetOwnPropertyNames.f;
+  var defineProperty$a = objectDefineProperty.f;
+  var getInternalState$6 = internalState.get;
+  var setInternalState$8 = internalState.set;
+  var ARRAY_BUFFER = 'ArrayBuffer';
+  var DATA_VIEW = 'DataView';
+  var PROTOTYPE$2 = 'prototype';
+  var WRONG_LENGTH = 'Wrong length';
+  var WRONG_INDEX = 'Wrong index';
+  var NativeArrayBuffer = global_1[ARRAY_BUFFER];
+  var $ArrayBuffer = NativeArrayBuffer;
+  var $DataView = global_1[DATA_VIEW];
+  var $DataViewPrototype = $DataView && $DataView[PROTOTYPE$2];
+  var ObjectPrototype$2 = Object.prototype;
+  var RangeError$1 = global_1.RangeError;
+  var packIEEE754 = ieee754.pack;
+  var unpackIEEE754 = ieee754.unpack;
+
+  var packInt8 = function (number) {
+    return [number & 0xFF];
+  };
+
+  var packInt16 = function (number) {
+    return [number & 0xFF, number >> 8 & 0xFF];
+  };
+
+  var packInt32 = function (number) {
+    return [number & 0xFF, number >> 8 & 0xFF, number >> 16 & 0xFF, number >> 24 & 0xFF];
+  };
+
+  var unpackInt32 = function (buffer) {
+    return buffer[3] << 24 | buffer[2] << 16 | buffer[1] << 8 | buffer[0];
+  };
+
+  var packFloat32 = function (number) {
+    return packIEEE754(number, 23, 4);
+  };
+
+  var packFloat64 = function (number) {
+    return packIEEE754(number, 52, 8);
+  };
+
+  var addGetter = function (Constructor, key) {
+    defineProperty$a(Constructor[PROTOTYPE$2], key, {
+      get: function () {
+        return getInternalState$6(this)[key];
+      }
+    });
+  };
+
+  var get$1 = function (view, count, index, isLittleEndian) {
+    var intIndex = toIndex(index);
+    var store = getInternalState$6(view);
+    if (intIndex + count > store.byteLength) throw RangeError$1(WRONG_INDEX);
+    var bytes = getInternalState$6(store.buffer).bytes;
+    var start = intIndex + store.byteOffset;
+    var pack = bytes.slice(start, start + count);
+    return isLittleEndian ? pack : pack.reverse();
+  };
+
+  var set$2 = function (view, count, index, conversion, value, isLittleEndian) {
+    var intIndex = toIndex(index);
+    var store = getInternalState$6(view);
+    if (intIndex + count > store.byteLength) throw RangeError$1(WRONG_INDEX);
+    var bytes = getInternalState$6(store.buffer).bytes;
+    var start = intIndex + store.byteOffset;
+    var pack = conversion(+value);
+
+    for (var i = 0; i < count; i++) bytes[start + i] = pack[isLittleEndian ? i : count - i - 1];
+  };
+
+  if (!arrayBufferNative) {
+    $ArrayBuffer = function ArrayBuffer(length) {
+      anInstance(this, $ArrayBuffer, ARRAY_BUFFER);
+      var byteLength = toIndex(length);
+      setInternalState$8(this, {
+        bytes: arrayFill.call(new Array(byteLength), 0),
+        byteLength: byteLength
+      });
+      if (!descriptors) this.byteLength = byteLength;
+    };
+
+    $DataView = function DataView(buffer, byteOffset, byteLength) {
+      anInstance(this, $DataView, DATA_VIEW);
+      anInstance(buffer, $ArrayBuffer, DATA_VIEW);
+      var bufferLength = getInternalState$6(buffer).byteLength;
+      var offset = toInteger(byteOffset);
+      if (offset < 0 || offset > bufferLength) throw RangeError$1('Wrong offset');
+      byteLength = byteLength === undefined ? bufferLength - offset : toLength(byteLength);
+      if (offset + byteLength > bufferLength) throw RangeError$1(WRONG_LENGTH);
+      setInternalState$8(this, {
+        buffer: buffer,
+        byteLength: byteLength,
+        byteOffset: offset
+      });
+
+      if (!descriptors) {
+        this.buffer = buffer;
+        this.byteLength = byteLength;
+        this.byteOffset = offset;
+      }
+    };
+
+    if (descriptors) {
+      addGetter($ArrayBuffer, 'byteLength');
+      addGetter($DataView, 'buffer');
+      addGetter($DataView, 'byteLength');
+      addGetter($DataView, 'byteOffset');
+    }
+
+    redefineAll($DataView[PROTOTYPE$2], {
+      getInt8: function getInt8(byteOffset) {
+        return get$1(this, 1, byteOffset)[0] << 24 >> 24;
+      },
+      getUint8: function getUint8(byteOffset) {
+        return get$1(this, 1, byteOffset)[0];
+      },
+      getInt16: function getInt16(byteOffset
+      /* , littleEndian */
+      ) {
+        var bytes = get$1(this, 2, byteOffset, arguments.length > 1 ? arguments[1] : undefined);
+        return (bytes[1] << 8 | bytes[0]) << 16 >> 16;
+      },
+      getUint16: function getUint16(byteOffset
+      /* , littleEndian */
+      ) {
+        var bytes = get$1(this, 2, byteOffset, arguments.length > 1 ? arguments[1] : undefined);
+        return bytes[1] << 8 | bytes[0];
+      },
+      getInt32: function getInt32(byteOffset
+      /* , littleEndian */
+      ) {
+        return unpackInt32(get$1(this, 4, byteOffset, arguments.length > 1 ? arguments[1] : undefined));
+      },
+      getUint32: function getUint32(byteOffset
+      /* , littleEndian */
+      ) {
+        return unpackInt32(get$1(this, 4, byteOffset, arguments.length > 1 ? arguments[1] : undefined)) >>> 0;
+      },
+      getFloat32: function getFloat32(byteOffset
+      /* , littleEndian */
+      ) {
+        return unpackIEEE754(get$1(this, 4, byteOffset, arguments.length > 1 ? arguments[1] : undefined), 23);
+      },
+      getFloat64: function getFloat64(byteOffset
+      /* , littleEndian */
+      ) {
+        return unpackIEEE754(get$1(this, 8, byteOffset, arguments.length > 1 ? arguments[1] : undefined), 52);
+      },
+      setInt8: function setInt8(byteOffset, value) {
+        set$2(this, 1, byteOffset, packInt8, value);
+      },
+      setUint8: function setUint8(byteOffset, value) {
+        set$2(this, 1, byteOffset, packInt8, value);
+      },
+      setInt16: function setInt16(byteOffset, value
+      /* , littleEndian */
+      ) {
+        set$2(this, 2, byteOffset, packInt16, value, arguments.length > 2 ? arguments[2] : undefined);
+      },
+      setUint16: function setUint16(byteOffset, value
+      /* , littleEndian */
+      ) {
+        set$2(this, 2, byteOffset, packInt16, value, arguments.length > 2 ? arguments[2] : undefined);
+      },
+      setInt32: function setInt32(byteOffset, value
+      /* , littleEndian */
+      ) {
+        set$2(this, 4, byteOffset, packInt32, value, arguments.length > 2 ? arguments[2] : undefined);
+      },
+      setUint32: function setUint32(byteOffset, value
+      /* , littleEndian */
+      ) {
+        set$2(this, 4, byteOffset, packInt32, value, arguments.length > 2 ? arguments[2] : undefined);
+      },
+      setFloat32: function setFloat32(byteOffset, value
+      /* , littleEndian */
+      ) {
+        set$2(this, 4, byteOffset, packFloat32, value, arguments.length > 2 ? arguments[2] : undefined);
+      },
+      setFloat64: function setFloat64(byteOffset, value
+      /* , littleEndian */
+      ) {
+        set$2(this, 8, byteOffset, packFloat64, value, arguments.length > 2 ? arguments[2] : undefined);
+      }
+    });
+  } else {
+    if (!fails(function () {
+      NativeArrayBuffer(1);
+    }) || !fails(function () {
+      new NativeArrayBuffer(-1); // eslint-disable-line no-new
+    }) || fails(function () {
+      new NativeArrayBuffer(); // eslint-disable-line no-new
+
+      new NativeArrayBuffer(1.5); // eslint-disable-line no-new
+
+      new NativeArrayBuffer(NaN); // eslint-disable-line no-new
+
+      return NativeArrayBuffer.name != ARRAY_BUFFER;
+    })) {
+      $ArrayBuffer = function ArrayBuffer(length) {
+        anInstance(this, $ArrayBuffer);
+        return new NativeArrayBuffer(toIndex(length));
+      };
+
+      var ArrayBufferPrototype = $ArrayBuffer[PROTOTYPE$2] = NativeArrayBuffer[PROTOTYPE$2];
+
+      for (var keys$3 = getOwnPropertyNames$2(NativeArrayBuffer), j$1 = 0, key$1; keys$3.length > j$1;) {
+        if (!((key$1 = keys$3[j$1++]) in $ArrayBuffer)) {
+          createNonEnumerableProperty($ArrayBuffer, key$1, NativeArrayBuffer[key$1]);
+        }
+      }
+
+      ArrayBufferPrototype.constructor = $ArrayBuffer;
+    } // WebKit bug - the same parent prototype for typed arrays and data view
+
+
+    if (objectSetPrototypeOf && objectGetPrototypeOf($DataViewPrototype) !== ObjectPrototype$2) {
+      objectSetPrototypeOf($DataViewPrototype, ObjectPrototype$2);
+    } // iOS Safari 7.x bug
+
+
+    var testView = new $DataView(new $ArrayBuffer(2));
+    var nativeSetInt8 = $DataViewPrototype.setInt8;
+    testView.setInt8(0, 2147483648);
+    testView.setInt8(1, 2147483649);
+    if (testView.getInt8(0) || !testView.getInt8(1)) redefineAll($DataViewPrototype, {
+      setInt8: function setInt8(byteOffset, value) {
+        nativeSetInt8.call(this, byteOffset, value << 24 >> 24);
+      },
+      setUint8: function setUint8(byteOffset, value) {
+        nativeSetInt8.call(this, byteOffset, value << 24 >> 24);
+      }
+    }, {
+      unsafe: true
+    });
+  }
+
+  setToStringTag($ArrayBuffer, ARRAY_BUFFER);
+  setToStringTag($DataView, DATA_VIEW);
+  var arrayBuffer = {
+    ArrayBuffer: $ArrayBuffer,
+    DataView: $DataView
+  };
+
+  var ARRAY_BUFFER$1 = 'ArrayBuffer';
+  var ArrayBuffer$1 = arrayBuffer[ARRAY_BUFFER$1];
+  var NativeArrayBuffer$1 = global_1[ARRAY_BUFFER$1]; // `ArrayBuffer` constructor
+  // https://tc39.github.io/ecma262/#sec-arraybuffer-constructor
+
+  _export({
+    global: true,
+    forced: NativeArrayBuffer$1 !== ArrayBuffer$1
+  }, {
+    ArrayBuffer: ArrayBuffer$1
+  });
+  setSpecies(ARRAY_BUFFER$1);
+
+  var defineProperty$b = objectDefineProperty.f;
   var Int8Array$1 = global_1.Int8Array;
   var Int8ArrayPrototype = Int8Array$1 && Int8Array$1.prototype;
   var Uint8ClampedArray = global_1.Uint8ClampedArray;
@@ -6303,9 +7218,9 @@
   var ObjectPrototype$3 = Object.prototype;
   var isPrototypeOf = ObjectPrototype$3.isPrototypeOf;
   var TO_STRING_TAG$3 = wellKnownSymbol('toStringTag');
-  var TYPED_ARRAY_TAG = uid('TYPED_ARRAY_TAG');
-  var NATIVE_ARRAY_BUFFER = !!(global_1.ArrayBuffer && DataView);
-  var NATIVE_ARRAY_BUFFER_VIEWS = NATIVE_ARRAY_BUFFER && !!objectSetPrototypeOf;
+  var TYPED_ARRAY_TAG = uid('TYPED_ARRAY_TAG'); // Fixing native typed arrays in Opera Presto crashes the browser, see #595
+
+  var NATIVE_ARRAY_BUFFER_VIEWS = arrayBufferNative && !!objectSetPrototypeOf && classof(global_1.opera) !== 'Opera';
   var TYPED_ARRAY_TAG_REQIRED = false;
   var NAME$1;
   var TypedArrayConstructorsList = {
@@ -6348,7 +7263,7 @@
     throw TypeError('Target is not a typed array constructor');
   };
 
-  var exportProto = function (KEY, property, forced) {
+  var exportTypedArrayMethod = function (KEY, property, forced) {
     if (!descriptors) return;
     if (forced) for (var ARRAY in TypedArrayConstructorsList) {
       var TypedArrayConstructor = global_1[ARRAY];
@@ -6363,7 +7278,7 @@
     }
   };
 
-  var exportStatic = function (KEY, property, forced) {
+  var exportTypedArrayStaticMethod = function (KEY, property, forced) {
     var ARRAY, TypedArrayConstructor;
     if (!descriptors) return;
 
@@ -6425,393 +7340,29 @@
 
   if (descriptors && !has(TypedArrayPrototype, TO_STRING_TAG$3)) {
     TYPED_ARRAY_TAG_REQIRED = true;
-    defineProperty$7(TypedArrayPrototype, TO_STRING_TAG$3, {
+    defineProperty$b(TypedArrayPrototype, TO_STRING_TAG$3, {
       get: function () {
         return isObject(this) ? this[TYPED_ARRAY_TAG] : undefined;
       }
     });
 
     for (NAME$1 in TypedArrayConstructorsList) if (global_1[NAME$1]) {
-      hide(global_1[NAME$1], TYPED_ARRAY_TAG, NAME$1);
+      createNonEnumerableProperty(global_1[NAME$1], TYPED_ARRAY_TAG, NAME$1);
     }
-  } // WebKit bug - the same parent prototype for typed arrays and data view
-
-
-  if (NATIVE_ARRAY_BUFFER && objectSetPrototypeOf && objectGetPrototypeOf(DataViewPrototype) !== ObjectPrototype$3) {
-    objectSetPrototypeOf(DataViewPrototype, ObjectPrototype$3);
   }
 
   var arrayBufferViewCore = {
-    NATIVE_ARRAY_BUFFER: NATIVE_ARRAY_BUFFER,
     NATIVE_ARRAY_BUFFER_VIEWS: NATIVE_ARRAY_BUFFER_VIEWS,
     TYPED_ARRAY_TAG: TYPED_ARRAY_TAG_REQIRED && TYPED_ARRAY_TAG,
     aTypedArray: aTypedArray,
     aTypedArrayConstructor: aTypedArrayConstructor,
-    exportProto: exportProto,
-    exportStatic: exportStatic,
+    exportTypedArrayMethod: exportTypedArrayMethod,
+    exportTypedArrayStaticMethod: exportTypedArrayStaticMethod,
     isView: isView,
     isTypedArray: isTypedArray,
     TypedArray: TypedArray,
     TypedArrayPrototype: TypedArrayPrototype
   };
-
-  // https://tc39.github.io/ecma262/#sec-toindex
-
-  var toIndex = function (it) {
-    if (it === undefined) return 0;
-    var number = toInteger(it);
-    var length = toLength(number);
-    if (number !== length) throw RangeError('Wrong length or index');
-    return length;
-  };
-
-  var arrayBuffer = createCommonjsModule(function (module, exports) {
-
-    var NATIVE_ARRAY_BUFFER = arrayBufferViewCore.NATIVE_ARRAY_BUFFER;
-    var getOwnPropertyNames = objectGetOwnPropertyNames.f;
-    var defineProperty = objectDefineProperty.f;
-    var getInternalState = internalState.get;
-    var setInternalState = internalState.set;
-    var ARRAY_BUFFER = 'ArrayBuffer';
-    var DATA_VIEW = 'DataView';
-    var PROTOTYPE = 'prototype';
-    var WRONG_LENGTH = 'Wrong length';
-    var WRONG_INDEX = 'Wrong index';
-    var NativeArrayBuffer = global_1[ARRAY_BUFFER];
-    var $ArrayBuffer = NativeArrayBuffer;
-    var $DataView = global_1[DATA_VIEW];
-    var Math = global_1.Math;
-    var RangeError = global_1.RangeError; // eslint-disable-next-line no-shadow-restricted-names
-
-    var Infinity = 1 / 0;
-    var abs = Math.abs;
-    var pow = Math.pow;
-    var floor = Math.floor;
-    var log = Math.log;
-    var LN2 = Math.LN2; // IEEE754 conversions based on https://github.com/feross/ieee754
-
-    var packIEEE754 = function (number, mantissaLength, bytes) {
-      var buffer = new Array(bytes);
-      var exponentLength = bytes * 8 - mantissaLength - 1;
-      var eMax = (1 << exponentLength) - 1;
-      var eBias = eMax >> 1;
-      var rt = mantissaLength === 23 ? pow(2, -24) - pow(2, -77) : 0;
-      var sign = number < 0 || number === 0 && 1 / number < 0 ? 1 : 0;
-      var index = 0;
-      var exponent, mantissa, c;
-      number = abs(number); // eslint-disable-next-line no-self-compare
-
-      if (number != number || number === Infinity) {
-        // eslint-disable-next-line no-self-compare
-        mantissa = number != number ? 1 : 0;
-        exponent = eMax;
-      } else {
-        exponent = floor(log(number) / LN2);
-
-        if (number * (c = pow(2, -exponent)) < 1) {
-          exponent--;
-          c *= 2;
-        }
-
-        if (exponent + eBias >= 1) {
-          number += rt / c;
-        } else {
-          number += rt * pow(2, 1 - eBias);
-        }
-
-        if (number * c >= 2) {
-          exponent++;
-          c /= 2;
-        }
-
-        if (exponent + eBias >= eMax) {
-          mantissa = 0;
-          exponent = eMax;
-        } else if (exponent + eBias >= 1) {
-          mantissa = (number * c - 1) * pow(2, mantissaLength);
-          exponent = exponent + eBias;
-        } else {
-          mantissa = number * pow(2, eBias - 1) * pow(2, mantissaLength);
-          exponent = 0;
-        }
-      }
-
-      for (; mantissaLength >= 8; buffer[index++] = mantissa & 255, mantissa /= 256, mantissaLength -= 8);
-
-      exponent = exponent << mantissaLength | mantissa;
-      exponentLength += mantissaLength;
-
-      for (; exponentLength > 0; buffer[index++] = exponent & 255, exponent /= 256, exponentLength -= 8);
-
-      buffer[--index] |= sign * 128;
-      return buffer;
-    };
-
-    var unpackIEEE754 = function (buffer, mantissaLength) {
-      var bytes = buffer.length;
-      var exponentLength = bytes * 8 - mantissaLength - 1;
-      var eMax = (1 << exponentLength) - 1;
-      var eBias = eMax >> 1;
-      var nBits = exponentLength - 7;
-      var index = bytes - 1;
-      var sign = buffer[index--];
-      var exponent = sign & 127;
-      var mantissa;
-      sign >>= 7;
-
-      for (; nBits > 0; exponent = exponent * 256 + buffer[index], index--, nBits -= 8);
-
-      mantissa = exponent & (1 << -nBits) - 1;
-      exponent >>= -nBits;
-      nBits += mantissaLength;
-
-      for (; nBits > 0; mantissa = mantissa * 256 + buffer[index], index--, nBits -= 8);
-
-      if (exponent === 0) {
-        exponent = 1 - eBias;
-      } else if (exponent === eMax) {
-        return mantissa ? NaN : sign ? -Infinity : Infinity;
-      } else {
-        mantissa = mantissa + pow(2, mantissaLength);
-        exponent = exponent - eBias;
-      }
-
-      return (sign ? -1 : 1) * mantissa * pow(2, exponent - mantissaLength);
-    };
-
-    var unpackInt32 = function (buffer) {
-      return buffer[3] << 24 | buffer[2] << 16 | buffer[1] << 8 | buffer[0];
-    };
-
-    var packInt8 = function (number) {
-      return [number & 0xFF];
-    };
-
-    var packInt16 = function (number) {
-      return [number & 0xFF, number >> 8 & 0xFF];
-    };
-
-    var packInt32 = function (number) {
-      return [number & 0xFF, number >> 8 & 0xFF, number >> 16 & 0xFF, number >> 24 & 0xFF];
-    };
-
-    var packFloat32 = function (number) {
-      return packIEEE754(number, 23, 4);
-    };
-
-    var packFloat64 = function (number) {
-      return packIEEE754(number, 52, 8);
-    };
-
-    var addGetter = function (Constructor, key) {
-      defineProperty(Constructor[PROTOTYPE], key, {
-        get: function () {
-          return getInternalState(this)[key];
-        }
-      });
-    };
-
-    var get = function (view, count, index, isLittleEndian) {
-      var numIndex = +index;
-      var intIndex = toIndex(numIndex);
-      var store = getInternalState(view);
-      if (intIndex + count > store.byteLength) throw RangeError(WRONG_INDEX);
-      var bytes = getInternalState(store.buffer).bytes;
-      var start = intIndex + store.byteOffset;
-      var pack = bytes.slice(start, start + count);
-      return isLittleEndian ? pack : pack.reverse();
-    };
-
-    var set = function (view, count, index, conversion, value, isLittleEndian) {
-      var numIndex = +index;
-      var intIndex = toIndex(numIndex);
-      var store = getInternalState(view);
-      if (intIndex + count > store.byteLength) throw RangeError(WRONG_INDEX);
-      var bytes = getInternalState(store.buffer).bytes;
-      var start = intIndex + store.byteOffset;
-      var pack = conversion(+value);
-
-      for (var i = 0; i < count; i++) bytes[start + i] = pack[isLittleEndian ? i : count - i - 1];
-    };
-
-    if (!NATIVE_ARRAY_BUFFER) {
-      $ArrayBuffer = function ArrayBuffer(length) {
-        anInstance(this, $ArrayBuffer, ARRAY_BUFFER);
-        var byteLength = toIndex(length);
-        setInternalState(this, {
-          bytes: arrayFill.call(new Array(byteLength), 0),
-          byteLength: byteLength
-        });
-        if (!descriptors) this.byteLength = byteLength;
-      };
-
-      $DataView = function DataView(buffer, byteOffset, byteLength) {
-        anInstance(this, $DataView, DATA_VIEW);
-        anInstance(buffer, $ArrayBuffer, DATA_VIEW);
-        var bufferLength = getInternalState(buffer).byteLength;
-        var offset = toInteger(byteOffset);
-        if (offset < 0 || offset > bufferLength) throw RangeError('Wrong offset');
-        byteLength = byteLength === undefined ? bufferLength - offset : toLength(byteLength);
-        if (offset + byteLength > bufferLength) throw RangeError(WRONG_LENGTH);
-        setInternalState(this, {
-          buffer: buffer,
-          byteLength: byteLength,
-          byteOffset: offset
-        });
-
-        if (!descriptors) {
-          this.buffer = buffer;
-          this.byteLength = byteLength;
-          this.byteOffset = offset;
-        }
-      };
-
-      if (descriptors) {
-        addGetter($ArrayBuffer, 'byteLength');
-        addGetter($DataView, 'buffer');
-        addGetter($DataView, 'byteLength');
-        addGetter($DataView, 'byteOffset');
-      }
-
-      redefineAll($DataView[PROTOTYPE], {
-        getInt8: function getInt8(byteOffset) {
-          return get(this, 1, byteOffset)[0] << 24 >> 24;
-        },
-        getUint8: function getUint8(byteOffset) {
-          return get(this, 1, byteOffset)[0];
-        },
-        getInt16: function getInt16(byteOffset
-        /* , littleEndian */
-        ) {
-          var bytes = get(this, 2, byteOffset, arguments.length > 1 ? arguments[1] : undefined);
-          return (bytes[1] << 8 | bytes[0]) << 16 >> 16;
-        },
-        getUint16: function getUint16(byteOffset
-        /* , littleEndian */
-        ) {
-          var bytes = get(this, 2, byteOffset, arguments.length > 1 ? arguments[1] : undefined);
-          return bytes[1] << 8 | bytes[0];
-        },
-        getInt32: function getInt32(byteOffset
-        /* , littleEndian */
-        ) {
-          return unpackInt32(get(this, 4, byteOffset, arguments.length > 1 ? arguments[1] : undefined));
-        },
-        getUint32: function getUint32(byteOffset
-        /* , littleEndian */
-        ) {
-          return unpackInt32(get(this, 4, byteOffset, arguments.length > 1 ? arguments[1] : undefined)) >>> 0;
-        },
-        getFloat32: function getFloat32(byteOffset
-        /* , littleEndian */
-        ) {
-          return unpackIEEE754(get(this, 4, byteOffset, arguments.length > 1 ? arguments[1] : undefined), 23);
-        },
-        getFloat64: function getFloat64(byteOffset
-        /* , littleEndian */
-        ) {
-          return unpackIEEE754(get(this, 8, byteOffset, arguments.length > 1 ? arguments[1] : undefined), 52);
-        },
-        setInt8: function setInt8(byteOffset, value) {
-          set(this, 1, byteOffset, packInt8, value);
-        },
-        setUint8: function setUint8(byteOffset, value) {
-          set(this, 1, byteOffset, packInt8, value);
-        },
-        setInt16: function setInt16(byteOffset, value
-        /* , littleEndian */
-        ) {
-          set(this, 2, byteOffset, packInt16, value, arguments.length > 2 ? arguments[2] : undefined);
-        },
-        setUint16: function setUint16(byteOffset, value
-        /* , littleEndian */
-        ) {
-          set(this, 2, byteOffset, packInt16, value, arguments.length > 2 ? arguments[2] : undefined);
-        },
-        setInt32: function setInt32(byteOffset, value
-        /* , littleEndian */
-        ) {
-          set(this, 4, byteOffset, packInt32, value, arguments.length > 2 ? arguments[2] : undefined);
-        },
-        setUint32: function setUint32(byteOffset, value
-        /* , littleEndian */
-        ) {
-          set(this, 4, byteOffset, packInt32, value, arguments.length > 2 ? arguments[2] : undefined);
-        },
-        setFloat32: function setFloat32(byteOffset, value
-        /* , littleEndian */
-        ) {
-          set(this, 4, byteOffset, packFloat32, value, arguments.length > 2 ? arguments[2] : undefined);
-        },
-        setFloat64: function setFloat64(byteOffset, value
-        /* , littleEndian */
-        ) {
-          set(this, 8, byteOffset, packFloat64, value, arguments.length > 2 ? arguments[2] : undefined);
-        }
-      });
-    } else {
-      if (!fails(function () {
-        NativeArrayBuffer(1);
-      }) || !fails(function () {
-        new NativeArrayBuffer(-1); // eslint-disable-line no-new
-      }) || fails(function () {
-        new NativeArrayBuffer(); // eslint-disable-line no-new
-
-        new NativeArrayBuffer(1.5); // eslint-disable-line no-new
-
-        new NativeArrayBuffer(NaN); // eslint-disable-line no-new
-
-        return NativeArrayBuffer.name != ARRAY_BUFFER;
-      })) {
-        $ArrayBuffer = function ArrayBuffer(length) {
-          anInstance(this, $ArrayBuffer);
-          return new NativeArrayBuffer(toIndex(length));
-        };
-
-        var ArrayBufferPrototype = $ArrayBuffer[PROTOTYPE] = NativeArrayBuffer[PROTOTYPE];
-
-        for (var keys = getOwnPropertyNames(NativeArrayBuffer), j = 0, key; keys.length > j;) {
-          if (!((key = keys[j++]) in $ArrayBuffer)) hide($ArrayBuffer, key, NativeArrayBuffer[key]);
-        }
-
-        ArrayBufferPrototype.constructor = $ArrayBuffer;
-      } // iOS Safari 7.x bug
-
-
-      var testView = new $DataView(new $ArrayBuffer(2));
-      var nativeSetInt8 = $DataView[PROTOTYPE].setInt8;
-      testView.setInt8(0, 2147483648);
-      testView.setInt8(1, 2147483649);
-      if (testView.getInt8(0) || !testView.getInt8(1)) redefineAll($DataView[PROTOTYPE], {
-        setInt8: function setInt8(byteOffset, value) {
-          nativeSetInt8.call(this, byteOffset, value << 24 >> 24);
-        },
-        setUint8: function setUint8(byteOffset, value) {
-          nativeSetInt8.call(this, byteOffset, value << 24 >> 24);
-        }
-      }, {
-        unsafe: true
-      });
-    }
-
-    setToStringTag($ArrayBuffer, ARRAY_BUFFER);
-    setToStringTag($DataView, DATA_VIEW);
-    exports[ARRAY_BUFFER] = $ArrayBuffer;
-    exports[DATA_VIEW] = $DataView;
-  });
-
-  var ARRAY_BUFFER = 'ArrayBuffer';
-  var ArrayBuffer$1 = arrayBuffer[ARRAY_BUFFER];
-  var NativeArrayBuffer = global_1[ARRAY_BUFFER]; // `ArrayBuffer` constructor
-  // https://tc39.github.io/ecma262/#sec-arraybuffer-constructor
-
-  _export({
-    global: true,
-    forced: NativeArrayBuffer !== ArrayBuffer$1
-  }, {
-    ArrayBuffer: ArrayBuffer$1
-  });
-  setSpecies(ARRAY_BUFFER);
 
   var NATIVE_ARRAY_BUFFER_VIEWS$1 = arrayBufferViewCore.NATIVE_ARRAY_BUFFER_VIEWS; // `ArrayBuffer.isView` method
   // https://tc39.github.io/ecma262/#sec-arraybuffer.isview
@@ -6859,12 +7410,11 @@
     }
   });
 
-  var NATIVE_ARRAY_BUFFER$1 = arrayBufferViewCore.NATIVE_ARRAY_BUFFER; // `DataView` constructor
   // https://tc39.github.io/ecma262/#sec-dataview-constructor
 
   _export({
     global: true,
-    forced: !NATIVE_ARRAY_BUFFER$1
+    forced: !arrayBufferNative
   }, {
     DataView: arrayBuffer.DataView
   });
@@ -6874,7 +7424,7 @@
   var NATIVE_ARRAY_BUFFER_VIEWS$2 = arrayBufferViewCore.NATIVE_ARRAY_BUFFER_VIEWS;
   var ArrayBuffer$3 = global_1.ArrayBuffer;
   var Int8Array$2 = global_1.Int8Array;
-  var typedArraysConstructorsRequiresWrappers = !NATIVE_ARRAY_BUFFER_VIEWS$2 || !fails(function () {
+  var typedArrayConstructorsRequireWrappers = !NATIVE_ARRAY_BUFFER_VIEWS$2 || !fails(function () {
     Int8Array$2(1);
   }) || !fails(function () {
     new Int8Array$2(-1);
@@ -6884,13 +7434,19 @@
     new Int8Array$2(1.5);
     new Int8Array$2(iterable);
   }, true) || fails(function () {
-    // Safari 11 bug
+    // Safari (11+) bug - a reason why even Safari 13 should load a typed array polyfill
     return new Int8Array$2(new ArrayBuffer$3(2), 1, undefined).length !== 1;
   });
 
+  var toPositiveInteger = function (it) {
+    var result = toInteger(it);
+    if (result < 0) throw RangeError("The argument can't be less than 0");
+    return result;
+  };
+
   var toOffset = function (it, BYTES) {
-    var offset = toInteger(it);
-    if (offset < 0 || offset % BYTES) throw RangeError('Wrong offset');
+    var offset = toPositiveInteger(it);
+    if (offset % BYTES) throw RangeError('Wrong offset');
     return offset;
   };
 
@@ -6904,19 +7460,20 @@
     var mapfn = argumentsLength > 1 ? arguments[1] : undefined;
     var mapping = mapfn !== undefined;
     var iteratorMethod = getIteratorMethod(O);
-    var i, length, result, step, iterator;
+    var i, length, result, step, iterator, next;
 
     if (iteratorMethod != undefined && !isArrayIteratorMethod(iteratorMethod)) {
       iterator = iteratorMethod.call(O);
+      next = iterator.next;
       O = [];
 
-      while (!(step = iterator.next()).done) {
+      while (!(step = next.call(iterator)).done) {
         O.push(step.value);
       }
     }
 
     if (mapping && argumentsLength > 2) {
-      mapfn = bindContext(mapfn, arguments[2], 2);
+      mapfn = functionBindContext(mapfn, arguments[2], 2);
     }
 
     length = toLength(O.length);
@@ -7008,9 +7565,10 @@
       }, {
         getOwnPropertyDescriptor: wrappedGetOwnPropertyDescriptor,
         defineProperty: wrappedDefineProperty
-      }); // eslint-disable-next-line max-statements
+      });
 
-      module.exports = function (TYPE, BYTES, wrapper, CLAMPED) {
+      module.exports = function (TYPE, wrapper, CLAMPED) {
+        var BYTES = TYPE.match(/\d+$/)[0] / 8;
         var CONSTRUCTOR_NAME = TYPE + (CLAMPED ? 'Clamped' : '') + 'Array';
         var GETTER = 'get' + TYPE;
         var SETTER = 'set' + TYPE;
@@ -7086,26 +7644,33 @@
           });
           if (objectSetPrototypeOf) objectSetPrototypeOf(TypedArrayConstructor, TypedArray);
           TypedArrayConstructorPrototype = TypedArrayConstructor.prototype = objectCreate(TypedArrayPrototype);
-        } else if (typedArraysConstructorsRequiresWrappers) {
+        } else if (typedArrayConstructorsRequireWrappers) {
           TypedArrayConstructor = wrapper(function (dummy, data, typedArrayOffset, $length) {
             anInstance(dummy, TypedArrayConstructor, CONSTRUCTOR_NAME);
-            if (!isObject(data)) return new NativeTypedArrayConstructor(toIndex(data));
-            if (isArrayBuffer(data)) return $length !== undefined ? new NativeTypedArrayConstructor(data, toOffset(typedArrayOffset, BYTES), $length) : typedArrayOffset !== undefined ? new NativeTypedArrayConstructor(data, toOffset(typedArrayOffset, BYTES)) : new NativeTypedArrayConstructor(data);
-            if (isTypedArray(data)) return fromList(TypedArrayConstructor, data);
-            return typedArrayFrom.call(TypedArrayConstructor, data);
+            return inheritIfRequired(function () {
+              if (!isObject(data)) return new NativeTypedArrayConstructor(toIndex(data));
+              if (isArrayBuffer(data)) return $length !== undefined ? new NativeTypedArrayConstructor(data, toOffset(typedArrayOffset, BYTES), $length) : typedArrayOffset !== undefined ? new NativeTypedArrayConstructor(data, toOffset(typedArrayOffset, BYTES)) : new NativeTypedArrayConstructor(data);
+              if (isTypedArray(data)) return fromList(TypedArrayConstructor, data);
+              return typedArrayFrom.call(TypedArrayConstructor, data);
+            }(), dummy, TypedArrayConstructor);
           });
           if (objectSetPrototypeOf) objectSetPrototypeOf(TypedArrayConstructor, TypedArray);
           forEach(getOwnPropertyNames(NativeTypedArrayConstructor), function (key) {
-            if (!(key in TypedArrayConstructor)) hide(TypedArrayConstructor, key, NativeTypedArrayConstructor[key]);
+            if (!(key in TypedArrayConstructor)) {
+              createNonEnumerableProperty(TypedArrayConstructor, key, NativeTypedArrayConstructor[key]);
+            }
           });
           TypedArrayConstructor.prototype = TypedArrayConstructorPrototype;
         }
 
         if (TypedArrayConstructorPrototype.constructor !== TypedArrayConstructor) {
-          hide(TypedArrayConstructorPrototype, 'constructor', TypedArrayConstructor);
+          createNonEnumerableProperty(TypedArrayConstructorPrototype, 'constructor', TypedArrayConstructor);
         }
 
-        if (TYPED_ARRAY_TAG) hide(TypedArrayConstructorPrototype, TYPED_ARRAY_TAG, CONSTRUCTOR_NAME);
+        if (TYPED_ARRAY_TAG) {
+          createNonEnumerableProperty(TypedArrayConstructorPrototype, TYPED_ARRAY_TAG, CONSTRUCTOR_NAME);
+        }
+
         exported[CONSTRUCTOR_NAME] = TypedArrayConstructor;
         _export({
           global: true,
@@ -7114,11 +7679,11 @@
         }, exported);
 
         if (!(BYTES_PER_ELEMENT in TypedArrayConstructor)) {
-          hide(TypedArrayConstructor, BYTES_PER_ELEMENT, BYTES);
+          createNonEnumerableProperty(TypedArrayConstructor, BYTES_PER_ELEMENT, BYTES);
         }
 
         if (!(BYTES_PER_ELEMENT in TypedArrayConstructorPrototype)) {
-          hide(TypedArrayConstructorPrototype, BYTES_PER_ELEMENT, BYTES);
+          createNonEnumerableProperty(TypedArrayConstructorPrototype, BYTES_PER_ELEMENT, BYTES);
         }
 
         setSpecies(CONSTRUCTOR_NAME);
@@ -7130,7 +7695,7 @@
 
   // https://tc39.github.io/ecma262/#sec-typedarray-objects
 
-  typedArrayConstructor('Int8', 1, function (init) {
+  typedArrayConstructor('Int8', function (init) {
     return function Int8Array(data, byteOffset, length) {
       return init(this, data, byteOffset, length);
     };
@@ -7138,7 +7703,7 @@
 
   // https://tc39.github.io/ecma262/#sec-typedarray-objects
 
-  typedArrayConstructor('Uint8', 1, function (init) {
+  typedArrayConstructor('Uint8', function (init) {
     return function Uint8Array(data, byteOffset, length) {
       return init(this, data, byteOffset, length);
     };
@@ -7146,7 +7711,7 @@
 
   // https://tc39.github.io/ecma262/#sec-typedarray-objects
 
-  typedArrayConstructor('Uint8', 1, function (init) {
+  typedArrayConstructor('Uint8', function (init) {
     return function Uint8ClampedArray(data, byteOffset, length) {
       return init(this, data, byteOffset, length);
     };
@@ -7154,7 +7719,7 @@
 
   // https://tc39.github.io/ecma262/#sec-typedarray-objects
 
-  typedArrayConstructor('Int16', 2, function (init) {
+  typedArrayConstructor('Int16', function (init) {
     return function Int16Array(data, byteOffset, length) {
       return init(this, data, byteOffset, length);
     };
@@ -7162,7 +7727,7 @@
 
   // https://tc39.github.io/ecma262/#sec-typedarray-objects
 
-  typedArrayConstructor('Uint16', 2, function (init) {
+  typedArrayConstructor('Uint16', function (init) {
     return function Uint16Array(data, byteOffset, length) {
       return init(this, data, byteOffset, length);
     };
@@ -7170,7 +7735,7 @@
 
   // https://tc39.github.io/ecma262/#sec-typedarray-objects
 
-  typedArrayConstructor('Int32', 4, function (init) {
+  typedArrayConstructor('Int32', function (init) {
     return function Int32Array(data, byteOffset, length) {
       return init(this, data, byteOffset, length);
     };
@@ -7178,7 +7743,7 @@
 
   // https://tc39.github.io/ecma262/#sec-typedarray-objects
 
-  typedArrayConstructor('Uint32', 4, function (init) {
+  typedArrayConstructor('Uint32', function (init) {
     return function Uint32Array(data, byteOffset, length) {
       return init(this, data, byteOffset, length);
     };
@@ -7186,7 +7751,7 @@
 
   // https://tc39.github.io/ecma262/#sec-typedarray-objects
 
-  typedArrayConstructor('Float32', 4, function (init) {
+  typedArrayConstructor('Float32', function (init) {
     return function Float32Array(data, byteOffset, length) {
       return init(this, data, byteOffset, length);
     };
@@ -7194,21 +7759,22 @@
 
   // https://tc39.github.io/ecma262/#sec-typedarray-objects
 
-  typedArrayConstructor('Float64', 8, function (init) {
+  typedArrayConstructor('Float64', function (init) {
     return function Float64Array(data, byteOffset, length) {
       return init(this, data, byteOffset, length);
     };
   });
 
+  var exportTypedArrayStaticMethod$1 = arrayBufferViewCore.exportTypedArrayStaticMethod; // `%TypedArray%.from` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.from
 
+  exportTypedArrayStaticMethod$1('from', typedArrayFrom, typedArrayConstructorsRequireWrappers);
 
-  arrayBufferViewCore.exportStatic('from', typedArrayFrom, typedArraysConstructorsRequiresWrappers);
-
-  var aTypedArrayConstructor$2 = arrayBufferViewCore.aTypedArrayConstructor; // `%TypedArray%.of` method
+  var aTypedArrayConstructor$2 = arrayBufferViewCore.aTypedArrayConstructor;
+  var exportTypedArrayStaticMethod$2 = arrayBufferViewCore.exportTypedArrayStaticMethod; // `%TypedArray%.of` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.of
 
-  arrayBufferViewCore.exportStatic('of', function of()
+  exportTypedArrayStaticMethod$2('of', function of()
   /* ...items */
   {
     var index = 0;
@@ -7218,32 +7784,35 @@
     while (length > index) result[index] = arguments[index++];
 
     return result;
-  }, typedArraysConstructorsRequiresWrappers);
+  }, typedArrayConstructorsRequireWrappers);
 
-  var aTypedArray$1 = arrayBufferViewCore.aTypedArray; // `%TypedArray%.prototype.copyWithin` method
+  var aTypedArray$1 = arrayBufferViewCore.aTypedArray;
+  var exportTypedArrayMethod$1 = arrayBufferViewCore.exportTypedArrayMethod; // `%TypedArray%.prototype.copyWithin` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.copywithin
 
-  arrayBufferViewCore.exportProto('copyWithin', function copyWithin(target, start
+  exportTypedArrayMethod$1('copyWithin', function copyWithin(target, start
   /* , end */
   ) {
     return arrayCopyWithin.call(aTypedArray$1(this), target, start, arguments.length > 2 ? arguments[2] : undefined);
   });
 
   var $every$1 = arrayIteration.every;
-  var aTypedArray$2 = arrayBufferViewCore.aTypedArray; // `%TypedArray%.prototype.every` method
+  var aTypedArray$2 = arrayBufferViewCore.aTypedArray;
+  var exportTypedArrayMethod$2 = arrayBufferViewCore.exportTypedArrayMethod; // `%TypedArray%.prototype.every` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.every
 
-  arrayBufferViewCore.exportProto('every', function every(callbackfn
+  exportTypedArrayMethod$2('every', function every(callbackfn
   /* , thisArg */
   ) {
     return $every$1(aTypedArray$2(this), callbackfn, arguments.length > 1 ? arguments[1] : undefined);
   });
 
-  var aTypedArray$3 = arrayBufferViewCore.aTypedArray; // `%TypedArray%.prototype.fill` method
+  var aTypedArray$3 = arrayBufferViewCore.aTypedArray;
+  var exportTypedArrayMethod$3 = arrayBufferViewCore.exportTypedArrayMethod; // `%TypedArray%.prototype.fill` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.fill
   // eslint-disable-next-line no-unused-vars
 
-  arrayBufferViewCore.exportProto('fill', function fill(value
+  exportTypedArrayMethod$3('fill', function fill(value
   /* , start, end */
   ) {
     return arrayFill.apply(aTypedArray$3(this), arguments);
@@ -7251,10 +7820,11 @@
 
   var $filter$1 = arrayIteration.filter;
   var aTypedArray$4 = arrayBufferViewCore.aTypedArray;
-  var aTypedArrayConstructor$3 = arrayBufferViewCore.aTypedArrayConstructor; // `%TypedArray%.prototype.filter` method
+  var aTypedArrayConstructor$3 = arrayBufferViewCore.aTypedArrayConstructor;
+  var exportTypedArrayMethod$4 = arrayBufferViewCore.exportTypedArrayMethod; // `%TypedArray%.prototype.filter` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.filter
 
-  arrayBufferViewCore.exportProto('filter', function filter(callbackfn
+  exportTypedArrayMethod$4('filter', function filter(callbackfn
   /* , thisArg */
   ) {
     var list = $filter$1(aTypedArray$4(this), callbackfn, arguments.length > 1 ? arguments[1] : undefined);
@@ -7269,50 +7839,55 @@
   });
 
   var $find$1 = arrayIteration.find;
-  var aTypedArray$5 = arrayBufferViewCore.aTypedArray; // `%TypedArray%.prototype.find` method
+  var aTypedArray$5 = arrayBufferViewCore.aTypedArray;
+  var exportTypedArrayMethod$5 = arrayBufferViewCore.exportTypedArrayMethod; // `%TypedArray%.prototype.find` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.find
 
-  arrayBufferViewCore.exportProto('find', function find(predicate
+  exportTypedArrayMethod$5('find', function find(predicate
   /* , thisArg */
   ) {
     return $find$1(aTypedArray$5(this), predicate, arguments.length > 1 ? arguments[1] : undefined);
   });
 
   var $findIndex$1 = arrayIteration.findIndex;
-  var aTypedArray$6 = arrayBufferViewCore.aTypedArray; // `%TypedArray%.prototype.findIndex` method
+  var aTypedArray$6 = arrayBufferViewCore.aTypedArray;
+  var exportTypedArrayMethod$6 = arrayBufferViewCore.exportTypedArrayMethod; // `%TypedArray%.prototype.findIndex` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.findindex
 
-  arrayBufferViewCore.exportProto('findIndex', function findIndex(predicate
+  exportTypedArrayMethod$6('findIndex', function findIndex(predicate
   /* , thisArg */
   ) {
     return $findIndex$1(aTypedArray$6(this), predicate, arguments.length > 1 ? arguments[1] : undefined);
   });
 
   var $forEach$2 = arrayIteration.forEach;
-  var aTypedArray$7 = arrayBufferViewCore.aTypedArray; // `%TypedArray%.prototype.forEach` method
+  var aTypedArray$7 = arrayBufferViewCore.aTypedArray;
+  var exportTypedArrayMethod$7 = arrayBufferViewCore.exportTypedArrayMethod; // `%TypedArray%.prototype.forEach` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.foreach
 
-  arrayBufferViewCore.exportProto('forEach', function forEach(callbackfn
+  exportTypedArrayMethod$7('forEach', function forEach(callbackfn
   /* , thisArg */
   ) {
     $forEach$2(aTypedArray$7(this), callbackfn, arguments.length > 1 ? arguments[1] : undefined);
   });
 
   var $includes$1 = arrayIncludes.includes;
-  var aTypedArray$8 = arrayBufferViewCore.aTypedArray; // `%TypedArray%.prototype.includes` method
+  var aTypedArray$8 = arrayBufferViewCore.aTypedArray;
+  var exportTypedArrayMethod$8 = arrayBufferViewCore.exportTypedArrayMethod; // `%TypedArray%.prototype.includes` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.includes
 
-  arrayBufferViewCore.exportProto('includes', function includes(searchElement
+  exportTypedArrayMethod$8('includes', function includes(searchElement
   /* , fromIndex */
   ) {
     return $includes$1(aTypedArray$8(this), searchElement, arguments.length > 1 ? arguments[1] : undefined);
   });
 
   var $indexOf$1 = arrayIncludes.indexOf;
-  var aTypedArray$9 = arrayBufferViewCore.aTypedArray; // `%TypedArray%.prototype.indexOf` method
+  var aTypedArray$9 = arrayBufferViewCore.aTypedArray;
+  var exportTypedArrayMethod$9 = arrayBufferViewCore.exportTypedArrayMethod; // `%TypedArray%.prototype.indexOf` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.indexof
 
-  arrayBufferViewCore.exportProto('indexOf', function indexOf(searchElement
+  exportTypedArrayMethod$9('indexOf', function indexOf(searchElement
   /* , fromIndex */
   ) {
     return $indexOf$1(aTypedArray$9(this), searchElement, arguments.length > 1 ? arguments[1] : undefined);
@@ -7324,7 +7899,7 @@
   var arrayKeys = es_array_iterator.keys;
   var arrayEntries = es_array_iterator.entries;
   var aTypedArray$a = arrayBufferViewCore.aTypedArray;
-  var exportProto$1 = arrayBufferViewCore.exportProto;
+  var exportTypedArrayMethod$a = arrayBufferViewCore.exportTypedArrayMethod;
   var nativeTypedArrayIterator = Uint8Array && Uint8Array.prototype[ITERATOR$5];
   var CORRECT_ITER_NAME = !!nativeTypedArrayIterator && (nativeTypedArrayIterator.name == 'values' || nativeTypedArrayIterator.name == undefined);
 
@@ -7334,35 +7909,37 @@
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.entries
 
 
-  exportProto$1('entries', function entries() {
+  exportTypedArrayMethod$a('entries', function entries() {
     return arrayEntries.call(aTypedArray$a(this));
   }); // `%TypedArray%.prototype.keys` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.keys
 
-  exportProto$1('keys', function keys() {
+  exportTypedArrayMethod$a('keys', function keys() {
     return arrayKeys.call(aTypedArray$a(this));
   }); // `%TypedArray%.prototype.values` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.values
 
-  exportProto$1('values', typedArrayValues, !CORRECT_ITER_NAME); // `%TypedArray%.prototype[@@iterator]` method
+  exportTypedArrayMethod$a('values', typedArrayValues, !CORRECT_ITER_NAME); // `%TypedArray%.prototype[@@iterator]` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype-@@iterator
 
-  exportProto$1(ITERATOR$5, typedArrayValues, !CORRECT_ITER_NAME);
+  exportTypedArrayMethod$a(ITERATOR$5, typedArrayValues, !CORRECT_ITER_NAME);
 
   var aTypedArray$b = arrayBufferViewCore.aTypedArray;
+  var exportTypedArrayMethod$b = arrayBufferViewCore.exportTypedArrayMethod;
   var $join = [].join; // `%TypedArray%.prototype.join` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.join
   // eslint-disable-next-line no-unused-vars
 
-  arrayBufferViewCore.exportProto('join', function join(separator) {
+  exportTypedArrayMethod$b('join', function join(separator) {
     return $join.apply(aTypedArray$b(this), arguments);
   });
 
-  var aTypedArray$c = arrayBufferViewCore.aTypedArray; // `%TypedArray%.prototype.lastIndexOf` method
+  var aTypedArray$c = arrayBufferViewCore.aTypedArray;
+  var exportTypedArrayMethod$c = arrayBufferViewCore.exportTypedArrayMethod; // `%TypedArray%.prototype.lastIndexOf` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.lastindexof
   // eslint-disable-next-line no-unused-vars
 
-  arrayBufferViewCore.exportProto('lastIndexOf', function lastIndexOf(searchElement
+  exportTypedArrayMethod$c('lastIndexOf', function lastIndexOf(searchElement
   /* , fromIndex */
   ) {
     return arrayLastIndexOf.apply(aTypedArray$c(this), arguments);
@@ -7370,10 +7947,11 @@
 
   var $map$1 = arrayIteration.map;
   var aTypedArray$d = arrayBufferViewCore.aTypedArray;
-  var aTypedArrayConstructor$4 = arrayBufferViewCore.aTypedArrayConstructor; // `%TypedArray%.prototype.map` method
+  var aTypedArrayConstructor$4 = arrayBufferViewCore.aTypedArrayConstructor;
+  var exportTypedArrayMethod$d = arrayBufferViewCore.exportTypedArrayMethod; // `%TypedArray%.prototype.map` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.map
 
-  arrayBufferViewCore.exportProto('map', function map(mapfn
+  exportTypedArrayMethod$d('map', function map(mapfn
   /* , thisArg */
   ) {
     return $map$1(aTypedArray$d(this), mapfn, arguments.length > 1 ? arguments[1] : undefined, function (O, length) {
@@ -7382,33 +7960,36 @@
   });
 
   var $reduce$1 = arrayReduce.left;
-  var aTypedArray$e = arrayBufferViewCore.aTypedArray; // `%TypedArray%.prototype.reduce` method
+  var aTypedArray$e = arrayBufferViewCore.aTypedArray;
+  var exportTypedArrayMethod$e = arrayBufferViewCore.exportTypedArrayMethod; // `%TypedArray%.prototype.reduce` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.reduce
 
-  arrayBufferViewCore.exportProto('reduce', function reduce(callbackfn
+  exportTypedArrayMethod$e('reduce', function reduce(callbackfn
   /* , initialValue */
   ) {
     return $reduce$1(aTypedArray$e(this), callbackfn, arguments.length, arguments.length > 1 ? arguments[1] : undefined);
   });
 
   var $reduceRight$1 = arrayReduce.right;
-  var aTypedArray$f = arrayBufferViewCore.aTypedArray; // `%TypedArray%.prototype.reduceRicht` method
+  var aTypedArray$f = arrayBufferViewCore.aTypedArray;
+  var exportTypedArrayMethod$f = arrayBufferViewCore.exportTypedArrayMethod; // `%TypedArray%.prototype.reduceRicht` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.reduceright
 
-  arrayBufferViewCore.exportProto('reduceRight', function reduceRight(callbackfn
+  exportTypedArrayMethod$f('reduceRight', function reduceRight(callbackfn
   /* , initialValue */
   ) {
     return $reduceRight$1(aTypedArray$f(this), callbackfn, arguments.length, arguments.length > 1 ? arguments[1] : undefined);
   });
 
   var aTypedArray$g = arrayBufferViewCore.aTypedArray;
-  var floor$6 = Math.floor; // `%TypedArray%.prototype.reverse` method
+  var exportTypedArrayMethod$g = arrayBufferViewCore.exportTypedArrayMethod;
+  var floor$7 = Math.floor; // `%TypedArray%.prototype.reverse` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.reverse
 
-  arrayBufferViewCore.exportProto('reverse', function reverse() {
+  exportTypedArrayMethod$g('reverse', function reverse() {
     var that = this;
     var length = aTypedArray$g(that).length;
-    var middle = floor$6(length / 2);
+    var middle = floor$7(length / 2);
     var index = 0;
     var value;
 
@@ -7422,13 +8003,14 @@
   });
 
   var aTypedArray$h = arrayBufferViewCore.aTypedArray;
-  var FORCED$f = fails(function () {
+  var exportTypedArrayMethod$h = arrayBufferViewCore.exportTypedArrayMethod;
+  var FORCED$h = fails(function () {
     // eslint-disable-next-line no-undef
     new Int8Array(1).set({});
   }); // `%TypedArray%.prototype.set` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.set
 
-  arrayBufferViewCore.exportProto('set', function set(arrayLike
+  exportTypedArrayMethod$h('set', function set(arrayLike
   /* , offset */
   ) {
     aTypedArray$h(this);
@@ -7440,18 +8022,19 @@
     if (len + offset > length) throw RangeError('Wrong length');
 
     while (index < len) this[offset + index] = src[index++];
-  }, FORCED$f);
+  }, FORCED$h);
 
   var aTypedArray$i = arrayBufferViewCore.aTypedArray;
   var aTypedArrayConstructor$5 = arrayBufferViewCore.aTypedArrayConstructor;
+  var exportTypedArrayMethod$i = arrayBufferViewCore.exportTypedArrayMethod;
   var $slice = [].slice;
-  var FORCED$g = fails(function () {
+  var FORCED$i = fails(function () {
     // eslint-disable-next-line no-undef
     new Int8Array(1).slice();
   }); // `%TypedArray%.prototype.slice` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.slice
 
-  arrayBufferViewCore.exportProto('slice', function slice(start, end) {
+  exportTypedArrayMethod$i('slice', function slice(start, end) {
     var list = $slice.call(aTypedArray$i(this), start, end);
     var C = speciesConstructor(this, this.constructor);
     var index = 0;
@@ -7461,30 +8044,33 @@
     while (length > index) result[index] = list[index++];
 
     return result;
-  }, FORCED$g);
+  }, FORCED$i);
 
   var $some$1 = arrayIteration.some;
-  var aTypedArray$j = arrayBufferViewCore.aTypedArray; // `%TypedArray%.prototype.some` method
+  var aTypedArray$j = arrayBufferViewCore.aTypedArray;
+  var exportTypedArrayMethod$j = arrayBufferViewCore.exportTypedArrayMethod; // `%TypedArray%.prototype.some` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.some
 
-  arrayBufferViewCore.exportProto('some', function some(callbackfn
+  exportTypedArrayMethod$j('some', function some(callbackfn
   /* , thisArg */
   ) {
     return $some$1(aTypedArray$j(this), callbackfn, arguments.length > 1 ? arguments[1] : undefined);
   });
 
   var aTypedArray$k = arrayBufferViewCore.aTypedArray;
+  var exportTypedArrayMethod$k = arrayBufferViewCore.exportTypedArrayMethod;
   var $sort = [].sort; // `%TypedArray%.prototype.sort` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.sort
 
-  arrayBufferViewCore.exportProto('sort', function sort(comparefn) {
+  exportTypedArrayMethod$k('sort', function sort(comparefn) {
     return $sort.call(aTypedArray$k(this), comparefn);
   });
 
-  var aTypedArray$l = arrayBufferViewCore.aTypedArray; // `%TypedArray%.prototype.subarray` method
+  var aTypedArray$l = arrayBufferViewCore.aTypedArray;
+  var exportTypedArrayMethod$l = arrayBufferViewCore.exportTypedArrayMethod; // `%TypedArray%.prototype.subarray` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.subarray
 
-  arrayBufferViewCore.exportProto('subarray', function subarray(begin, end) {
+  exportTypedArrayMethod$l('subarray', function subarray(begin, end) {
     var O = aTypedArray$l(this);
     var length = O.length;
     var beginIndex = toAbsoluteIndex(begin, length);
@@ -7493,25 +8079,27 @@
 
   var Int8Array$3 = global_1.Int8Array;
   var aTypedArray$m = arrayBufferViewCore.aTypedArray;
+  var exportTypedArrayMethod$m = arrayBufferViewCore.exportTypedArrayMethod;
   var $toLocaleString = [].toLocaleString;
   var $slice$1 = [].slice; // iOS Safari 6.x fails here
 
   var TO_LOCALE_STRING_BUG = !!Int8Array$3 && fails(function () {
     $toLocaleString.call(new Int8Array$3(1));
   });
-  var FORCED$h = fails(function () {
+  var FORCED$j = fails(function () {
     return [1, 2].toLocaleString() != new Int8Array$3([1, 2]).toLocaleString();
   }) || !fails(function () {
     Int8Array$3.prototype.toLocaleString.call([1, 2]);
   }); // `%TypedArray%.prototype.toLocaleString` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.tolocalestring
 
-  arrayBufferViewCore.exportProto('toLocaleString', function toLocaleString() {
+  exportTypedArrayMethod$m('toLocaleString', function toLocaleString() {
     return $toLocaleString.apply(TO_LOCALE_STRING_BUG ? $slice$1.call(aTypedArray$m(this)) : aTypedArray$m(this), arguments);
-  }, FORCED$h);
+  }, FORCED$j);
 
+  var exportTypedArrayMethod$n = arrayBufferViewCore.exportTypedArrayMethod;
   var Uint8Array$1 = global_1.Uint8Array;
-  var Uint8ArrayPrototype = Uint8Array$1 && Uint8Array$1.prototype;
+  var Uint8ArrayPrototype = Uint8Array$1 && Uint8Array$1.prototype || {};
   var arrayToString = [].toString;
   var arrayJoin = [].join;
 
@@ -7521,11 +8109,12 @@
     arrayToString = function toString() {
       return arrayJoin.call(this);
     };
-  } // `%TypedArray%.prototype.toString` method
+  }
+
+  var IS_NOT_ARRAY_METHOD = Uint8ArrayPrototype.toString != arrayToString; // `%TypedArray%.prototype.toString` method
   // https://tc39.github.io/ecma262/#sec-%typedarray%.prototype.tostring
 
-
-  arrayBufferViewCore.exportProto('toString', arrayToString, (Uint8ArrayPrototype || {}).toString != arrayToString);
+  exportTypedArrayMethod$n('toString', arrayToString, IS_NOT_ARRAY_METHOD);
 
   var nativeApply = getBuiltIn('Reflect', 'apply');
   var functionApply = Function.apply; // MS Edge argumentsList argument is optional
@@ -7568,12 +8157,12 @@
       /* empty */
     });
   });
-  var FORCED$i = NEW_TARGET_BUG || ARGS_BUG;
+  var FORCED$k = NEW_TARGET_BUG || ARGS_BUG;
   _export({
     target: 'Reflect',
     stat: true,
-    forced: FORCED$i,
-    sham: FORCED$i
+    forced: FORCED$k,
+    sham: FORCED$k
   }, {
     construct: function construct(Target, args
     /* , newTarget */
@@ -7646,7 +8235,7 @@
     }
   });
 
-  var getOwnPropertyDescriptor$6 = objectGetOwnPropertyDescriptor.f; // `Reflect.deleteProperty` method
+  var getOwnPropertyDescriptor$8 = objectGetOwnPropertyDescriptor.f; // `Reflect.deleteProperty` method
   // https://tc39.github.io/ecma262/#sec-reflect.deleteproperty
 
   _export({
@@ -7654,28 +8243,28 @@
     stat: true
   }, {
     deleteProperty: function deleteProperty(target, propertyKey) {
-      var descriptor = getOwnPropertyDescriptor$6(anObject(target), propertyKey);
+      var descriptor = getOwnPropertyDescriptor$8(anObject(target), propertyKey);
       return descriptor && !descriptor.configurable ? false : delete target[propertyKey];
     }
   });
 
   // https://tc39.github.io/ecma262/#sec-reflect.get
 
-  function get$1(target, propertyKey
+  function get$2(target, propertyKey
   /* , receiver */
   ) {
     var receiver = arguments.length < 3 ? target : arguments[2];
     var descriptor, prototype;
     if (anObject(target) === receiver) return target[propertyKey];
     if (descriptor = objectGetOwnPropertyDescriptor.f(target, propertyKey)) return has(descriptor, 'value') ? descriptor.value : descriptor.get === undefined ? undefined : descriptor.get.call(receiver);
-    if (isObject(prototype = objectGetPrototypeOf(target))) return get$1(prototype, propertyKey, receiver);
+    if (isObject(prototype = objectGetPrototypeOf(target))) return get$2(prototype, propertyKey, receiver);
   }
 
   _export({
     target: 'Reflect',
     stat: true
   }, {
-    get: get$1
+    get: get$2
   });
 
   // https://tc39.github.io/ecma262/#sec-reflect.getownpropertydescriptor
@@ -7732,7 +8321,7 @@
     target: 'Reflect',
     stat: true
   }, {
-    ownKeys: ownKeys
+    ownKeys: ownKeys$1
   });
 
   // https://tc39.github.io/ecma262/#sec-reflect.preventextensions
@@ -7757,7 +8346,7 @@
 
   // https://tc39.github.io/ecma262/#sec-reflect.set
 
-  function set$2(target, propertyKey, V
+  function set$3(target, propertyKey, V
   /* , receiver */
   ) {
     var receiver = arguments.length < 4 ? target : arguments[3];
@@ -7766,7 +8355,7 @@
 
     if (!ownDescriptor) {
       if (isObject(prototype = objectGetPrototypeOf(target))) {
-        return set$2(prototype, propertyKey, V, receiver);
+        return set$3(prototype, propertyKey, V, receiver);
       }
 
       ownDescriptor = createPropertyDescriptor(0);
@@ -7785,13 +8374,23 @@
     }
 
     return ownDescriptor.set === undefined ? false : (ownDescriptor.set.call(receiver, V), true);
-  }
+  } // MS Edge 17-18 Reflect.set allows setting the property to object
+  // with non-writable property on the prototype
 
+
+  var MS_EDGE_BUG = fails(function () {
+    var object = objectDefineProperty.f({}, 'a', {
+      configurable: true
+    }); // eslint-disable-next-line no-undef
+
+    return Reflect.set(objectGetPrototypeOf(object), 'a', 1, object) !== false;
+  });
   _export({
     target: 'Reflect',
-    stat: true
+    stat: true,
+    forced: MS_EDGE_BUG
   }, {
-    set: set$2
+    set: set$3
   });
 
   // https://tc39.github.io/ecma262/#sec-reflect.setprototypeof
@@ -7854,7 +8453,7 @@
     var CollectionPrototype = Collection && Collection.prototype; // some Chrome versions have non-configurable methods on DOMTokenList
 
     if (CollectionPrototype && CollectionPrototype.forEach !== arrayForEach) try {
-      hide(CollectionPrototype, 'forEach', arrayForEach);
+      createNonEnumerableProperty(CollectionPrototype, 'forEach', arrayForEach);
     } catch (error) {
       CollectionPrototype.forEach = arrayForEach;
     }
@@ -7871,15 +8470,19 @@
     if (CollectionPrototype$1) {
       // some Chrome versions have non-configurable methods on DOMTokenList
       if (CollectionPrototype$1[ITERATOR$6] !== ArrayValues) try {
-        hide(CollectionPrototype$1, ITERATOR$6, ArrayValues);
+        createNonEnumerableProperty(CollectionPrototype$1, ITERATOR$6, ArrayValues);
       } catch (error) {
         CollectionPrototype$1[ITERATOR$6] = ArrayValues;
       }
-      if (!CollectionPrototype$1[TO_STRING_TAG$4]) hide(CollectionPrototype$1, TO_STRING_TAG$4, COLLECTION_NAME$1);
+
+      if (!CollectionPrototype$1[TO_STRING_TAG$4]) {
+        createNonEnumerableProperty(CollectionPrototype$1, TO_STRING_TAG$4, COLLECTION_NAME$1);
+      }
+
       if (domIterables[COLLECTION_NAME$1]) for (var METHOD_NAME in es_array_iterator) {
         // some Chrome versions have non-configurable methods on DOMTokenList
         if (CollectionPrototype$1[METHOD_NAME] !== es_array_iterator[METHOD_NAME]) try {
-          hide(CollectionPrototype$1, METHOD_NAME, es_array_iterator[METHOD_NAME]);
+          createNonEnumerableProperty(CollectionPrototype$1, METHOD_NAME, es_array_iterator[METHOD_NAME]);
         } catch (error) {
           CollectionPrototype$1[METHOD_NAME] = es_array_iterator[METHOD_NAME];
         }
@@ -7887,13 +8490,13 @@
     }
   }
 
-  var FORCED$j = !global_1.setImmediate || !global_1.clearImmediate; // http://w3c.github.io/setImmediate/
+  var FORCED$l = !global_1.setImmediate || !global_1.clearImmediate; // http://w3c.github.io/setImmediate/
 
   _export({
     global: true,
     bind: true,
     enumerable: true,
-    forced: FORCED$j
+    forced: FORCED$l
   }, {
     // `setImmediate` method
     // http://w3c.github.io/setImmediate/#si-setImmediate
@@ -7903,8 +8506,8 @@
     clearImmediate: task.clear
   });
 
-  var process$3 = global_1.process;
-  var isNode = classofRaw(process$3) == 'process'; // `queueMicrotask` method
+  var process$4 = global_1.process;
+  var isNode = classofRaw(process$4) == 'process'; // `queueMicrotask` method
   // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-queuemicrotask
 
   _export({
@@ -7913,13 +8516,13 @@
     noTargetGet: true
   }, {
     queueMicrotask: function queueMicrotask(fn) {
-      var domain = isNode && process$3.domain;
+      var domain = isNode && process$4.domain;
       microtask(domain ? domain.bind(fn) : fn);
     }
   });
 
   var slice$1 = [].slice;
-  var MSIE = /MSIE .\./.test(userAgent); // <- dirty ie9- check
+  var MSIE = /MSIE .\./.test(engineUserAgent); // <- dirty ie9- check
 
   var wrap$1 = function (scheduler) {
     return function (handler, timeout
@@ -7951,13 +8554,20 @@
 
   var ITERATOR$7 = wellKnownSymbol('iterator');
   var nativeUrl = !fails(function () {
-    var url = new URL('b?e=1', 'http://a');
+    var url = new URL('b?a=1&b=2&c=3', 'http://a');
     var searchParams = url.searchParams;
+    var result = '';
     url.pathname = 'c%20d';
-    return isPure && !url.toJSON || !searchParams.sort || url.href !== 'http://a/c%20d?e=1' || searchParams.get('e') !== '1' || String(new URLSearchParams('?a=1')) !== 'a=1' || !searchParams[ITERATOR$7] // throws in Edge
+    searchParams.forEach(function (value, key) {
+      searchParams['delete']('b');
+      result += key + value;
+    });
+    return isPure && !url.toJSON || !searchParams.sort || url.href !== 'http://a/c%20d?a=1&c=3' || searchParams.get('c') !== '3' || String(new URLSearchParams('?a=1')) !== 'a=1' || !searchParams[ITERATOR$7] // throws in Edge
     || new URL('https://a@b').username !== 'a' || new URLSearchParams(new URLSearchParams('a=b')).get('a') !== 'b' // not punycoded in Edge
     || new URL('http://тест').host !== 'xn--e1aybc' // not escaped in Chrome 62-
-    || new URL('http://a#б').hash !== '#%D0%B1';
+    || new URL('http://a#б').hash !== '#%D0%B1' // fails in Chrome 66-
+    || result !== 'a1c3' // throws in Safari
+    || new URL('http://x', undefined).host !== 'x';
   });
 
   var maxInt = 2147483647; // aka. 0x7FFFFFFF or 2^31-1
@@ -7978,7 +8588,7 @@
 
   var OVERFLOW_ERROR = 'Overflow: input needs wider integers to process';
   var baseMinusTMin = base - tMin;
-  var floor$7 = Math.floor;
+  var floor$8 = Math.floor;
   var stringFromCharCode = String.fromCharCode;
   /**
    * Creates an array containing the numeric code points of each Unicode
@@ -8034,14 +8644,14 @@
 
   var adapt = function (delta, numPoints, firstTime) {
     var k = 0;
-    delta = firstTime ? floor$7(delta / damp) : delta >> 1;
-    delta += floor$7(delta / numPoints);
+    delta = firstTime ? floor$8(delta / damp) : delta >> 1;
+    delta += floor$8(delta / numPoints);
 
     for (; delta > baseMinusTMin * tMax >> 1; k += base) {
-      delta = floor$7(delta / baseMinusTMin);
+      delta = floor$8(delta / baseMinusTMin);
     }
 
-    return floor$7(k + (baseMinusTMin + 1) * delta / (delta + skew));
+    return floor$8(k + (baseMinusTMin + 1) * delta / (delta + skew));
   };
   /**
    * Converts a string of Unicode symbols (e.g. a domain name label) to a
@@ -8095,7 +8705,7 @@
 
       var handledCPCountPlusOne = handledCPCount + 1;
 
-      if (m - n > floor$7((maxInt - delta) / handledCPCountPlusOne)) {
+      if (m - n > floor$8((maxInt - delta) / handledCPCountPlusOne)) {
         throw RangeError(OVERFLOW_ERROR);
       }
 
@@ -8121,7 +8731,7 @@
             var qMinusT = q - t;
             var baseMinusT = base - t;
             output.push(stringFromCharCode(digitToBasic(t + qMinusT % baseMinusT)));
-            q = floor$7(qMinusT / baseMinusT);
+            q = floor$8(qMinusT / baseMinusT);
           }
 
           output.push(stringFromCharCode(digitToBasic(q)));
@@ -8138,7 +8748,7 @@
     return output.join('');
   };
 
-  var punycodeToAscii = function (input) {
+  var stringPunycodeToAscii = function (input) {
     var encoded = [];
     var labels = input.toLowerCase().replace(regexSeparators, '\u002E').split('.');
     var i, label;
@@ -8161,10 +8771,12 @@
     return anObject(iteratorMethod.call(it));
   };
 
+  var $fetch$1 = getBuiltIn('fetch');
+  var Headers = getBuiltIn('Headers');
   var ITERATOR$8 = wellKnownSymbol('iterator');
   var URL_SEARCH_PARAMS = 'URLSearchParams';
   var URL_SEARCH_PARAMS_ITERATOR = URL_SEARCH_PARAMS + 'Iterator';
-  var setInternalState$7 = internalState.set;
+  var setInternalState$9 = internalState.set;
   var getInternalParamsState = internalState.getterFor(URL_SEARCH_PARAMS);
   var getInternalIteratorState = internalState.getterFor(URL_SEARCH_PARAMS_ITERATOR);
   var plus = /\+/g;
@@ -8245,7 +8857,7 @@
   };
 
   var URLSearchParamsIterator = createIteratorConstructor(function Iterator(params, kind) {
-    setInternalState$7(this, {
+    setInternalState$9(this, {
       type: URL_SEARCH_PARAMS_ITERATOR,
       iterator: getIterator(getInternalParamsState(params).entries),
       kind: kind
@@ -8271,8 +8883,8 @@
     var init = arguments.length > 0 ? arguments[0] : undefined;
     var that = this;
     var entries = [];
-    var iteratorMethod, iterator, step, entryIterator, first, second, key;
-    setInternalState$7(that, {
+    var iteratorMethod, iterator, next, step, entryIterator, entryNext, first, second, key;
+    setInternalState$9(that, {
       type: URL_SEARCH_PARAMS,
       entries: entries,
       updateURL: function () {
@@ -8287,10 +8899,12 @@
 
         if (typeof iteratorMethod === 'function') {
           iterator = iteratorMethod.call(init);
+          next = iterator.next;
 
-          while (!(step = iterator.next()).done) {
+          while (!(step = next.call(iterator)).done) {
             entryIterator = getIterator(anObject(step.value));
-            if ((first = entryIterator.next()).done || (second = entryIterator.next()).done || !entryIterator.next().done) throw TypeError('Expected sequence with length 2');
+            entryNext = entryIterator.next;
+            if ((first = entryNext.call(entryIterator)).done || (second = entryNext.call(entryIterator)).done || !entryNext.call(entryIterator).done) throw TypeError('Expected sequence with length 2');
             entries.push({
               key: first.value + '',
               value: second.value + ''
@@ -8436,7 +9050,7 @@
     /* , thisArg */
     ) {
       var entries = getInternalParamsState(this).entries;
-      var boundFunction = bindContext(callback, arguments.length > 1 ? arguments[1] : undefined, 3);
+      var boundFunction = functionBindContext(callback, arguments.length > 1 ? arguments[1] : undefined, 3);
       var index = 0;
       var entry;
 
@@ -8485,7 +9099,49 @@
     forced: !nativeUrl
   }, {
     URLSearchParams: URLSearchParamsConstructor
-  });
+  }); // Wrap `fetch` for correct work with polyfilled `URLSearchParams`
+  // https://github.com/zloirock/core-js/issues/674
+
+  if (!nativeUrl && typeof $fetch$1 == 'function' && typeof Headers == 'function') {
+    _export({
+      global: true,
+      enumerable: true,
+      forced: true
+    }, {
+      fetch: function fetch(input
+      /* , init */
+      ) {
+        var args = [input];
+        var init, body, headers;
+
+        if (arguments.length > 1) {
+          init = arguments[1];
+
+          if (isObject(init)) {
+            body = init.body;
+
+            if (classof(body) === URL_SEARCH_PARAMS) {
+              headers = init.headers ? new Headers(init.headers) : new Headers();
+
+              if (!headers.has('content-type')) {
+                headers.set('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
+              }
+
+              init = objectCreate(init, {
+                body: createPropertyDescriptor(0, String(body)),
+                headers: createPropertyDescriptor(0, headers)
+              });
+            }
+          }
+
+          args.push(init);
+        }
+
+        return $fetch$1.apply(this, args);
+      }
+    });
+  }
+
   var web_urlSearchParams = {
     URLSearchParams: URLSearchParamsConstructor,
     getState: getInternalParamsState
@@ -8495,10 +9151,10 @@
   var NativeURL = global_1.URL;
   var URLSearchParams$1 = web_urlSearchParams.URLSearchParams;
   var getInternalSearchParamsState = web_urlSearchParams.getState;
-  var setInternalState$8 = internalState.set;
+  var setInternalState$a = internalState.set;
   var getInternalURLState = internalState.getterFor('URL');
-  var floor$8 = Math.floor;
-  var pow$3 = Math.pow;
+  var floor$9 = Math.floor;
+  var pow$4 = Math.pow;
   var INVALID_AUTHORITY = 'Invalid authority';
   var INVALID_SCHEME = 'Invalid scheme';
   var INVALID_HOST = 'Invalid host';
@@ -8539,7 +9195,7 @@
 
       url.host = result;
     } else {
-      input = punycodeToAscii(input);
+      input = stringPunycodeToAscii(input);
       if (FORBIDDEN_HOST_CODE_POINT.test(input)) return INVALID_HOST;
       result = parseIPv4(input);
       if (result === null) return INVALID_HOST;
@@ -8583,14 +9239,14 @@
       number = numbers[index];
 
       if (index == partsLength - 1) {
-        if (number >= pow$3(256, 5 - partsLength)) return null;
+        if (number >= pow$4(256, 5 - partsLength)) return null;
       } else if (number > 255) return null;
     }
 
     ipv4 = numbers.pop();
 
     for (index = 0; index < numbers.length; index++) {
-      ipv4 += numbers[index] * pow$3(256, 3 - index);
+      ipv4 += numbers[index] * pow$4(256, 3 - index);
     }
 
     return ipv4;
@@ -8723,7 +9379,7 @@
 
       for (index = 0; index < 4; index++) {
         result.unshift(host % 256);
-        host = floor$8(host / 256);
+        host = floor$9(host / 256);
       }
 
       return result.join('.'); // ipv6
@@ -8785,7 +9441,6 @@
   var specialSchemes = {
     ftp: 21,
     file: null,
-    gopher: 70,
     http: 80,
     https: 443,
     ws: 80,
@@ -9282,7 +9937,7 @@
     var that = anInstance(this, URLConstructor, 'URL');
     var base = arguments.length > 1 ? arguments[1] : undefined;
     var urlString = String(url);
-    var state = setInternalState$8(that, {
+    var state = setInternalState$a(that, {
       type: 'URL'
     });
     var baseState, failure;
@@ -10455,7 +11110,7 @@
 
   var Chart = createCommonjsModule(function (module, exports) {
     /*!
-     * Chart.js v2.8.0
+     * Chart.js v2.9.3
      * https://www.chartjs.org
      * (c) 2019 Chart.js Contributors
      * Released under the MIT License
@@ -10463,782 +11118,1252 @@
     (function (global, factory) {
        module.exports = factory(function () {
         try {
-          return moment;
+          return moment$1;
         } catch (e) {}
       }()) ;
     })(commonjsGlobal, function (moment) {
 
       moment = moment && moment.hasOwnProperty('default') ? moment['default'] : moment;
-      /* MIT license */
 
-      var conversions = {
-        rgb2hsl: rgb2hsl,
-        rgb2hsv: rgb2hsv,
-        rgb2hwb: rgb2hwb,
-        rgb2cmyk: rgb2cmyk,
-        rgb2keyword: rgb2keyword,
-        rgb2xyz: rgb2xyz,
-        rgb2lab: rgb2lab,
-        rgb2lch: rgb2lch,
-        hsl2rgb: hsl2rgb,
-        hsl2hsv: hsl2hsv,
-        hsl2hwb: hsl2hwb,
-        hsl2cmyk: hsl2cmyk,
-        hsl2keyword: hsl2keyword,
-        hsv2rgb: hsv2rgb,
-        hsv2hsl: hsv2hsl,
-        hsv2hwb: hsv2hwb,
-        hsv2cmyk: hsv2cmyk,
-        hsv2keyword: hsv2keyword,
-        hwb2rgb: hwb2rgb,
-        hwb2hsl: hwb2hsl,
-        hwb2hsv: hwb2hsv,
-        hwb2cmyk: hwb2cmyk,
-        hwb2keyword: hwb2keyword,
-        cmyk2rgb: cmyk2rgb,
-        cmyk2hsl: cmyk2hsl,
-        cmyk2hsv: cmyk2hsv,
-        cmyk2hwb: cmyk2hwb,
-        cmyk2keyword: cmyk2keyword,
-        keyword2rgb: keyword2rgb,
-        keyword2hsl: keyword2hsl,
-        keyword2hsv: keyword2hsv,
-        keyword2hwb: keyword2hwb,
-        keyword2cmyk: keyword2cmyk,
-        keyword2lab: keyword2lab,
-        keyword2xyz: keyword2xyz,
-        xyz2rgb: xyz2rgb,
-        xyz2lab: xyz2lab,
-        xyz2lch: xyz2lch,
-        lab2xyz: lab2xyz,
-        lab2rgb: lab2rgb,
-        lab2lch: lab2lch,
-        lch2lab: lch2lab,
-        lch2xyz: lch2xyz,
-        lch2rgb: lch2rgb
+      function createCommonjsModule(fn, module) {
+        return module = {
+          exports: {}
+        }, fn(module, module.exports), module.exports;
+      }
+
+      function getCjsExportFromNamespace(n) {
+        return n && n['default'] || n;
+      }
+
+      var colorName = {
+        "aliceblue": [240, 248, 255],
+        "antiquewhite": [250, 235, 215],
+        "aqua": [0, 255, 255],
+        "aquamarine": [127, 255, 212],
+        "azure": [240, 255, 255],
+        "beige": [245, 245, 220],
+        "bisque": [255, 228, 196],
+        "black": [0, 0, 0],
+        "blanchedalmond": [255, 235, 205],
+        "blue": [0, 0, 255],
+        "blueviolet": [138, 43, 226],
+        "brown": [165, 42, 42],
+        "burlywood": [222, 184, 135],
+        "cadetblue": [95, 158, 160],
+        "chartreuse": [127, 255, 0],
+        "chocolate": [210, 105, 30],
+        "coral": [255, 127, 80],
+        "cornflowerblue": [100, 149, 237],
+        "cornsilk": [255, 248, 220],
+        "crimson": [220, 20, 60],
+        "cyan": [0, 255, 255],
+        "darkblue": [0, 0, 139],
+        "darkcyan": [0, 139, 139],
+        "darkgoldenrod": [184, 134, 11],
+        "darkgray": [169, 169, 169],
+        "darkgreen": [0, 100, 0],
+        "darkgrey": [169, 169, 169],
+        "darkkhaki": [189, 183, 107],
+        "darkmagenta": [139, 0, 139],
+        "darkolivegreen": [85, 107, 47],
+        "darkorange": [255, 140, 0],
+        "darkorchid": [153, 50, 204],
+        "darkred": [139, 0, 0],
+        "darksalmon": [233, 150, 122],
+        "darkseagreen": [143, 188, 143],
+        "darkslateblue": [72, 61, 139],
+        "darkslategray": [47, 79, 79],
+        "darkslategrey": [47, 79, 79],
+        "darkturquoise": [0, 206, 209],
+        "darkviolet": [148, 0, 211],
+        "deeppink": [255, 20, 147],
+        "deepskyblue": [0, 191, 255],
+        "dimgray": [105, 105, 105],
+        "dimgrey": [105, 105, 105],
+        "dodgerblue": [30, 144, 255],
+        "firebrick": [178, 34, 34],
+        "floralwhite": [255, 250, 240],
+        "forestgreen": [34, 139, 34],
+        "fuchsia": [255, 0, 255],
+        "gainsboro": [220, 220, 220],
+        "ghostwhite": [248, 248, 255],
+        "gold": [255, 215, 0],
+        "goldenrod": [218, 165, 32],
+        "gray": [128, 128, 128],
+        "green": [0, 128, 0],
+        "greenyellow": [173, 255, 47],
+        "grey": [128, 128, 128],
+        "honeydew": [240, 255, 240],
+        "hotpink": [255, 105, 180],
+        "indianred": [205, 92, 92],
+        "indigo": [75, 0, 130],
+        "ivory": [255, 255, 240],
+        "khaki": [240, 230, 140],
+        "lavender": [230, 230, 250],
+        "lavenderblush": [255, 240, 245],
+        "lawngreen": [124, 252, 0],
+        "lemonchiffon": [255, 250, 205],
+        "lightblue": [173, 216, 230],
+        "lightcoral": [240, 128, 128],
+        "lightcyan": [224, 255, 255],
+        "lightgoldenrodyellow": [250, 250, 210],
+        "lightgray": [211, 211, 211],
+        "lightgreen": [144, 238, 144],
+        "lightgrey": [211, 211, 211],
+        "lightpink": [255, 182, 193],
+        "lightsalmon": [255, 160, 122],
+        "lightseagreen": [32, 178, 170],
+        "lightskyblue": [135, 206, 250],
+        "lightslategray": [119, 136, 153],
+        "lightslategrey": [119, 136, 153],
+        "lightsteelblue": [176, 196, 222],
+        "lightyellow": [255, 255, 224],
+        "lime": [0, 255, 0],
+        "limegreen": [50, 205, 50],
+        "linen": [250, 240, 230],
+        "magenta": [255, 0, 255],
+        "maroon": [128, 0, 0],
+        "mediumaquamarine": [102, 205, 170],
+        "mediumblue": [0, 0, 205],
+        "mediumorchid": [186, 85, 211],
+        "mediumpurple": [147, 112, 219],
+        "mediumseagreen": [60, 179, 113],
+        "mediumslateblue": [123, 104, 238],
+        "mediumspringgreen": [0, 250, 154],
+        "mediumturquoise": [72, 209, 204],
+        "mediumvioletred": [199, 21, 133],
+        "midnightblue": [25, 25, 112],
+        "mintcream": [245, 255, 250],
+        "mistyrose": [255, 228, 225],
+        "moccasin": [255, 228, 181],
+        "navajowhite": [255, 222, 173],
+        "navy": [0, 0, 128],
+        "oldlace": [253, 245, 230],
+        "olive": [128, 128, 0],
+        "olivedrab": [107, 142, 35],
+        "orange": [255, 165, 0],
+        "orangered": [255, 69, 0],
+        "orchid": [218, 112, 214],
+        "palegoldenrod": [238, 232, 170],
+        "palegreen": [152, 251, 152],
+        "paleturquoise": [175, 238, 238],
+        "palevioletred": [219, 112, 147],
+        "papayawhip": [255, 239, 213],
+        "peachpuff": [255, 218, 185],
+        "peru": [205, 133, 63],
+        "pink": [255, 192, 203],
+        "plum": [221, 160, 221],
+        "powderblue": [176, 224, 230],
+        "purple": [128, 0, 128],
+        "rebeccapurple": [102, 51, 153],
+        "red": [255, 0, 0],
+        "rosybrown": [188, 143, 143],
+        "royalblue": [65, 105, 225],
+        "saddlebrown": [139, 69, 19],
+        "salmon": [250, 128, 114],
+        "sandybrown": [244, 164, 96],
+        "seagreen": [46, 139, 87],
+        "seashell": [255, 245, 238],
+        "sienna": [160, 82, 45],
+        "silver": [192, 192, 192],
+        "skyblue": [135, 206, 235],
+        "slateblue": [106, 90, 205],
+        "slategray": [112, 128, 144],
+        "slategrey": [112, 128, 144],
+        "snow": [255, 250, 250],
+        "springgreen": [0, 255, 127],
+        "steelblue": [70, 130, 180],
+        "tan": [210, 180, 140],
+        "teal": [0, 128, 128],
+        "thistle": [216, 191, 216],
+        "tomato": [255, 99, 71],
+        "turquoise": [64, 224, 208],
+        "violet": [238, 130, 238],
+        "wheat": [245, 222, 179],
+        "white": [255, 255, 255],
+        "whitesmoke": [245, 245, 245],
+        "yellow": [255, 255, 0],
+        "yellowgreen": [154, 205, 50]
       };
+      var conversions = createCommonjsModule(function (module) {
+        /* MIT license */
+        // NOTE: conversions should only return primitive values (i.e. arrays, or
+        //       values that give correct `typeof` results).
+        //       do not use box values types (i.e. Number(), String(), etc.)
+        var reverseKeywords = {};
 
-      function rgb2hsl(rgb) {
-        var r = rgb[0] / 255,
-            g = rgb[1] / 255,
-            b = rgb[2] / 255,
-            min = Math.min(r, g, b),
-            max = Math.max(r, g, b),
-            delta = max - min,
-            h,
-            s,
-            l;
-        if (max == min) h = 0;else if (r == max) h = (g - b) / delta;else if (g == max) h = 2 + (b - r) / delta;else if (b == max) h = 4 + (r - g) / delta;
-        h = Math.min(h * 60, 360);
-        if (h < 0) h += 360;
-        l = (min + max) / 2;
-        if (max == min) s = 0;else if (l <= 0.5) s = delta / (max + min);else s = delta / (2 - max - min);
-        return [h, s * 100, l * 100];
-      }
-
-      function rgb2hsv(rgb) {
-        var r = rgb[0],
-            g = rgb[1],
-            b = rgb[2],
-            min = Math.min(r, g, b),
-            max = Math.max(r, g, b),
-            delta = max - min,
-            h,
-            s,
-            v;
-        if (max == 0) s = 0;else s = delta / max * 1000 / 10;
-        if (max == min) h = 0;else if (r == max) h = (g - b) / delta;else if (g == max) h = 2 + (b - r) / delta;else if (b == max) h = 4 + (r - g) / delta;
-        h = Math.min(h * 60, 360);
-        if (h < 0) h += 360;
-        v = max / 255 * 1000 / 10;
-        return [h, s, v];
-      }
-
-      function rgb2hwb(rgb) {
-        var r = rgb[0],
-            g = rgb[1],
-            b = rgb[2],
-            h = rgb2hsl(rgb)[0],
-            w = 1 / 255 * Math.min(r, Math.min(g, b)),
-            b = 1 - 1 / 255 * Math.max(r, Math.max(g, b));
-        return [h, w * 100, b * 100];
-      }
-
-      function rgb2cmyk(rgb) {
-        var r = rgb[0] / 255,
-            g = rgb[1] / 255,
-            b = rgb[2] / 255,
-            c,
-            m,
-            y,
-            k;
-        k = Math.min(1 - r, 1 - g, 1 - b);
-        c = (1 - r - k) / (1 - k) || 0;
-        m = (1 - g - k) / (1 - k) || 0;
-        y = (1 - b - k) / (1 - k) || 0;
-        return [c * 100, m * 100, y * 100, k * 100];
-      }
-
-      function rgb2keyword(rgb) {
-        return reverseKeywords[JSON.stringify(rgb)];
-      }
-
-      function rgb2xyz(rgb) {
-        var r = rgb[0] / 255,
-            g = rgb[1] / 255,
-            b = rgb[2] / 255; // assume sRGB
-
-        r = r > 0.04045 ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
-        g = g > 0.04045 ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
-        b = b > 0.04045 ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
-        var x = r * 0.4124 + g * 0.3576 + b * 0.1805;
-        var y = r * 0.2126 + g * 0.7152 + b * 0.0722;
-        var z = r * 0.0193 + g * 0.1192 + b * 0.9505;
-        return [x * 100, y * 100, z * 100];
-      }
-
-      function rgb2lab(rgb) {
-        var xyz = rgb2xyz(rgb),
-            x = xyz[0],
-            y = xyz[1],
-            z = xyz[2],
-            l,
-            a,
-            b;
-        x /= 95.047;
-        y /= 100;
-        z /= 108.883;
-        x = x > 0.008856 ? Math.pow(x, 1 / 3) : 7.787 * x + 16 / 116;
-        y = y > 0.008856 ? Math.pow(y, 1 / 3) : 7.787 * y + 16 / 116;
-        z = z > 0.008856 ? Math.pow(z, 1 / 3) : 7.787 * z + 16 / 116;
-        l = 116 * y - 16;
-        a = 500 * (x - y);
-        b = 200 * (y - z);
-        return [l, a, b];
-      }
-
-      function rgb2lch(args) {
-        return lab2lch(rgb2lab(args));
-      }
-
-      function hsl2rgb(hsl) {
-        var h = hsl[0] / 360,
-            s = hsl[1] / 100,
-            l = hsl[2] / 100,
-            t1,
-            t2,
-            t3,
-            rgb,
-            val;
-
-        if (s == 0) {
-          val = l * 255;
-          return [val, val, val];
+        for (var key in colorName) {
+          if (colorName.hasOwnProperty(key)) {
+            reverseKeywords[colorName[key]] = key;
+          }
         }
 
-        if (l < 0.5) t2 = l * (1 + s);else t2 = l + s - l * s;
-        t1 = 2 * l - t2;
-        rgb = [0, 0, 0];
+        var convert = module.exports = {
+          rgb: {
+            channels: 3,
+            labels: 'rgb'
+          },
+          hsl: {
+            channels: 3,
+            labels: 'hsl'
+          },
+          hsv: {
+            channels: 3,
+            labels: 'hsv'
+          },
+          hwb: {
+            channels: 3,
+            labels: 'hwb'
+          },
+          cmyk: {
+            channels: 4,
+            labels: 'cmyk'
+          },
+          xyz: {
+            channels: 3,
+            labels: 'xyz'
+          },
+          lab: {
+            channels: 3,
+            labels: 'lab'
+          },
+          lch: {
+            channels: 3,
+            labels: 'lch'
+          },
+          hex: {
+            channels: 1,
+            labels: ['hex']
+          },
+          keyword: {
+            channels: 1,
+            labels: ['keyword']
+          },
+          ansi16: {
+            channels: 1,
+            labels: ['ansi16']
+          },
+          ansi256: {
+            channels: 1,
+            labels: ['ansi256']
+          },
+          hcg: {
+            channels: 3,
+            labels: ['h', 'c', 'g']
+          },
+          apple: {
+            channels: 3,
+            labels: ['r16', 'g16', 'b16']
+          },
+          gray: {
+            channels: 1,
+            labels: ['gray']
+          }
+        }; // hide .channels and .labels properties
 
-        for (var i = 0; i < 3; i++) {
-          t3 = h + 1 / 3 * -(i - 1);
-          t3 < 0 && t3++;
-          t3 > 1 && t3--;
-          if (6 * t3 < 1) val = t1 + (t2 - t1) * 6 * t3;else if (2 * t3 < 1) val = t2;else if (3 * t3 < 2) val = t1 + (t2 - t1) * (2 / 3 - t3) * 6;else val = t1;
-          rgb[i] = val * 255;
+        for (var model in convert) {
+          if (convert.hasOwnProperty(model)) {
+            if (!('channels' in convert[model])) {
+              throw new Error('missing channels property: ' + model);
+            }
+
+            if (!('labels' in convert[model])) {
+              throw new Error('missing channel labels property: ' + model);
+            }
+
+            if (convert[model].labels.length !== convert[model].channels) {
+              throw new Error('channel and label counts mismatch: ' + model);
+            }
+
+            var channels = convert[model].channels;
+            var labels = convert[model].labels;
+            delete convert[model].channels;
+            delete convert[model].labels;
+            Object.defineProperty(convert[model], 'channels', {
+              value: channels
+            });
+            Object.defineProperty(convert[model], 'labels', {
+              value: labels
+            });
+          }
         }
 
-        return rgb;
-      }
-
-      function hsl2hsv(hsl) {
-        var h = hsl[0],
-            s = hsl[1] / 100,
-            l = hsl[2] / 100,
-            sv,
-            v;
-
-        if (l === 0) {
-          // no need to do calc on black
-          // also avoids divide by 0 error
-          return [0, 0, 0];
-        }
-
-        l *= 2;
-        s *= l <= 1 ? l : 2 - l;
-        v = (l + s) / 2;
-        sv = 2 * s / (l + s);
-        return [h, sv * 100, v * 100];
-      }
-
-      function hsl2hwb(args) {
-        return rgb2hwb(hsl2rgb(args));
-      }
-
-      function hsl2cmyk(args) {
-        return rgb2cmyk(hsl2rgb(args));
-      }
-
-      function hsl2keyword(args) {
-        return rgb2keyword(hsl2rgb(args));
-      }
-
-      function hsv2rgb(hsv) {
-        var h = hsv[0] / 60,
-            s = hsv[1] / 100,
-            v = hsv[2] / 100,
-            hi = Math.floor(h) % 6;
-        var f = h - Math.floor(h),
-            p = 255 * v * (1 - s),
-            q = 255 * v * (1 - s * f),
-            t = 255 * v * (1 - s * (1 - f)),
-            v = 255 * v;
-
-        switch (hi) {
-          case 0:
-            return [v, t, p];
-
-          case 1:
-            return [q, v, p];
-
-          case 2:
-            return [p, v, t];
-
-          case 3:
-            return [p, q, v];
-
-          case 4:
-            return [t, p, v];
-
-          case 5:
-            return [v, p, q];
-        }
-      }
-
-      function hsv2hsl(hsv) {
-        var h = hsv[0],
-            s = hsv[1] / 100,
-            v = hsv[2] / 100,
-            sl,
-            l;
-        l = (2 - s) * v;
-        sl = s * v;
-        sl /= l <= 1 ? l : 2 - l;
-        sl = sl || 0;
-        l /= 2;
-        return [h, sl * 100, l * 100];
-      }
-
-      function hsv2hwb(args) {
-        return rgb2hwb(hsv2rgb(args));
-      }
-
-      function hsv2cmyk(args) {
-        return rgb2cmyk(hsv2rgb(args));
-      }
-
-      function hsv2keyword(args) {
-        return rgb2keyword(hsv2rgb(args));
-      } // http://dev.w3.org/csswg/css-color/#hwb-to-rgb
-
-
-      function hwb2rgb(hwb) {
-        var h = hwb[0] / 360,
-            wh = hwb[1] / 100,
-            bl = hwb[2] / 100,
-            ratio = wh + bl,
-            i,
-            v,
-            f,
-            n; // wh + bl cant be > 1
-
-        if (ratio > 1) {
-          wh /= ratio;
-          bl /= ratio;
-        }
-
-        i = Math.floor(6 * h);
-        v = 1 - bl;
-        f = 6 * h - i;
-
-        if ((i & 0x01) != 0) {
-          f = 1 - f;
-        }
-
-        n = wh + f * (v - wh); // linear interpolation
-
-        switch (i) {
-          default:
-          case 6:
-          case 0:
-            r = v;
-            g = n;
-            b = wh;
-            break;
-
-          case 1:
-            r = n;
-            g = v;
-            b = wh;
-            break;
-
-          case 2:
-            r = wh;
-            g = v;
-            b = n;
-            break;
-
-          case 3:
-            r = wh;
-            g = n;
-            b = v;
-            break;
-
-          case 4:
-            r = n;
-            g = wh;
-            b = v;
-            break;
-
-          case 5:
-            r = v;
-            g = wh;
-            b = n;
-            break;
-        }
-
-        return [r * 255, g * 255, b * 255];
-      }
-
-      function hwb2hsl(args) {
-        return rgb2hsl(hwb2rgb(args));
-      }
-
-      function hwb2hsv(args) {
-        return rgb2hsv(hwb2rgb(args));
-      }
-
-      function hwb2cmyk(args) {
-        return rgb2cmyk(hwb2rgb(args));
-      }
-
-      function hwb2keyword(args) {
-        return rgb2keyword(hwb2rgb(args));
-      }
-
-      function cmyk2rgb(cmyk) {
-        var c = cmyk[0] / 100,
-            m = cmyk[1] / 100,
-            y = cmyk[2] / 100,
-            k = cmyk[3] / 100,
-            r,
-            g,
-            b;
-        r = 1 - Math.min(1, c * (1 - k) + k);
-        g = 1 - Math.min(1, m * (1 - k) + k);
-        b = 1 - Math.min(1, y * (1 - k) + k);
-        return [r * 255, g * 255, b * 255];
-      }
-
-      function cmyk2hsl(args) {
-        return rgb2hsl(cmyk2rgb(args));
-      }
-
-      function cmyk2hsv(args) {
-        return rgb2hsv(cmyk2rgb(args));
-      }
-
-      function cmyk2hwb(args) {
-        return rgb2hwb(cmyk2rgb(args));
-      }
-
-      function cmyk2keyword(args) {
-        return rgb2keyword(cmyk2rgb(args));
-      }
-
-      function xyz2rgb(xyz) {
-        var x = xyz[0] / 100,
-            y = xyz[1] / 100,
-            z = xyz[2] / 100,
-            r,
-            g,
-            b;
-        r = x * 3.2406 + y * -1.5372 + z * -0.4986;
-        g = x * -0.9689 + y * 1.8758 + z * 0.0415;
-        b = x * 0.0557 + y * -0.2040 + z * 1.0570; // assume sRGB
-
-        r = r > 0.0031308 ? 1.055 * Math.pow(r, 1.0 / 2.4) - 0.055 : r = r * 12.92;
-        g = g > 0.0031308 ? 1.055 * Math.pow(g, 1.0 / 2.4) - 0.055 : g = g * 12.92;
-        b = b > 0.0031308 ? 1.055 * Math.pow(b, 1.0 / 2.4) - 0.055 : b = b * 12.92;
-        r = Math.min(Math.max(0, r), 1);
-        g = Math.min(Math.max(0, g), 1);
-        b = Math.min(Math.max(0, b), 1);
-        return [r * 255, g * 255, b * 255];
-      }
-
-      function xyz2lab(xyz) {
-        var x = xyz[0],
-            y = xyz[1],
-            z = xyz[2],
-            l,
-            a,
-            b;
-        x /= 95.047;
-        y /= 100;
-        z /= 108.883;
-        x = x > 0.008856 ? Math.pow(x, 1 / 3) : 7.787 * x + 16 / 116;
-        y = y > 0.008856 ? Math.pow(y, 1 / 3) : 7.787 * y + 16 / 116;
-        z = z > 0.008856 ? Math.pow(z, 1 / 3) : 7.787 * z + 16 / 116;
-        l = 116 * y - 16;
-        a = 500 * (x - y);
-        b = 200 * (y - z);
-        return [l, a, b];
-      }
-
-      function xyz2lch(args) {
-        return lab2lch(xyz2lab(args));
-      }
-
-      function lab2xyz(lab) {
-        var l = lab[0],
-            a = lab[1],
-            b = lab[2],
-            x,
-            y,
-            z,
-            y2;
-
-        if (l <= 8) {
-          y = l * 100 / 903.3;
-          y2 = 7.787 * (y / 100) + 16 / 116;
-        } else {
-          y = 100 * Math.pow((l + 16) / 116, 3);
-          y2 = Math.pow(y / 100, 1 / 3);
-        }
-
-        x = x / 95.047 <= 0.008856 ? x = 95.047 * (a / 500 + y2 - 16 / 116) / 7.787 : 95.047 * Math.pow(a / 500 + y2, 3);
-        z = z / 108.883 <= 0.008859 ? z = 108.883 * (y2 - b / 200 - 16 / 116) / 7.787 : 108.883 * Math.pow(y2 - b / 200, 3);
-        return [x, y, z];
-      }
-
-      function lab2lch(lab) {
-        var l = lab[0],
-            a = lab[1],
-            b = lab[2],
-            hr,
-            h,
-            c;
-        hr = Math.atan2(b, a);
-        h = hr * 360 / 2 / Math.PI;
-
-        if (h < 0) {
-          h += 360;
-        }
-
-        c = Math.sqrt(a * a + b * b);
-        return [l, c, h];
-      }
-
-      function lab2rgb(args) {
-        return xyz2rgb(lab2xyz(args));
-      }
-
-      function lch2lab(lch) {
-        var l = lch[0],
-            c = lch[1],
-            h = lch[2],
-            a,
-            b,
-            hr;
-        hr = h / 360 * 2 * Math.PI;
-        a = c * Math.cos(hr);
-        b = c * Math.sin(hr);
-        return [l, a, b];
-      }
-
-      function lch2xyz(args) {
-        return lab2xyz(lch2lab(args));
-      }
-
-      function lch2rgb(args) {
-        return lab2rgb(lch2lab(args));
-      }
-
-      function keyword2rgb(keyword) {
-        return cssKeywords[keyword];
-      }
-
-      function keyword2hsl(args) {
-        return rgb2hsl(keyword2rgb(args));
-      }
-
-      function keyword2hsv(args) {
-        return rgb2hsv(keyword2rgb(args));
-      }
-
-      function keyword2hwb(args) {
-        return rgb2hwb(keyword2rgb(args));
-      }
-
-      function keyword2cmyk(args) {
-        return rgb2cmyk(keyword2rgb(args));
-      }
-
-      function keyword2lab(args) {
-        return rgb2lab(keyword2rgb(args));
-      }
-
-      function keyword2xyz(args) {
-        return rgb2xyz(keyword2rgb(args));
-      }
-
-      var cssKeywords = {
-        aliceblue: [240, 248, 255],
-        antiquewhite: [250, 235, 215],
-        aqua: [0, 255, 255],
-        aquamarine: [127, 255, 212],
-        azure: [240, 255, 255],
-        beige: [245, 245, 220],
-        bisque: [255, 228, 196],
-        black: [0, 0, 0],
-        blanchedalmond: [255, 235, 205],
-        blue: [0, 0, 255],
-        blueviolet: [138, 43, 226],
-        brown: [165, 42, 42],
-        burlywood: [222, 184, 135],
-        cadetblue: [95, 158, 160],
-        chartreuse: [127, 255, 0],
-        chocolate: [210, 105, 30],
-        coral: [255, 127, 80],
-        cornflowerblue: [100, 149, 237],
-        cornsilk: [255, 248, 220],
-        crimson: [220, 20, 60],
-        cyan: [0, 255, 255],
-        darkblue: [0, 0, 139],
-        darkcyan: [0, 139, 139],
-        darkgoldenrod: [184, 134, 11],
-        darkgray: [169, 169, 169],
-        darkgreen: [0, 100, 0],
-        darkgrey: [169, 169, 169],
-        darkkhaki: [189, 183, 107],
-        darkmagenta: [139, 0, 139],
-        darkolivegreen: [85, 107, 47],
-        darkorange: [255, 140, 0],
-        darkorchid: [153, 50, 204],
-        darkred: [139, 0, 0],
-        darksalmon: [233, 150, 122],
-        darkseagreen: [143, 188, 143],
-        darkslateblue: [72, 61, 139],
-        darkslategray: [47, 79, 79],
-        darkslategrey: [47, 79, 79],
-        darkturquoise: [0, 206, 209],
-        darkviolet: [148, 0, 211],
-        deeppink: [255, 20, 147],
-        deepskyblue: [0, 191, 255],
-        dimgray: [105, 105, 105],
-        dimgrey: [105, 105, 105],
-        dodgerblue: [30, 144, 255],
-        firebrick: [178, 34, 34],
-        floralwhite: [255, 250, 240],
-        forestgreen: [34, 139, 34],
-        fuchsia: [255, 0, 255],
-        gainsboro: [220, 220, 220],
-        ghostwhite: [248, 248, 255],
-        gold: [255, 215, 0],
-        goldenrod: [218, 165, 32],
-        gray: [128, 128, 128],
-        green: [0, 128, 0],
-        greenyellow: [173, 255, 47],
-        grey: [128, 128, 128],
-        honeydew: [240, 255, 240],
-        hotpink: [255, 105, 180],
-        indianred: [205, 92, 92],
-        indigo: [75, 0, 130],
-        ivory: [255, 255, 240],
-        khaki: [240, 230, 140],
-        lavender: [230, 230, 250],
-        lavenderblush: [255, 240, 245],
-        lawngreen: [124, 252, 0],
-        lemonchiffon: [255, 250, 205],
-        lightblue: [173, 216, 230],
-        lightcoral: [240, 128, 128],
-        lightcyan: [224, 255, 255],
-        lightgoldenrodyellow: [250, 250, 210],
-        lightgray: [211, 211, 211],
-        lightgreen: [144, 238, 144],
-        lightgrey: [211, 211, 211],
-        lightpink: [255, 182, 193],
-        lightsalmon: [255, 160, 122],
-        lightseagreen: [32, 178, 170],
-        lightskyblue: [135, 206, 250],
-        lightslategray: [119, 136, 153],
-        lightslategrey: [119, 136, 153],
-        lightsteelblue: [176, 196, 222],
-        lightyellow: [255, 255, 224],
-        lime: [0, 255, 0],
-        limegreen: [50, 205, 50],
-        linen: [250, 240, 230],
-        magenta: [255, 0, 255],
-        maroon: [128, 0, 0],
-        mediumaquamarine: [102, 205, 170],
-        mediumblue: [0, 0, 205],
-        mediumorchid: [186, 85, 211],
-        mediumpurple: [147, 112, 219],
-        mediumseagreen: [60, 179, 113],
-        mediumslateblue: [123, 104, 238],
-        mediumspringgreen: [0, 250, 154],
-        mediumturquoise: [72, 209, 204],
-        mediumvioletred: [199, 21, 133],
-        midnightblue: [25, 25, 112],
-        mintcream: [245, 255, 250],
-        mistyrose: [255, 228, 225],
-        moccasin: [255, 228, 181],
-        navajowhite: [255, 222, 173],
-        navy: [0, 0, 128],
-        oldlace: [253, 245, 230],
-        olive: [128, 128, 0],
-        olivedrab: [107, 142, 35],
-        orange: [255, 165, 0],
-        orangered: [255, 69, 0],
-        orchid: [218, 112, 214],
-        palegoldenrod: [238, 232, 170],
-        palegreen: [152, 251, 152],
-        paleturquoise: [175, 238, 238],
-        palevioletred: [219, 112, 147],
-        papayawhip: [255, 239, 213],
-        peachpuff: [255, 218, 185],
-        peru: [205, 133, 63],
-        pink: [255, 192, 203],
-        plum: [221, 160, 221],
-        powderblue: [176, 224, 230],
-        purple: [128, 0, 128],
-        rebeccapurple: [102, 51, 153],
-        red: [255, 0, 0],
-        rosybrown: [188, 143, 143],
-        royalblue: [65, 105, 225],
-        saddlebrown: [139, 69, 19],
-        salmon: [250, 128, 114],
-        sandybrown: [244, 164, 96],
-        seagreen: [46, 139, 87],
-        seashell: [255, 245, 238],
-        sienna: [160, 82, 45],
-        silver: [192, 192, 192],
-        skyblue: [135, 206, 235],
-        slateblue: [106, 90, 205],
-        slategray: [112, 128, 144],
-        slategrey: [112, 128, 144],
-        snow: [255, 250, 250],
-        springgreen: [0, 255, 127],
-        steelblue: [70, 130, 180],
-        tan: [210, 180, 140],
-        teal: [0, 128, 128],
-        thistle: [216, 191, 216],
-        tomato: [255, 99, 71],
-        turquoise: [64, 224, 208],
-        violet: [238, 130, 238],
-        wheat: [245, 222, 179],
-        white: [255, 255, 255],
-        whitesmoke: [245, 245, 245],
-        yellow: [255, 255, 0],
-        yellowgreen: [154, 205, 50]
-      };
-      var reverseKeywords = {};
-
-      for (var key in cssKeywords) {
-        reverseKeywords[JSON.stringify(cssKeywords[key])] = key;
-      }
-
-      var convert = function () {
-        return new Converter();
-      };
-
-      for (var func in conversions) {
-        // export Raw versions
-        convert[func + "Raw"] = function (func) {
-          // accept array or plain args
-          return function (arg) {
-            if (typeof arg == "number") arg = Array.prototype.slice.call(arguments);
-            return conversions[func](arg);
+        convert.rgb.hsl = function (rgb) {
+          var r = rgb[0] / 255;
+          var g = rgb[1] / 255;
+          var b = rgb[2] / 255;
+          var min = Math.min(r, g, b);
+          var max = Math.max(r, g, b);
+          var delta = max - min;
+          var h;
+          var s;
+          var l;
+
+          if (max === min) {
+            h = 0;
+          } else if (r === max) {
+            h = (g - b) / delta;
+          } else if (g === max) {
+            h = 2 + (b - r) / delta;
+          } else if (b === max) {
+            h = 4 + (r - g) / delta;
+          }
+
+          h = Math.min(h * 60, 360);
+
+          if (h < 0) {
+            h += 360;
+          }
+
+          l = (min + max) / 2;
+
+          if (max === min) {
+            s = 0;
+          } else if (l <= 0.5) {
+            s = delta / (max + min);
+          } else {
+            s = delta / (2 - max - min);
+          }
+
+          return [h, s * 100, l * 100];
+        };
+
+        convert.rgb.hsv = function (rgb) {
+          var rdif;
+          var gdif;
+          var bdif;
+          var h;
+          var s;
+          var r = rgb[0] / 255;
+          var g = rgb[1] / 255;
+          var b = rgb[2] / 255;
+          var v = Math.max(r, g, b);
+          var diff = v - Math.min(r, g, b);
+
+          var diffc = function (c) {
+            return (v - c) / 6 / diff + 1 / 2;
           };
-        }(func);
 
-        var pair = /(\w+)2(\w+)/.exec(func),
-            from = pair[1],
-            to = pair[2]; // export rgb2hsl and ["rgb"]["hsl"]
+          if (diff === 0) {
+            h = s = 0;
+          } else {
+            s = diff / v;
+            rdif = diffc(r);
+            gdif = diffc(g);
+            bdif = diffc(b);
 
-        convert[from] = convert[from] || {};
+            if (r === v) {
+              h = bdif - gdif;
+            } else if (g === v) {
+              h = 1 / 3 + rdif - bdif;
+            } else if (b === v) {
+              h = 2 / 3 + gdif - rdif;
+            }
 
-        convert[from][to] = convert[func] = function (func) {
-          return function (arg) {
-            if (typeof arg == "number") arg = Array.prototype.slice.call(arguments);
-            var val = conversions[func](arg);
-            if (typeof val == "string" || val === undefined) return val; // keyword
+            if (h < 0) {
+              h += 1;
+            } else if (h > 1) {
+              h -= 1;
+            }
+          }
 
-            for (var i = 0; i < val.length; i++) val[i] = Math.round(val[i]);
+          return [h * 360, s * 100, v * 100];
+        };
 
-            return val;
-          };
-        }(func);
-      }
-      /* Converter does lazy conversion and caching */
+        convert.rgb.hwb = function (rgb) {
+          var r = rgb[0];
+          var g = rgb[1];
+          var b = rgb[2];
+          var h = convert.rgb.hsl(rgb)[0];
+          var w = 1 / 255 * Math.min(r, Math.min(g, b));
+          b = 1 - 1 / 255 * Math.max(r, Math.max(g, b));
+          return [h, w * 100, b * 100];
+        };
+
+        convert.rgb.cmyk = function (rgb) {
+          var r = rgb[0] / 255;
+          var g = rgb[1] / 255;
+          var b = rgb[2] / 255;
+          var c;
+          var m;
+          var y;
+          var k;
+          k = Math.min(1 - r, 1 - g, 1 - b);
+          c = (1 - r - k) / (1 - k) || 0;
+          m = (1 - g - k) / (1 - k) || 0;
+          y = (1 - b - k) / (1 - k) || 0;
+          return [c * 100, m * 100, y * 100, k * 100];
+        };
+        /**
+         * See https://en.m.wikipedia.org/wiki/Euclidean_distance#Squared_Euclidean_distance
+         * */
 
 
-      var Converter = function () {
-        this.convs = {};
-      };
-      /* Either get the values for a space or
-        set the values for a space, depending on args */
-
-
-      Converter.prototype.routeSpace = function (space, args) {
-        var values = args[0];
-
-        if (values === undefined) {
-          // color.rgb()
-          return this.getValues(space);
-        } // color.rgb(10, 10, 10)
-
-
-        if (typeof values == "number") {
-          values = Array.prototype.slice.call(args);
+        function comparativeDistance(x, y) {
+          return Math.pow(x[0] - y[0], 2) + Math.pow(x[1] - y[1], 2) + Math.pow(x[2] - y[2], 2);
         }
 
-        return this.setValues(space, values);
-      };
-      /* Set the values for a space, invalidating cache */
+        convert.rgb.keyword = function (rgb) {
+          var reversed = reverseKeywords[rgb];
+
+          if (reversed) {
+            return reversed;
+          }
+
+          var currentClosestDistance = Infinity;
+          var currentClosestKeyword;
+
+          for (var keyword in colorName) {
+            if (colorName.hasOwnProperty(keyword)) {
+              var value = colorName[keyword]; // Compute comparative distance
+
+              var distance = comparativeDistance(rgb, value); // Check if its less, if so set as closest
+
+              if (distance < currentClosestDistance) {
+                currentClosestDistance = distance;
+                currentClosestKeyword = keyword;
+              }
+            }
+          }
+
+          return currentClosestKeyword;
+        };
+
+        convert.keyword.rgb = function (keyword) {
+          return colorName[keyword];
+        };
+
+        convert.rgb.xyz = function (rgb) {
+          var r = rgb[0] / 255;
+          var g = rgb[1] / 255;
+          var b = rgb[2] / 255; // assume sRGB
+
+          r = r > 0.04045 ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
+          g = g > 0.04045 ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
+          b = b > 0.04045 ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
+          var x = r * 0.4124 + g * 0.3576 + b * 0.1805;
+          var y = r * 0.2126 + g * 0.7152 + b * 0.0722;
+          var z = r * 0.0193 + g * 0.1192 + b * 0.9505;
+          return [x * 100, y * 100, z * 100];
+        };
+
+        convert.rgb.lab = function (rgb) {
+          var xyz = convert.rgb.xyz(rgb);
+          var x = xyz[0];
+          var y = xyz[1];
+          var z = xyz[2];
+          var l;
+          var a;
+          var b;
+          x /= 95.047;
+          y /= 100;
+          z /= 108.883;
+          x = x > 0.008856 ? Math.pow(x, 1 / 3) : 7.787 * x + 16 / 116;
+          y = y > 0.008856 ? Math.pow(y, 1 / 3) : 7.787 * y + 16 / 116;
+          z = z > 0.008856 ? Math.pow(z, 1 / 3) : 7.787 * z + 16 / 116;
+          l = 116 * y - 16;
+          a = 500 * (x - y);
+          b = 200 * (y - z);
+          return [l, a, b];
+        };
+
+        convert.hsl.rgb = function (hsl) {
+          var h = hsl[0] / 360;
+          var s = hsl[1] / 100;
+          var l = hsl[2] / 100;
+          var t1;
+          var t2;
+          var t3;
+          var rgb;
+          var val;
+
+          if (s === 0) {
+            val = l * 255;
+            return [val, val, val];
+          }
+
+          if (l < 0.5) {
+            t2 = l * (1 + s);
+          } else {
+            t2 = l + s - l * s;
+          }
+
+          t1 = 2 * l - t2;
+          rgb = [0, 0, 0];
+
+          for (var i = 0; i < 3; i++) {
+            t3 = h + 1 / 3 * -(i - 1);
+
+            if (t3 < 0) {
+              t3++;
+            }
+
+            if (t3 > 1) {
+              t3--;
+            }
+
+            if (6 * t3 < 1) {
+              val = t1 + (t2 - t1) * 6 * t3;
+            } else if (2 * t3 < 1) {
+              val = t2;
+            } else if (3 * t3 < 2) {
+              val = t1 + (t2 - t1) * (2 / 3 - t3) * 6;
+            } else {
+              val = t1;
+            }
+
+            rgb[i] = val * 255;
+          }
+
+          return rgb;
+        };
+
+        convert.hsl.hsv = function (hsl) {
+          var h = hsl[0];
+          var s = hsl[1] / 100;
+          var l = hsl[2] / 100;
+          var smin = s;
+          var lmin = Math.max(l, 0.01);
+          var sv;
+          var v;
+          l *= 2;
+          s *= l <= 1 ? l : 2 - l;
+          smin *= lmin <= 1 ? lmin : 2 - lmin;
+          v = (l + s) / 2;
+          sv = l === 0 ? 2 * smin / (lmin + smin) : 2 * s / (l + s);
+          return [h, sv * 100, v * 100];
+        };
+
+        convert.hsv.rgb = function (hsv) {
+          var h = hsv[0] / 60;
+          var s = hsv[1] / 100;
+          var v = hsv[2] / 100;
+          var hi = Math.floor(h) % 6;
+          var f = h - Math.floor(h);
+          var p = 255 * v * (1 - s);
+          var q = 255 * v * (1 - s * f);
+          var t = 255 * v * (1 - s * (1 - f));
+          v *= 255;
+
+          switch (hi) {
+            case 0:
+              return [v, t, p];
+
+            case 1:
+              return [q, v, p];
+
+            case 2:
+              return [p, v, t];
+
+            case 3:
+              return [p, q, v];
+
+            case 4:
+              return [t, p, v];
+
+            case 5:
+              return [v, p, q];
+          }
+        };
+
+        convert.hsv.hsl = function (hsv) {
+          var h = hsv[0];
+          var s = hsv[1] / 100;
+          var v = hsv[2] / 100;
+          var vmin = Math.max(v, 0.01);
+          var lmin;
+          var sl;
+          var l;
+          l = (2 - s) * v;
+          lmin = (2 - s) * vmin;
+          sl = s * vmin;
+          sl /= lmin <= 1 ? lmin : 2 - lmin;
+          sl = sl || 0;
+          l /= 2;
+          return [h, sl * 100, l * 100];
+        }; // http://dev.w3.org/csswg/css-color/#hwb-to-rgb
 
 
-      Converter.prototype.setValues = function (space, values) {
-        this.space = space;
-        this.convs = {};
-        this.convs[space] = values;
-        return this;
-      };
-      /* Get the values for a space. If there's already
-        a conversion for the space, fetch it, otherwise
-        compute it */
+        convert.hwb.rgb = function (hwb) {
+          var h = hwb[0] / 360;
+          var wh = hwb[1] / 100;
+          var bl = hwb[2] / 100;
+          var ratio = wh + bl;
+          var i;
+          var v;
+          var f;
+          var n; // wh + bl cant be > 1
 
+          if (ratio > 1) {
+            wh /= ratio;
+            bl /= ratio;
+          }
 
-      Converter.prototype.getValues = function (space) {
-        var vals = this.convs[space];
+          i = Math.floor(6 * h);
+          v = 1 - bl;
+          f = 6 * h - i;
 
-        if (!vals) {
-          var fspace = this.space,
-              from = this.convs[fspace];
-          vals = convert[fspace][space](from);
-          this.convs[space] = vals;
-        }
+          if ((i & 0x01) !== 0) {
+            f = 1 - f;
+          }
 
-        return vals;
-      };
+          n = wh + f * (v - wh); // linear interpolation
 
-      ["rgb", "hsl", "hsv", "cmyk", "keyword"].forEach(function (space) {
-        Converter.prototype[space] = function (vals) {
-          return this.routeSpace(space, arguments);
+          var r;
+          var g;
+          var b;
+
+          switch (i) {
+            default:
+            case 6:
+            case 0:
+              r = v;
+              g = n;
+              b = wh;
+              break;
+
+            case 1:
+              r = n;
+              g = v;
+              b = wh;
+              break;
+
+            case 2:
+              r = wh;
+              g = v;
+              b = n;
+              break;
+
+            case 3:
+              r = wh;
+              g = n;
+              b = v;
+              break;
+
+            case 4:
+              r = n;
+              g = wh;
+              b = v;
+              break;
+
+            case 5:
+              r = v;
+              g = wh;
+              b = n;
+              break;
+          }
+
+          return [r * 255, g * 255, b * 255];
+        };
+
+        convert.cmyk.rgb = function (cmyk) {
+          var c = cmyk[0] / 100;
+          var m = cmyk[1] / 100;
+          var y = cmyk[2] / 100;
+          var k = cmyk[3] / 100;
+          var r;
+          var g;
+          var b;
+          r = 1 - Math.min(1, c * (1 - k) + k);
+          g = 1 - Math.min(1, m * (1 - k) + k);
+          b = 1 - Math.min(1, y * (1 - k) + k);
+          return [r * 255, g * 255, b * 255];
+        };
+
+        convert.xyz.rgb = function (xyz) {
+          var x = xyz[0] / 100;
+          var y = xyz[1] / 100;
+          var z = xyz[2] / 100;
+          var r;
+          var g;
+          var b;
+          r = x * 3.2406 + y * -1.5372 + z * -0.4986;
+          g = x * -0.9689 + y * 1.8758 + z * 0.0415;
+          b = x * 0.0557 + y * -0.2040 + z * 1.0570; // assume sRGB
+
+          r = r > 0.0031308 ? 1.055 * Math.pow(r, 1.0 / 2.4) - 0.055 : r * 12.92;
+          g = g > 0.0031308 ? 1.055 * Math.pow(g, 1.0 / 2.4) - 0.055 : g * 12.92;
+          b = b > 0.0031308 ? 1.055 * Math.pow(b, 1.0 / 2.4) - 0.055 : b * 12.92;
+          r = Math.min(Math.max(0, r), 1);
+          g = Math.min(Math.max(0, g), 1);
+          b = Math.min(Math.max(0, b), 1);
+          return [r * 255, g * 255, b * 255];
+        };
+
+        convert.xyz.lab = function (xyz) {
+          var x = xyz[0];
+          var y = xyz[1];
+          var z = xyz[2];
+          var l;
+          var a;
+          var b;
+          x /= 95.047;
+          y /= 100;
+          z /= 108.883;
+          x = x > 0.008856 ? Math.pow(x, 1 / 3) : 7.787 * x + 16 / 116;
+          y = y > 0.008856 ? Math.pow(y, 1 / 3) : 7.787 * y + 16 / 116;
+          z = z > 0.008856 ? Math.pow(z, 1 / 3) : 7.787 * z + 16 / 116;
+          l = 116 * y - 16;
+          a = 500 * (x - y);
+          b = 200 * (y - z);
+          return [l, a, b];
+        };
+
+        convert.lab.xyz = function (lab) {
+          var l = lab[0];
+          var a = lab[1];
+          var b = lab[2];
+          var x;
+          var y;
+          var z;
+          y = (l + 16) / 116;
+          x = a / 500 + y;
+          z = y - b / 200;
+          var y2 = Math.pow(y, 3);
+          var x2 = Math.pow(x, 3);
+          var z2 = Math.pow(z, 3);
+          y = y2 > 0.008856 ? y2 : (y - 16 / 116) / 7.787;
+          x = x2 > 0.008856 ? x2 : (x - 16 / 116) / 7.787;
+          z = z2 > 0.008856 ? z2 : (z - 16 / 116) / 7.787;
+          x *= 95.047;
+          y *= 100;
+          z *= 108.883;
+          return [x, y, z];
+        };
+
+        convert.lab.lch = function (lab) {
+          var l = lab[0];
+          var a = lab[1];
+          var b = lab[2];
+          var hr;
+          var h;
+          var c;
+          hr = Math.atan2(b, a);
+          h = hr * 360 / 2 / Math.PI;
+
+          if (h < 0) {
+            h += 360;
+          }
+
+          c = Math.sqrt(a * a + b * b);
+          return [l, c, h];
+        };
+
+        convert.lch.lab = function (lch) {
+          var l = lch[0];
+          var c = lch[1];
+          var h = lch[2];
+          var a;
+          var b;
+          var hr;
+          hr = h / 360 * 2 * Math.PI;
+          a = c * Math.cos(hr);
+          b = c * Math.sin(hr);
+          return [l, a, b];
+        };
+
+        convert.rgb.ansi16 = function (args) {
+          var r = args[0];
+          var g = args[1];
+          var b = args[2];
+          var value = 1 in arguments ? arguments[1] : convert.rgb.hsv(args)[2]; // hsv -> ansi16 optimization
+
+          value = Math.round(value / 50);
+
+          if (value === 0) {
+            return 30;
+          }
+
+          var ansi = 30 + (Math.round(b / 255) << 2 | Math.round(g / 255) << 1 | Math.round(r / 255));
+
+          if (value === 2) {
+            ansi += 60;
+          }
+
+          return ansi;
+        };
+
+        convert.hsv.ansi16 = function (args) {
+          // optimization here; we already know the value and don't need to get
+          // it converted for us.
+          return convert.rgb.ansi16(convert.hsv.rgb(args), args[2]);
+        };
+
+        convert.rgb.ansi256 = function (args) {
+          var r = args[0];
+          var g = args[1];
+          var b = args[2]; // we use the extended greyscale palette here, with the exception of
+          // black and white. normal palette only has 4 greyscale shades.
+
+          if (r === g && g === b) {
+            if (r < 8) {
+              return 16;
+            }
+
+            if (r > 248) {
+              return 231;
+            }
+
+            return Math.round((r - 8) / 247 * 24) + 232;
+          }
+
+          var ansi = 16 + 36 * Math.round(r / 255 * 5) + 6 * Math.round(g / 255 * 5) + Math.round(b / 255 * 5);
+          return ansi;
+        };
+
+        convert.ansi16.rgb = function (args) {
+          var color = args % 10; // handle greyscale
+
+          if (color === 0 || color === 7) {
+            if (args > 50) {
+              color += 3.5;
+            }
+
+            color = color / 10.5 * 255;
+            return [color, color, color];
+          }
+
+          var mult = (~~(args > 50) + 1) * 0.5;
+          var r = (color & 1) * mult * 255;
+          var g = (color >> 1 & 1) * mult * 255;
+          var b = (color >> 2 & 1) * mult * 255;
+          return [r, g, b];
+        };
+
+        convert.ansi256.rgb = function (args) {
+          // handle greyscale
+          if (args >= 232) {
+            var c = (args - 232) * 10 + 8;
+            return [c, c, c];
+          }
+
+          args -= 16;
+          var rem;
+          var r = Math.floor(args / 36) / 5 * 255;
+          var g = Math.floor((rem = args % 36) / 6) / 5 * 255;
+          var b = rem % 6 / 5 * 255;
+          return [r, g, b];
+        };
+
+        convert.rgb.hex = function (args) {
+          var integer = ((Math.round(args[0]) & 0xFF) << 16) + ((Math.round(args[1]) & 0xFF) << 8) + (Math.round(args[2]) & 0xFF);
+          var string = integer.toString(16).toUpperCase();
+          return '000000'.substring(string.length) + string;
+        };
+
+        convert.hex.rgb = function (args) {
+          var match = args.toString(16).match(/[a-f0-9]{6}|[a-f0-9]{3}/i);
+
+          if (!match) {
+            return [0, 0, 0];
+          }
+
+          var colorString = match[0];
+
+          if (match[0].length === 3) {
+            colorString = colorString.split('').map(function (char) {
+              return char + char;
+            }).join('');
+          }
+
+          var integer = parseInt(colorString, 16);
+          var r = integer >> 16 & 0xFF;
+          var g = integer >> 8 & 0xFF;
+          var b = integer & 0xFF;
+          return [r, g, b];
+        };
+
+        convert.rgb.hcg = function (rgb) {
+          var r = rgb[0] / 255;
+          var g = rgb[1] / 255;
+          var b = rgb[2] / 255;
+          var max = Math.max(Math.max(r, g), b);
+          var min = Math.min(Math.min(r, g), b);
+          var chroma = max - min;
+          var grayscale;
+          var hue;
+
+          if (chroma < 1) {
+            grayscale = min / (1 - chroma);
+          } else {
+            grayscale = 0;
+          }
+
+          if (chroma <= 0) {
+            hue = 0;
+          } else if (max === r) {
+            hue = (g - b) / chroma % 6;
+          } else if (max === g) {
+            hue = 2 + (b - r) / chroma;
+          } else {
+            hue = 4 + (r - g) / chroma + 4;
+          }
+
+          hue /= 6;
+          hue %= 1;
+          return [hue * 360, chroma * 100, grayscale * 100];
+        };
+
+        convert.hsl.hcg = function (hsl) {
+          var s = hsl[1] / 100;
+          var l = hsl[2] / 100;
+          var c = 1;
+          var f = 0;
+
+          if (l < 0.5) {
+            c = 2.0 * s * l;
+          } else {
+            c = 2.0 * s * (1.0 - l);
+          }
+
+          if (c < 1.0) {
+            f = (l - 0.5 * c) / (1.0 - c);
+          }
+
+          return [hsl[0], c * 100, f * 100];
+        };
+
+        convert.hsv.hcg = function (hsv) {
+          var s = hsv[1] / 100;
+          var v = hsv[2] / 100;
+          var c = s * v;
+          var f = 0;
+
+          if (c < 1.0) {
+            f = (v - c) / (1 - c);
+          }
+
+          return [hsv[0], c * 100, f * 100];
+        };
+
+        convert.hcg.rgb = function (hcg) {
+          var h = hcg[0] / 360;
+          var c = hcg[1] / 100;
+          var g = hcg[2] / 100;
+
+          if (c === 0.0) {
+            return [g * 255, g * 255, g * 255];
+          }
+
+          var pure = [0, 0, 0];
+          var hi = h % 1 * 6;
+          var v = hi % 1;
+          var w = 1 - v;
+          var mg = 0;
+
+          switch (Math.floor(hi)) {
+            case 0:
+              pure[0] = 1;
+              pure[1] = v;
+              pure[2] = 0;
+              break;
+
+            case 1:
+              pure[0] = w;
+              pure[1] = 1;
+              pure[2] = 0;
+              break;
+
+            case 2:
+              pure[0] = 0;
+              pure[1] = 1;
+              pure[2] = v;
+              break;
+
+            case 3:
+              pure[0] = 0;
+              pure[1] = w;
+              pure[2] = 1;
+              break;
+
+            case 4:
+              pure[0] = v;
+              pure[1] = 0;
+              pure[2] = 1;
+              break;
+
+            default:
+              pure[0] = 1;
+              pure[1] = 0;
+              pure[2] = w;
+          }
+
+          mg = (1.0 - c) * g;
+          return [(c * pure[0] + mg) * 255, (c * pure[1] + mg) * 255, (c * pure[2] + mg) * 255];
+        };
+
+        convert.hcg.hsv = function (hcg) {
+          var c = hcg[1] / 100;
+          var g = hcg[2] / 100;
+          var v = c + g * (1.0 - c);
+          var f = 0;
+
+          if (v > 0.0) {
+            f = c / v;
+          }
+
+          return [hcg[0], f * 100, v * 100];
+        };
+
+        convert.hcg.hsl = function (hcg) {
+          var c = hcg[1] / 100;
+          var g = hcg[2] / 100;
+          var l = g * (1.0 - c) + 0.5 * c;
+          var s = 0;
+
+          if (l > 0.0 && l < 0.5) {
+            s = c / (2 * l);
+          } else if (l >= 0.5 && l < 1.0) {
+            s = c / (2 * (1 - l));
+          }
+
+          return [hcg[0], s * 100, l * 100];
+        };
+
+        convert.hcg.hwb = function (hcg) {
+          var c = hcg[1] / 100;
+          var g = hcg[2] / 100;
+          var v = c + g * (1.0 - c);
+          return [hcg[0], (v - c) * 100, (1 - v) * 100];
+        };
+
+        convert.hwb.hcg = function (hwb) {
+          var w = hwb[1] / 100;
+          var b = hwb[2] / 100;
+          var v = 1 - b;
+          var c = v - w;
+          var g = 0;
+
+          if (c < 1) {
+            g = (v - c) / (1 - c);
+          }
+
+          return [hwb[0], c * 100, g * 100];
+        };
+
+        convert.apple.rgb = function (apple) {
+          return [apple[0] / 65535 * 255, apple[1] / 65535 * 255, apple[2] / 65535 * 255];
+        };
+
+        convert.rgb.apple = function (rgb) {
+          return [rgb[0] / 255 * 65535, rgb[1] / 255 * 65535, rgb[2] / 255 * 65535];
+        };
+
+        convert.gray.rgb = function (args) {
+          return [args[0] / 100 * 255, args[0] / 100 * 255, args[0] / 100 * 255];
+        };
+
+        convert.gray.hsl = convert.gray.hsv = function (args) {
+          return [0, 0, args[0]];
+        };
+
+        convert.gray.hwb = function (gray) {
+          return [0, 100, gray[0]];
+        };
+
+        convert.gray.cmyk = function (gray) {
+          return [0, 0, 0, gray[0]];
+        };
+
+        convert.gray.lab = function (gray) {
+          return [gray[0], 0, 0];
+        };
+
+        convert.gray.hex = function (gray) {
+          var val = Math.round(gray[0] / 100 * 255) & 0xFF;
+          var integer = (val << 16) + (val << 8) + val;
+          var string = integer.toString(16).toUpperCase();
+          return '000000'.substring(string.length) + string;
+        };
+
+        convert.rgb.gray = function (rgb) {
+          var val = (rgb[0] + rgb[1] + rgb[2]) / 3;
+          return [val / 255 * 100];
         };
       });
+      var conversions_1 = conversions.rgb;
+      var conversions_2 = conversions.hsl;
+      var conversions_3 = conversions.hsv;
+      var conversions_4 = conversions.hwb;
+      var conversions_5 = conversions.cmyk;
+      var conversions_6 = conversions.xyz;
+      var conversions_7 = conversions.lab;
+      var conversions_8 = conversions.lch;
+      var conversions_9 = conversions.hex;
+      var conversions_10 = conversions.keyword;
+      var conversions_11 = conversions.ansi16;
+      var conversions_12 = conversions.ansi256;
+      var conversions_13 = conversions.hcg;
+      var conversions_14 = conversions.apple;
+      var conversions_15 = conversions.gray;
+      /*
+      	this function routes a model to all other models.
+      
+      	all functions that are routed have a property `.conversion` attached
+      	to the returned synthetic function. This property is an array
+      	of strings, each with the steps in between the 'from' and 'to'
+      	color models (inclusive).
+      
+      	conversions that are not possible simply are not included.
+      */
+
+      function buildGraph() {
+        var graph = {}; // https://jsperf.com/object-keys-vs-for-in-with-closure/3
+
+        var models = Object.keys(conversions);
+
+        for (var len = models.length, i = 0; i < len; i++) {
+          graph[models[i]] = {
+            // http://jsperf.com/1-vs-infinity
+            // micro-opt, but this is simple.
+            distance: -1,
+            parent: null
+          };
+        }
+
+        return graph;
+      } // https://en.wikipedia.org/wiki/Breadth-first_search
+
+
+      function deriveBFS(fromModel) {
+        var graph = buildGraph();
+        var queue = [fromModel]; // unshift -> queue -> pop
+
+        graph[fromModel].distance = 0;
+
+        while (queue.length) {
+          var current = queue.pop();
+          var adjacents = Object.keys(conversions[current]);
+
+          for (var len = adjacents.length, i = 0; i < len; i++) {
+            var adjacent = adjacents[i];
+            var node = graph[adjacent];
+
+            if (node.distance === -1) {
+              node.distance = graph[current].distance + 1;
+              node.parent = current;
+              queue.unshift(adjacent);
+            }
+          }
+        }
+
+        return graph;
+      }
+
+      function link(from, to) {
+        return function (args) {
+          return to(from(args));
+        };
+      }
+
+      function wrapConversion(toModel, graph) {
+        var path = [graph[toModel].parent, toModel];
+        var fn = conversions[graph[toModel].parent][toModel];
+        var cur = graph[toModel].parent;
+
+        while (graph[cur].parent) {
+          path.unshift(graph[cur].parent);
+          fn = link(conversions[graph[cur].parent][cur], fn);
+          cur = graph[cur].parent;
+        }
+
+        fn.conversion = path;
+        return fn;
+      }
+
+      var route = function (fromModel) {
+        var graph = deriveBFS(fromModel);
+        var conversion = {};
+        var models = Object.keys(graph);
+
+        for (var len = models.length, i = 0; i < len; i++) {
+          var toModel = models[i];
+          var node = graph[toModel];
+
+          if (node.parent === null) {
+            // no possible conversion, or this node is the source model.
+            continue;
+          }
+
+          conversion[toModel] = wrapConversion(toModel, graph);
+        }
+
+        return conversion;
+      };
+
+      var convert = {};
+      var models = Object.keys(conversions);
+
+      function wrapRaw(fn) {
+        var wrappedFn = function (args) {
+          if (args === undefined || args === null) {
+            return args;
+          }
+
+          if (arguments.length > 1) {
+            args = Array.prototype.slice.call(arguments);
+          }
+
+          return fn(args);
+        }; // preserve .conversion property if there is one
+
+
+        if ('conversion' in fn) {
+          wrappedFn.conversion = fn.conversion;
+        }
+
+        return wrappedFn;
+      }
+
+      function wrapRounded(fn) {
+        var wrappedFn = function (args) {
+          if (args === undefined || args === null) {
+            return args;
+          }
+
+          if (arguments.length > 1) {
+            args = Array.prototype.slice.call(arguments);
+          }
+
+          var result = fn(args); // we're assuming the result is an array here.
+          // see notice in conversions.js; don't use box types
+          // in conversion functions.
+
+          if (typeof result === 'object') {
+            for (var len = result.length, i = 0; i < len; i++) {
+              result[i] = Math.round(result[i]);
+            }
+          }
+
+          return result;
+        }; // preserve .conversion property if there is one
+
+
+        if ('conversion' in fn) {
+          wrappedFn.conversion = fn.conversion;
+        }
+
+        return wrappedFn;
+      }
+
+      models.forEach(function (fromModel) {
+        convert[fromModel] = {};
+        Object.defineProperty(convert[fromModel], 'channels', {
+          value: conversions[fromModel].channels
+        });
+        Object.defineProperty(convert[fromModel], 'labels', {
+          value: conversions[fromModel].labels
+        });
+        var routes = route(fromModel);
+        var routeModels = Object.keys(routes);
+        routeModels.forEach(function (toModel) {
+          var fn = routes[toModel];
+          convert[fromModel][toModel] = wrapRounded(fn);
+          convert[fromModel][toModel].raw = wrapRaw(fn);
+        });
+      });
       var colorConvert = convert;
-      var colorName = {
+      var colorName$1 = {
         "aliceblue": [240, 248, 255],
         "antiquewhite": [250, 235, 215],
         "aqua": [0, 255, 255],
@@ -11462,7 +12587,7 @@
             return [0, 0, 0, 0];
           }
 
-          rgb = colorName[match[1]];
+          rgb = colorName$1[match[1]];
 
           if (!rgb) {
             return;
@@ -11624,8 +12749,8 @@
 
       var reverseNames = {};
 
-      for (var name in colorName) {
-        reverseNames[colorName[name]] = name;
+      for (var name in colorName$1) {
+        reverseNames[colorName$1[name]] = name;
       }
       /* MIT license */
 
@@ -12377,16 +13502,12 @@
          * @param {object} argN - Additional objects containing properties to merge in target.
          * @returns {object} The `target` object.
          */
-        extend: function (target) {
-          var setFn = function (value, key) {
-            target[key] = value;
-          };
-
-          for (var i = 1, ilen = arguments.length; i < ilen; ++i) {
-            helpers.each(arguments[i], setFn);
-          }
-
-          return target;
+        extend: Object.assign || function (target) {
+          return helpers.merge(target, [].slice.call(arguments, 1), {
+            merger: function (key, dst, src) {
+              dst[key] = src[key];
+            }
+          });
         },
 
         /**
@@ -12412,6 +13533,11 @@
 
           ChartElement.__super__ = me.prototype;
           return ChartElement;
+        },
+        _deprecated: function (scope, value, previous, current) {
+          if (value !== undefined) {
+            console.warn(scope + ': "' + previous + '" is deprecated. Please use "' + current + '" instead');
+          }
         }
       };
       var helpers_core = helpers; // DEPRECATIONS
@@ -12772,7 +13898,11 @@
             type = style.toString();
 
             if (type === '[object HTMLImageElement]' || type === '[object HTMLCanvasElement]') {
-              ctx.drawImage(style, x - style.width / 2, y - style.height / 2, style.width, style.height);
+              ctx.save();
+              ctx.translate(x, y);
+              ctx.rotate(rad);
+              ctx.drawImage(style, -style.width / 2, -style.height / 2, style.width, style.height);
+              ctx.restore();
               return;
             }
           }
@@ -12964,7 +14094,8 @@
         _set: function (scope, values) {
           return helpers_core.merge(this[scope] || (this[scope] = {}), values);
         }
-      };
+      }; // TODO(v3): remove 'global' from namespace.  all default are global and
+      // there's inconsistency around which options are under 'global'
 
       defaults._set('global', {
         defaultColor: 'rgba(0,0,0,0.1)',
@@ -13022,9 +14153,6 @@
 
             case '%':
               value /= 100;
-              break;
-
-            default:
               break;
           }
 
@@ -13089,9 +14217,12 @@
          * is called with `context` as first argument and the result becomes the new input.
          * @param {number} [index] - If defined and the current value is an array, the value
          * at `index` become the new input.
+         * @param {object} [info] - object to return information about resolution in
+         * @param {boolean} [info.cacheable] - Will be set to `false` if option is not cacheable.
          * @since 2.7.0
          */
-        resolve: function (inputs, context, index) {
+        resolve: function (inputs, context, index, info) {
+          var cacheable = true;
           var i, ilen, value;
 
           for (i = 0, ilen = inputs.length; i < ilen; ++i) {
@@ -13103,25 +14234,162 @@
 
             if (context !== undefined && typeof value === 'function') {
               value = value(context);
+              cacheable = false;
             }
 
             if (index !== undefined && helpers_core.isArray(value)) {
               value = value[index];
+              cacheable = false;
             }
 
             if (value !== undefined) {
+              if (info && !cacheable) {
+                info.cacheable = false;
+              }
+
               return value;
             }
           }
         }
       };
+      /**
+       * @alias Chart.helpers.math
+       * @namespace
+       */
+
+      var exports$2 = {
+        /**
+         * Returns an array of factors sorted from 1 to sqrt(value)
+         * @private
+         */
+        _factorize: function (value) {
+          var result = [];
+          var sqrt = Math.sqrt(value);
+          var i;
+
+          for (i = 1; i < sqrt; i++) {
+            if (value % i === 0) {
+              result.push(i);
+              result.push(value / i);
+            }
+          }
+
+          if (sqrt === (sqrt | 0)) {
+            // if value is a square number
+            result.push(sqrt);
+          }
+
+          result.sort(function (a, b) {
+            return a - b;
+          }).pop();
+          return result;
+        },
+        log10: Math.log10 || function (x) {
+          var exponent = Math.log(x) * Math.LOG10E; // Math.LOG10E = 1 / Math.LN10.
+          // Check for whole powers of 10,
+          // which due to floating point rounding error should be corrected.
+
+          var powerOf10 = Math.round(exponent);
+          var isPowerOf10 = x === Math.pow(10, powerOf10);
+          return isPowerOf10 ? powerOf10 : exponent;
+        }
+      };
+      var helpers_math = exports$2; // DEPRECATIONS
+
+      /**
+       * Provided for backward compatibility, use Chart.helpers.math.log10 instead.
+       * @namespace Chart.helpers.log10
+       * @deprecated since version 2.9.0
+       * @todo remove at version 3
+       * @private
+       */
+
+      helpers_core.log10 = exports$2.log10;
+
+      var getRtlAdapter = function (rectX, width) {
+        return {
+          x: function (x) {
+            return rectX + rectX + width - x;
+          },
+          setWidth: function (w) {
+            width = w;
+          },
+          textAlign: function (align) {
+            if (align === 'center') {
+              return align;
+            }
+
+            return align === 'right' ? 'left' : 'right';
+          },
+          xPlus: function (x, value) {
+            return x - value;
+          },
+          leftForLtr: function (x, itemWidth) {
+            return x - itemWidth;
+          }
+        };
+      };
+
+      var getLtrAdapter = function () {
+        return {
+          x: function (x) {
+            return x;
+          },
+          setWidth: function (w) {// eslint-disable-line no-unused-vars
+          },
+          textAlign: function (align) {
+            return align;
+          },
+          xPlus: function (x, value) {
+            return x + value;
+          },
+          leftForLtr: function (x, _itemWidth) {
+            // eslint-disable-line no-unused-vars
+            return x;
+          }
+        };
+      };
+
+      var getAdapter = function (rtl, rectX, width) {
+        return rtl ? getRtlAdapter(rectX, width) : getLtrAdapter();
+      };
+
+      var overrideTextDirection = function (ctx, direction) {
+        var style, original;
+
+        if (direction === 'ltr' || direction === 'rtl') {
+          style = ctx.canvas.style;
+          original = [style.getPropertyValue('direction'), style.getPropertyPriority('direction')];
+          style.setProperty('direction', direction, 'important');
+          ctx.prevTextDirection = original;
+        }
+      };
+
+      var restoreTextDirection = function (ctx) {
+        var original = ctx.prevTextDirection;
+
+        if (original !== undefined) {
+          delete ctx.prevTextDirection;
+          ctx.canvas.style.setProperty('direction', original[0], original[1]);
+        }
+      };
+
+      var helpers_rtl = {
+        getRtlAdapter: getAdapter,
+        overrideTextDirection: overrideTextDirection,
+        restoreTextDirection: restoreTextDirection
+      };
       var helpers$1 = helpers_core;
       var easing = helpers_easing;
       var canvas = helpers_canvas;
       var options = helpers_options;
+      var math = helpers_math;
+      var rtl = helpers_rtl;
       helpers$1.easing = easing;
       helpers$1.canvas = canvas;
       helpers$1.options = options;
+      helpers$1.math = math;
+      helpers$1.rtl = rtl;
 
       function interpolate(start, view, model, ease) {
         var keys = Object.keys(model);
@@ -13177,6 +14445,7 @@
       };
 
       helpers$1.extend(Element.prototype, {
+        _type: undefined,
         initialize: function () {
           this.hidden = false;
         },
@@ -13184,7 +14453,7 @@
           var me = this;
 
           if (!me._view) {
-            me._view = helpers$1.clone(me._model);
+            me._view = helpers$1.extend({}, me._model);
           }
 
           me._start = {};
@@ -13197,7 +14466,7 @@
           var view = me._view; // No animation -> No Transition
 
           if (!model || ease === 1) {
-            me._view = model;
+            me._view = helpers$1.extend({}, model);
             me._start = null;
             return me;
           }
@@ -13225,7 +14494,7 @@
       });
       Element.extend = helpers$1.inherits;
       var core_element = Element;
-      var exports$2 = core_element.extend({
+      var exports$3 = core_element.extend({
         chart: null,
         // the animation associated chart instance
         currentStep: 0,
@@ -13241,7 +14510,7 @@
         onAnimationComplete: null // user specified callback to fire when the animation finishes
 
       });
-      var core_animation = exports$2; // DEPRECATIONS
+      var core_animation = exports$3; // DEPRECATIONS
 
       /**
        * Provided for backward compatibility, use Chart.Animation instead
@@ -13250,7 +14519,7 @@
        * @todo remove at version 3
        */
 
-      Object.defineProperty(exports$2.prototype, 'animationObject', {
+      Object.defineProperty(exports$3.prototype, 'animationObject', {
         get: function () {
           return this;
         }
@@ -13262,7 +14531,7 @@
        * @todo remove at version 3
        */
 
-      Object.defineProperty(exports$2.prototype, 'chartInstance', {
+      Object.defineProperty(exports$3.prototype, 'chartInstance', {
         get: function () {
           return this.chart;
         },
@@ -13467,12 +14736,29 @@
          * @type {Chart.core.element}
          */
         dataElementType: null,
+
+        /**
+         * Dataset element option keys to be resolved in _resolveDatasetElementOptions.
+         * A derived controller may override this to resolve controller-specific options.
+         * The keys defined here are for backward compatibility for legend styles.
+         * @private
+         */
+        _datasetElementOptions: ['backgroundColor', 'borderCapStyle', 'borderColor', 'borderDash', 'borderDashOffset', 'borderJoinStyle', 'borderWidth'],
+
+        /**
+         * Data element option keys to be resolved in _resolveDataElementOptions.
+         * A derived controller may override this to resolve controller-specific options.
+         * The keys defined here are for backward compatibility for legend styles.
+         * @private
+         */
+        _dataElementOptions: ['backgroundColor', 'borderColor', 'borderWidth', 'pointStyle'],
         initialize: function (chart, datasetIndex) {
           var me = this;
           me.chart = chart;
           me.index = datasetIndex;
           me.linkScales();
           me.addElements();
+          me._type = me.getMeta().type;
         },
         updateIndex: function (datasetIndex) {
           this.index = datasetIndex;
@@ -13480,14 +14766,17 @@
         linkScales: function () {
           var me = this;
           var meta = me.getMeta();
+          var chart = me.chart;
+          var scales = chart.scales;
           var dataset = me.getDataset();
+          var scalesOpts = chart.options.scales;
 
-          if (meta.xAxisID === null || !(meta.xAxisID in me.chart.scales)) {
-            meta.xAxisID = dataset.xAxisID || me.chart.options.scales.xAxes[0].id;
+          if (meta.xAxisID === null || !(meta.xAxisID in scales) || dataset.xAxisID) {
+            meta.xAxisID = dataset.xAxisID || scalesOpts.xAxes[0].id;
           }
 
-          if (meta.yAxisID === null || !(meta.yAxisID in me.chart.scales)) {
-            meta.yAxisID = dataset.yAxisID || me.chart.options.scales.yAxes[0].id;
+          if (meta.yAxisID === null || !(meta.yAxisID in scales) || dataset.yAxisID) {
+            meta.yAxisID = dataset.yAxisID || scalesOpts.yAxes[0].id;
           }
         },
         getDataset: function () {
@@ -13528,7 +14817,7 @@
           return this.getScaleForId(this._getIndexScaleId());
         },
         reset: function () {
-          this.update(true);
+          this._update(true);
         },
 
         /**
@@ -13598,6 +14887,29 @@
 
           me.resyncElements();
         },
+
+        /**
+         * Returns the merged user-supplied and default dataset-level options
+         * @private
+         */
+        _configure: function () {
+          var me = this;
+          me._config = helpers$1.merge({}, [me.chart.options.datasets[me._type], me.getDataset()], {
+            merger: function (key, target, source) {
+              if (key !== '_meta' && key !== 'data') {
+                helpers$1._merger(key, target, source);
+              }
+            }
+          });
+        },
+        _update: function (reset) {
+          var me = this;
+
+          me._configure();
+
+          me._cachedDataOpts = null;
+          me.update(reset);
+        },
         update: helpers$1.noop,
         transition: function (easingValue) {
           var meta = this.getMeta();
@@ -13627,6 +14939,115 @@
             elements[i].draw();
           }
         },
+
+        /**
+         * Returns a set of predefined style properties that should be used to represent the dataset
+         * or the data if the index is specified
+         * @param {number} index - data index
+         * @return {IStyleInterface} style object
+         */
+        getStyle: function (index) {
+          var me = this;
+          var meta = me.getMeta();
+          var dataset = meta.dataset;
+          var style;
+
+          me._configure();
+
+          if (dataset && index === undefined) {
+            style = me._resolveDatasetElementOptions(dataset || {});
+          } else {
+            index = index || 0;
+            style = me._resolveDataElementOptions(meta.data[index] || {}, index);
+          }
+
+          if (style.fill === false || style.fill === null) {
+            style.backgroundColor = style.borderColor;
+          }
+
+          return style;
+        },
+
+        /**
+         * @private
+         */
+        _resolveDatasetElementOptions: function (element, hover) {
+          var me = this;
+          var chart = me.chart;
+          var datasetOpts = me._config;
+          var custom = element.custom || {};
+          var options = chart.options.elements[me.datasetElementType.prototype._type] || {};
+          var elementOptions = me._datasetElementOptions;
+          var values = {};
+          var i, ilen, key, readKey; // Scriptable options
+
+          var context = {
+            chart: chart,
+            dataset: me.getDataset(),
+            datasetIndex: me.index,
+            hover: hover
+          };
+
+          for (i = 0, ilen = elementOptions.length; i < ilen; ++i) {
+            key = elementOptions[i];
+            readKey = hover ? 'hover' + key.charAt(0).toUpperCase() + key.slice(1) : key;
+            values[key] = resolve([custom[readKey], datasetOpts[readKey], options[readKey]], context);
+          }
+
+          return values;
+        },
+
+        /**
+         * @private
+         */
+        _resolveDataElementOptions: function (element, index) {
+          var me = this;
+          var custom = element && element.custom;
+          var cached = me._cachedDataOpts;
+
+          if (cached && !custom) {
+            return cached;
+          }
+
+          var chart = me.chart;
+          var datasetOpts = me._config;
+          var options = chart.options.elements[me.dataElementType.prototype._type] || {};
+          var elementOptions = me._dataElementOptions;
+          var values = {}; // Scriptable options
+
+          var context = {
+            chart: chart,
+            dataIndex: index,
+            dataset: me.getDataset(),
+            datasetIndex: me.index
+          }; // `resolve` sets cacheable to `false` if any option is indexed or scripted
+
+          var info = {
+            cacheable: !custom
+          };
+          var keys, i, ilen, key;
+          custom = custom || {};
+
+          if (helpers$1.isArray(elementOptions)) {
+            for (i = 0, ilen = elementOptions.length; i < ilen; ++i) {
+              key = elementOptions[i];
+              values[key] = resolve([custom[key], datasetOpts[key], options[key]], context, index, info);
+            }
+          } else {
+            keys = Object.keys(elementOptions);
+
+            for (i = 0, ilen = keys.length; i < ilen; ++i) {
+              key = keys[i];
+              values[key] = resolve([custom[key], datasetOpts[elementOptions[key]], datasetOpts[key], options[key]], context, index, info);
+            }
+          }
+
+          if (info.cacheable) {
+            me._cachedDataOpts = Object.freeze(values);
+          }
+
+          return values;
+        },
         removeHoverStyle: function (element) {
           helpers$1.merge(element._model, element.$previousStyle || {});
           delete element.$previousStyle;
@@ -13645,6 +15066,42 @@
           model.backgroundColor = resolve([custom.hoverBackgroundColor, dataset.hoverBackgroundColor, getHoverColor(model.backgroundColor)], undefined, index);
           model.borderColor = resolve([custom.hoverBorderColor, dataset.hoverBorderColor, getHoverColor(model.borderColor)], undefined, index);
           model.borderWidth = resolve([custom.hoverBorderWidth, dataset.hoverBorderWidth, model.borderWidth], undefined, index);
+        },
+
+        /**
+         * @private
+         */
+        _removeDatasetHoverStyle: function () {
+          var element = this.getMeta().dataset;
+
+          if (element) {
+            this.removeHoverStyle(element);
+          }
+        },
+
+        /**
+         * @private
+         */
+        _setDatasetHoverStyle: function () {
+          var element = this.getMeta().dataset;
+          var prev = {};
+          var i, ilen, key, keys, hoverOptions, model;
+
+          if (!element) {
+            return;
+          }
+
+          model = element._model;
+          hoverOptions = this._resolveDatasetElementOptions(element, true);
+          keys = Object.keys(hoverOptions);
+
+          for (i = 0, ilen = keys.length; i < ilen; ++i) {
+            key = keys[i];
+            prev[key] = model[key];
+            model[key] = hoverOptions[key];
+          }
+
+          element.$previousStyle = prev;
         },
 
         /**
@@ -13712,6 +15169,7 @@
       });
       DatasetController.extend = helpers$1.inherits;
       var core_datasetController = DatasetController;
+      var TAU = Math.PI * 2;
 
       core_defaults._set('global', {
         elements: {
@@ -13724,7 +15182,87 @@
         }
       });
 
+      function clipArc(ctx, arc) {
+        var startAngle = arc.startAngle;
+        var endAngle = arc.endAngle;
+        var pixelMargin = arc.pixelMargin;
+        var angleMargin = pixelMargin / arc.outerRadius;
+        var x = arc.x;
+        var y = arc.y; // Draw an inner border by cliping the arc and drawing a double-width border
+        // Enlarge the clipping arc by 0.33 pixels to eliminate glitches between borders
+
+        ctx.beginPath();
+        ctx.arc(x, y, arc.outerRadius, startAngle - angleMargin, endAngle + angleMargin);
+
+        if (arc.innerRadius > pixelMargin) {
+          angleMargin = pixelMargin / arc.innerRadius;
+          ctx.arc(x, y, arc.innerRadius - pixelMargin, endAngle + angleMargin, startAngle - angleMargin, true);
+        } else {
+          ctx.arc(x, y, pixelMargin, endAngle + Math.PI / 2, startAngle - Math.PI / 2);
+        }
+
+        ctx.closePath();
+        ctx.clip();
+      }
+
+      function drawFullCircleBorders(ctx, vm, arc, inner) {
+        var endAngle = arc.endAngle;
+        var i;
+
+        if (inner) {
+          arc.endAngle = arc.startAngle + TAU;
+          clipArc(ctx, arc);
+          arc.endAngle = endAngle;
+
+          if (arc.endAngle === arc.startAngle && arc.fullCircles) {
+            arc.endAngle += TAU;
+            arc.fullCircles--;
+          }
+        }
+
+        ctx.beginPath();
+        ctx.arc(arc.x, arc.y, arc.innerRadius, arc.startAngle + TAU, arc.startAngle, true);
+
+        for (i = 0; i < arc.fullCircles; ++i) {
+          ctx.stroke();
+        }
+
+        ctx.beginPath();
+        ctx.arc(arc.x, arc.y, vm.outerRadius, arc.startAngle, arc.startAngle + TAU);
+
+        for (i = 0; i < arc.fullCircles; ++i) {
+          ctx.stroke();
+        }
+      }
+
+      function drawBorder(ctx, vm, arc) {
+        var inner = vm.borderAlign === 'inner';
+
+        if (inner) {
+          ctx.lineWidth = vm.borderWidth * 2;
+          ctx.lineJoin = 'round';
+        } else {
+          ctx.lineWidth = vm.borderWidth;
+          ctx.lineJoin = 'bevel';
+        }
+
+        if (arc.fullCircles) {
+          drawFullCircleBorders(ctx, vm, arc, inner);
+        }
+
+        if (inner) {
+          clipArc(ctx, arc);
+        }
+
+        ctx.beginPath();
+        ctx.arc(arc.x, arc.y, vm.outerRadius, arc.startAngle, arc.endAngle);
+        ctx.arc(arc.x, arc.y, arc.innerRadius, arc.endAngle, arc.startAngle, true);
+        ctx.closePath();
+        ctx.stroke();
+      }
+
       var element_arc = core_element.extend({
+        _type: 'arc',
         inLabelRange: function (mouseX) {
           var vm = this._view;
 
@@ -13749,15 +15287,15 @@
             var endAngle = vm.endAngle;
 
             while (endAngle < startAngle) {
-              endAngle += 2.0 * Math.PI;
+              endAngle += TAU;
             }
 
             while (angle > endAngle) {
-              angle -= 2.0 * Math.PI;
+              angle -= TAU;
             }
 
             while (angle < startAngle) {
-              angle += 2.0 * Math.PI;
+              angle += TAU;
             } // Check if within the range of the open/close angle
 
 
@@ -13793,48 +15331,44 @@
         draw: function () {
           var ctx = this._chart.ctx;
           var vm = this._view;
-          var sA = vm.startAngle;
-          var eA = vm.endAngle;
           var pixelMargin = vm.borderAlign === 'inner' ? 0.33 : 0;
-          var angleMargin;
+          var arc = {
+            x: vm.x,
+            y: vm.y,
+            innerRadius: vm.innerRadius,
+            outerRadius: Math.max(vm.outerRadius - pixelMargin, 0),
+            pixelMargin: pixelMargin,
+            startAngle: vm.startAngle,
+            endAngle: vm.endAngle,
+            fullCircles: Math.floor(vm.circumference / TAU)
+          };
+          var i;
           ctx.save();
-          ctx.beginPath();
-          ctx.arc(vm.x, vm.y, Math.max(vm.outerRadius - pixelMargin, 0), sA, eA);
-          ctx.arc(vm.x, vm.y, vm.innerRadius, eA, sA, true);
-          ctx.closePath();
           ctx.fillStyle = vm.backgroundColor;
+          ctx.strokeStyle = vm.borderColor;
+
+          if (arc.fullCircles) {
+            arc.endAngle = arc.startAngle + TAU;
+            ctx.beginPath();
+            ctx.arc(arc.x, arc.y, arc.outerRadius, arc.startAngle, arc.endAngle);
+            ctx.arc(arc.x, arc.y, arc.innerRadius, arc.endAngle, arc.startAngle, true);
+            ctx.closePath();
+
+            for (i = 0; i < arc.fullCircles; ++i) {
+              ctx.fill();
+            }
+
+            arc.endAngle = arc.startAngle + vm.circumference % TAU;
+          }
+
+          ctx.beginPath();
+          ctx.arc(arc.x, arc.y, arc.outerRadius, arc.startAngle, arc.endAngle);
+          ctx.arc(arc.x, arc.y, arc.innerRadius, arc.endAngle, arc.startAngle, true);
+          ctx.closePath();
           ctx.fill();
 
           if (vm.borderWidth) {
-            if (vm.borderAlign === 'inner') {
-              // Draw an inner border by cliping the arc and drawing a double-width border
-              // Enlarge the clipping arc by 0.33 pixels to eliminate glitches between borders
-              ctx.beginPath();
-              angleMargin = pixelMargin / vm.outerRadius;
-              ctx.arc(vm.x, vm.y, vm.outerRadius, sA - angleMargin, eA + angleMargin);
-
-              if (vm.innerRadius > pixelMargin) {
-                angleMargin = pixelMargin / vm.innerRadius;
-                ctx.arc(vm.x, vm.y, vm.innerRadius - pixelMargin, eA + angleMargin, sA - angleMargin, true);
-              } else {
-                ctx.arc(vm.x, vm.y, pixelMargin, eA + Math.PI / 2, sA - Math.PI / 2);
-              }
-
-              ctx.closePath();
-              ctx.clip();
-              ctx.beginPath();
-              ctx.arc(vm.x, vm.y, vm.outerRadius, sA, eA);
-              ctx.arc(vm.x, vm.y, vm.innerRadius, eA, sA, true);
-              ctx.closePath();
-              ctx.lineWidth = vm.borderWidth * 2;
-              ctx.lineJoin = 'round';
-            } else {
-              ctx.lineWidth = vm.borderWidth;
-              ctx.lineJoin = 'bevel';
-            }
-
-            ctx.strokeStyle = vm.borderColor;
-            ctx.stroke();
+            drawBorder(ctx, vm, arc);
           }
 
           ctx.restore();
@@ -13862,6 +15396,7 @@
       });
 
       var element_line = core_element.extend({
+        _type: 'line',
         draw: function () {
           var me = this;
           var vm = me._view;
@@ -13874,10 +15409,28 @@
           var globalDefaults = core_defaults.global;
           var globalOptionLineElements = globalDefaults.elements.line;
           var lastDrawnIndex = -1;
-          var index, current, previous, currentVM; // If we are looping, adding the first point again
+          var closePath = me._loop;
+          var index, previous, currentVM;
 
-          if (me._loop && points.length) {
-            points.push(points[0]);
+          if (!points.length) {
+            return;
+          }
+
+          if (me._loop) {
+            for (index = 0; index < points.length; ++index) {
+              previous = helpers$1.previousItem(points, index); // If the line has an open path, shift the point array
+
+              if (!points[index]._view.skip && previous._view.skip) {
+                points = points.slice(index).concat(points.slice(0, index));
+                closePath = spanGaps;
+                break;
+              }
+            } // If the line has a close path, add the first point again
+
+
+            if (closePath) {
+              points.push(points[0]);
+            }
           }
 
           ctx.save(); // Stroke Line Options
@@ -13893,34 +15446,34 @@
           ctx.lineWidth = valueOrDefault$1(vm.borderWidth, globalOptionLineElements.borderWidth);
           ctx.strokeStyle = vm.borderColor || globalDefaults.defaultColor; // Stroke Line
 
-          ctx.beginPath();
-          lastDrawnIndex = -1;
+          ctx.beginPath(); // First point moves to it's starting position no matter what
 
-          for (index = 0; index < points.length; ++index) {
-            current = points[index];
-            previous = helpers$1.previousItem(points, index);
-            currentVM = current._view; // First point moves to it's starting position no matter what
+          currentVM = points[0]._view;
 
-            if (index === 0) {
-              if (!currentVM.skip) {
+          if (!currentVM.skip) {
+            ctx.moveTo(currentVM.x, currentVM.y);
+            lastDrawnIndex = 0;
+          }
+
+          for (index = 1; index < points.length; ++index) {
+            currentVM = points[index]._view;
+            previous = lastDrawnIndex === -1 ? helpers$1.previousItem(points, index) : points[lastDrawnIndex];
+
+            if (!currentVM.skip) {
+              if (lastDrawnIndex !== index - 1 && !spanGaps || lastDrawnIndex === -1) {
+                // There was a gap and this is the first point after the gap
                 ctx.moveTo(currentVM.x, currentVM.y);
-                lastDrawnIndex = index;
+              } else {
+                // Line to next point
+                helpers$1.canvas.lineTo(ctx, previous._view, currentVM);
               }
-            } else {
-              previous = lastDrawnIndex === -1 ? previous : points[lastDrawnIndex];
 
-              if (!currentVM.skip) {
-                if (lastDrawnIndex !== index - 1 && !spanGaps || lastDrawnIndex === -1) {
-                  // There was a gap and this is the first point after the gap
-                  ctx.moveTo(currentVM.x, currentVM.y);
-                } else {
-                  // Line to next point
-                  helpers$1.canvas.lineTo(ctx, previous._view, current._view);
-                }
-
-                lastDrawnIndex = index;
-              }
+              lastDrawnIndex = index;
             }
+          }
+
+          if (closePath) {
+            ctx.closePath();
           }
 
           ctx.stroke();
@@ -13957,6 +15510,7 @@
       }
 
       var element_point = core_element.extend({
+        _type: 'point',
         inRange: function (mouseX, mouseY) {
           var vm = this._view;
           return vm ? Math.pow(mouseX - vm.x, 2) + Math.pow(mouseY - vm.y, 2) < Math.pow(vm.hitRadius + vm.radius, 2) : false;
@@ -14130,6 +15684,7 @@
       }
 
       var element_rectangle = core_element.extend({
+        _type: 'rectangle',
         draw: function () {
           var ctx = this._chart.ctx;
           var vm = this._view;
@@ -14207,7 +15762,8 @@
       elements.Line = Line;
       elements.Point = Point;
       elements.Rectangle = Rectangle;
-      var resolve$1 = helpers$1.options.resolve;
+      var deprecated = helpers$1._deprecated;
+      var valueOrDefault$3 = helpers$1.valueOrDefault;
 
       core_defaults._set('bar', {
         hover: {
@@ -14216,8 +15772,6 @@
         scales: {
           xAxes: [{
             type: 'category',
-            categoryPercentage: 0.8,
-            barPercentage: 0.9,
             offset: true,
             gridLines: {
               offsetGridLines: true
@@ -14228,6 +15782,15 @@
           }]
         }
       });
+
+      core_defaults._set('global', {
+        datasets: {
+          bar: {
+            categoryPercentage: 0.8,
+            barPercentage: 0.9
+          }
+        }
+      });
       /**
        * Computes the "optimal" sample size to maintain bars equally sized while preventing overlap.
        * @private
@@ -14235,17 +15798,16 @@
 
 
       function computeMinSampleSize(scale, pixels) {
-        var min = scale.isHorizontal() ? scale.width : scale.height;
-        var ticks = scale.getTicks();
+        var min = scale._length;
         var prev, curr, i, ilen;
 
         for (i = 1, ilen = pixels.length; i < ilen; ++i) {
           min = Math.min(min, Math.abs(pixels[i] - pixels[i - 1]));
         }
 
-        for (i = 0, ilen = ticks.length; i < ilen; ++i) {
+        for (i = 0, ilen = scale.getTicks().length; i < ilen; ++i) {
           curr = scale.getPixelForTick(i);
-          min = i > 0 ? Math.min(min, curr - prev) : min;
+          min = i > 0 ? Math.min(min, Math.abs(curr - prev)) : min;
           prev = curr;
         }
 
@@ -14263,10 +15825,11 @@
         var thickness = options.barThickness;
         var count = ruler.stackCount;
         var curr = ruler.pixels[index];
+        var min = helpers$1.isNullOrUndef(thickness) ? computeMinSampleSize(ruler.scale, ruler.pixels) : -1;
         var size, ratio;
 
         if (helpers$1.isNullOrUndef(thickness)) {
-          size = ruler.min * options.categoryPercentage;
+          size = min * options.categoryPercentage;
           ratio = options.barPercentage;
         } else {
           // When bar thickness is enforced, category and bar percentages are ignored.
@@ -14320,13 +15883,24 @@
 
       var controller_bar = core_datasetController.extend({
         dataElementType: elements.Rectangle,
+
+        /**
+         * @private
+         */
+        _dataElementOptions: ['backgroundColor', 'borderColor', 'borderSkipped', 'borderWidth', 'barPercentage', 'barThickness', 'categoryPercentage', 'maxBarThickness', 'minBarLength'],
         initialize: function () {
           var me = this;
-          var meta;
+          var meta, scaleOpts;
           core_datasetController.prototype.initialize.apply(me, arguments);
           meta = me.getMeta();
           meta.stack = me.getDataset().stack;
           meta.bar = true;
+          scaleOpts = me._getIndexScale().options;
+          deprecated('bar chart', scaleOpts.barPercentage, 'scales.[x/y]Axes.barPercentage', 'dataset.barPercentage');
+          deprecated('bar chart', scaleOpts.barThickness, 'scales.[x/y]Axes.barThickness', 'dataset.barThickness');
+          deprecated('bar chart', scaleOpts.categoryPercentage, 'scales.[x/y]Axes.categoryPercentage', 'dataset.categoryPercentage');
+          deprecated('bar chart', me._getValueScale().options.minBarLength, 'scales.[x/y]Axes.minBarLength', 'dataset.minBarLength');
+          deprecated('bar chart', scaleOpts.maxBarThickness, 'scales.[x/y]Axes.maxBarThickness', 'dataset.maxBarThickness');
         },
         update: function (reset) {
           var me = this;
@@ -14343,7 +15917,7 @@
           var meta = me.getMeta();
           var dataset = me.getDataset();
 
-          var options = me._resolveElementOptions(rectangle, index);
+          var options = me._resolveDataElementOptions(rectangle, index);
 
           rectangle._xScale = me.getScaleForId(meta.xAxisID);
           rectangle._yScale = me.getScaleForId(meta.yAxisID);
@@ -14358,7 +15932,11 @@
             label: me.chart.data.labels[index]
           };
 
-          me._updateElementGeometry(rectangle, index, reset);
+          if (helpers$1.isArray(dataset.data[index])) {
+            rectangle._model.borderSkipped = null;
+          }
+
+          me._updateElementGeometry(rectangle, index, reset, options);
 
           rectangle.pivot();
         },
@@ -14366,7 +15944,7 @@
         /**
          * @private
          */
-        _updateElementGeometry: function (rectangle, index, reset) {
+        _updateElementGeometry: function (rectangle, index, reset, options) {
           var me = this;
           var model = rectangle._model;
 
@@ -14375,8 +15953,8 @@
           var base = vscale.getBasePixel();
           var horizontal = vscale.isHorizontal();
           var ruler = me._ruler || me.getRuler();
-          var vpixels = me.calculateBarValuePixels(me.index, index);
-          var ipixels = me.calculateBarIndexPixels(me.index, index, ruler);
+          var vpixels = me.calculateBarValuePixels(me.index, index, options);
+          var ipixels = me.calculateBarIndexPixels(me.index, index, ruler, options);
           model.horizontal = horizontal;
           model.base = reset ? base : vpixels.base;
           model.x = horizontal ? reset ? base : vpixels.head : ipixels.center;
@@ -14393,20 +15971,29 @@
          */
         _getStacks: function (last) {
           var me = this;
-          var chart = me.chart;
 
           var scale = me._getIndexScale();
 
+          var metasets = scale._getMatchingVisibleMetas(me._type);
+
           var stacked = scale.options.stacked;
-          var ilen = last === undefined ? chart.data.datasets.length : last + 1;
+          var ilen = metasets.length;
           var stacks = [];
           var i, meta;
 
           for (i = 0; i < ilen; ++i) {
-            meta = chart.getDatasetMeta(i);
+            meta = metasets[i]; // stacked   | meta.stack
+            //           | found | not found | undefined
+            // false     |   x   |     x     |     x
+            // true      |       |     x     |
+            // undefined |       |     x     |     x
 
-            if (meta.bar && chart.isDatasetVisible(i) && (stacked === false || stacked === true && stacks.indexOf(meta.stack) === -1 || stacked === undefined && (meta.stack === undefined || stacks.indexOf(meta.stack) === -1))) {
+            if (stacked === false || stacks.indexOf(meta.stack) === -1 || stacked === undefined && meta.stack === undefined) {
               stacks.push(meta.stack);
+            }
+
+            if (meta.index === last) {
+              break;
             }
           }
 
@@ -14444,25 +16031,18 @@
 
           var scale = me._getIndexScale();
 
-          var stackCount = me.getStackCount();
-          var datasetIndex = me.index;
-          var isHorizontal = scale.isHorizontal();
-          var start = isHorizontal ? scale.left : scale.top;
-          var end = start + (isHorizontal ? scale.width : scale.height);
           var pixels = [];
-          var i, ilen, min;
+          var i, ilen;
 
           for (i = 0, ilen = me.getMeta().data.length; i < ilen; ++i) {
-            pixels.push(scale.getPixelForValue(null, i, datasetIndex));
+            pixels.push(scale.getPixelForValue(null, i, me.index));
           }
 
-          min = helpers$1.isNullOrUndef(scale.options.barThickness) ? computeMinSampleSize(scale, pixels) : -1;
           return {
-            min: min,
             pixels: pixels,
-            start: start,
-            end: end,
-            stackCount: stackCount,
+            start: scale._startPixel,
+            end: scale._endPixel,
+            stackCount: me.getStackCount(),
             scale: scale
           };
         },
@@ -14471,30 +16051,40 @@
          * Note: pixel values are not clamped to the scale area.
          * @private
          */
-        calculateBarValuePixels: function (datasetIndex, index) {
+        calculateBarValuePixels: function (datasetIndex, index, options) {
           var me = this;
           var chart = me.chart;
-          var meta = me.getMeta();
 
           var scale = me._getValueScale();
 
           var isHorizontal = scale.isHorizontal();
           var datasets = chart.data.datasets;
-          var value = +scale.getRightValue(datasets[datasetIndex].data[index]);
-          var minBarLength = scale.options.minBarLength;
+
+          var metasets = scale._getMatchingVisibleMetas(me._type);
+
+          var value = scale._parseValue(datasets[datasetIndex].data[index]);
+
+          var minBarLength = options.minBarLength;
           var stacked = scale.options.stacked;
-          var stack = meta.stack;
-          var start = 0;
-          var i, imeta, ivalue, base, head, size;
+          var stack = me.getMeta().stack;
+          var start = value.start === undefined ? 0 : value.max >= 0 && value.min >= 0 ? value.min : value.max;
+          var length = value.start === undefined ? value.end : value.max >= 0 && value.min >= 0 ? value.max - value.min : value.min - value.max;
+          var ilen = metasets.length;
+          var i, imeta, ivalue, base, head, size, stackLength;
 
           if (stacked || stacked === undefined && stack !== undefined) {
-            for (i = 0; i < datasetIndex; ++i) {
-              imeta = chart.getDatasetMeta(i);
+            for (i = 0; i < ilen; ++i) {
+              imeta = metasets[i];
 
-              if (imeta.bar && imeta.stack === stack && imeta.controller._getValueScaleId() === scale.id && chart.isDatasetVisible(i)) {
-                ivalue = +scale.getRightValue(datasets[i].data[index]);
+              if (imeta.index === datasetIndex) {
+                break;
+              }
 
-                if (value < 0 && ivalue < 0 || value >= 0 && ivalue > 0) {
+              if (imeta.stack === stack) {
+                stackLength = scale._parseValue(datasets[imeta.index].data[index]);
+                ivalue = stackLength.start === undefined ? stackLength.end : stackLength.min >= 0 && stackLength.max >= 0 ? stackLength.max : stackLength.min;
+
+                if (value.min < 0 && ivalue < 0 || value.max >= 0 && ivalue > 0) {
                   start += ivalue;
                 }
               }
@@ -14502,13 +16092,13 @@
           }
 
           base = scale.getPixelForValue(start);
-          head = scale.getPixelForValue(start + value);
+          head = scale.getPixelForValue(start + length);
           size = head - base;
 
           if (minBarLength !== undefined && Math.abs(size) < minBarLength) {
             size = minBarLength;
 
-            if (value >= 0 && !isHorizontal || value < 0 && isHorizontal) {
+            if (length >= 0 && !isHorizontal || length < 0 && isHorizontal) {
               head = base - minBarLength;
             } else {
               head = base + minBarLength;
@@ -14526,13 +16116,12 @@
         /**
          * @private
          */
-        calculateBarIndexPixels: function (datasetIndex, index, ruler) {
+        calculateBarIndexPixels: function (datasetIndex, index, ruler, options) {
           var me = this;
-          var options = ruler.scale.options;
           var range = options.barThickness === 'flex' ? computeFlexCategoryTraits(index, ruler, options) : computeFitCategoryTraits(index, ruler, options);
           var stackIndex = me.getStackIndex(datasetIndex, me.getMeta().stack);
           var center = range.start + range.chunk * stackIndex + range.chunk / 2;
-          var size = Math.min(helpers$1.valueOrDefault(options.maxBarThickness, Infinity), range.chunk * range.ratio);
+          var size = Math.min(valueOrDefault$3(options.maxBarThickness, Infinity), range.chunk * range.ratio);
           return {
             base: center - size / 2,
             head: center + size / 2,
@@ -14553,7 +16142,9 @@
           helpers$1.canvas.clipArea(chart.ctx, chart.chartArea);
 
           for (; i < ilen; ++i) {
-            if (!isNaN(scale.getRightValue(dataset.data[i]))) {
+            var val = scale._parseValue(dataset.data[i]);
+
+            if (!isNaN(val.min) && !isNaN(val.max)) {
               rects[i].draw();
             }
           }
@@ -14564,34 +16155,24 @@
         /**
          * @private
          */
-        _resolveElementOptions: function (rectangle, index) {
+        _resolveDataElementOptions: function () {
           var me = this;
-          var chart = me.chart;
-          var datasets = chart.data.datasets;
-          var dataset = datasets[me.index];
-          var custom = rectangle.custom || {};
-          var options = chart.options.elements.rectangle;
-          var values = {};
-          var i, ilen, key; // Scriptable options
+          var values = helpers$1.extend({}, core_datasetController.prototype._resolveDataElementOptions.apply(me, arguments));
 
-          var context = {
-            chart: chart,
-            dataIndex: index,
-            dataset: dataset,
-            datasetIndex: me.index
-          };
-          var keys = ['backgroundColor', 'borderColor', 'borderSkipped', 'borderWidth'];
+          var indexOpts = me._getIndexScale().options;
 
-          for (i = 0, ilen = keys.length; i < ilen; ++i) {
-            key = keys[i];
-            values[key] = resolve$1([custom[key], dataset[key], options[key]], context, index);
-          }
+          var valueOpts = me._getValueScale().options;
 
+          values.barPercentage = valueOrDefault$3(indexOpts.barPercentage, values.barPercentage);
+          values.barThickness = valueOrDefault$3(indexOpts.barThickness, values.barThickness);
+          values.categoryPercentage = valueOrDefault$3(indexOpts.categoryPercentage, values.categoryPercentage);
+          values.maxBarThickness = valueOrDefault$3(indexOpts.maxBarThickness, values.maxBarThickness);
+          values.minBarLength = valueOrDefault$3(valueOpts.minBarLength, values.minBarLength);
           return values;
         }
       });
-      var valueOrDefault$3 = helpers$1.valueOrDefault;
-      var resolve$2 = helpers$1.options.resolve;
+      var valueOrDefault$4 = helpers$1.valueOrDefault;
+      var resolve$1 = helpers$1.options.resolve;
 
       core_defaults._set('bubble', {
         hover: {
@@ -14633,6 +16214,11 @@
         dataElementType: elements.Point,
 
         /**
+         * @private
+         */
+        _dataElementOptions: ['backgroundColor', 'borderColor', 'borderWidth', 'hoverBackgroundColor', 'hoverBorderColor', 'hoverBorderWidth', 'hoverRadius', 'hitRadius', 'pointStyle', 'rotation'],
+
+        /**
          * @protected
          */
         update: function (reset) {
@@ -14655,7 +16241,7 @@
           var xScale = me.getScaleForId(meta.xAxisID);
           var yScale = me.getScaleForId(meta.yAxisID);
 
-          var options = me._resolveElementOptions(point, index);
+          var options = me._resolveDataElementOptions(point, index);
 
           var data = me.getDataset().data[index];
           var dsIndex = me.index;
@@ -14694,46 +16280,45 @@
             borderWidth: model.borderWidth,
             radius: model.radius
           };
-          model.backgroundColor = valueOrDefault$3(options.hoverBackgroundColor, getHoverColor(options.backgroundColor));
-          model.borderColor = valueOrDefault$3(options.hoverBorderColor, getHoverColor(options.borderColor));
-          model.borderWidth = valueOrDefault$3(options.hoverBorderWidth, options.borderWidth);
+          model.backgroundColor = valueOrDefault$4(options.hoverBackgroundColor, getHoverColor(options.backgroundColor));
+          model.borderColor = valueOrDefault$4(options.hoverBorderColor, getHoverColor(options.borderColor));
+          model.borderWidth = valueOrDefault$4(options.hoverBorderWidth, options.borderWidth);
           model.radius = options.radius + options.hoverRadius;
         },
 
         /**
          * @private
          */
-        _resolveElementOptions: function (point, index) {
+        _resolveDataElementOptions: function (point, index) {
           var me = this;
           var chart = me.chart;
-          var datasets = chart.data.datasets;
-          var dataset = datasets[me.index];
+          var dataset = me.getDataset();
           var custom = point.custom || {};
-          var options = chart.options.elements.point;
-          var data = dataset.data[index];
-          var values = {};
-          var i, ilen, key; // Scriptable options
+          var data = dataset.data[index] || {};
+
+          var values = core_datasetController.prototype._resolveDataElementOptions.apply(me, arguments); // Scriptable options
+
 
           var context = {
             chart: chart,
             dataIndex: index,
             dataset: dataset,
             datasetIndex: me.index
-          };
-          var keys = ['backgroundColor', 'borderColor', 'borderWidth', 'hoverBackgroundColor', 'hoverBorderColor', 'hoverBorderWidth', 'hoverRadius', 'hitRadius', 'pointStyle', 'rotation'];
+          }; // In case values were cached (and thus frozen), we need to clone the values
 
-          for (i = 0, ilen = keys.length; i < ilen; ++i) {
-            key = keys[i];
-            values[key] = resolve$2([custom[key], dataset[key], options[key]], context, index);
+          if (me._cachedDataOpts === values) {
+            values = helpers$1.extend({}, values);
           } // Custom radius resolution
 
 
-          values.radius = resolve$2([custom.radius, data ? data.r : undefined, dataset.radius, options.radius], context, index);
+          values.radius = resolve$1([custom.radius, data.r, me._config.radius, chart.options.elements.point.radius], context, index);
           return values;
         }
       });
-      var resolve$3 = helpers$1.options.resolve;
-      var valueOrDefault$4 = helpers$1.valueOrDefault;
+      var valueOrDefault$5 = helpers$1.valueOrDefault;
+      var PI$1 = Math.PI;
+      var DOUBLE_PI$1 = PI$1 * 2;
+      var HALF_PI$1 = PI$1 / 2;
 
       core_defaults._set('doughnut', {
         animation: {
@@ -14746,26 +16331,26 @@
           mode: 'single'
         },
         legendCallback: function (chart) {
-          var text = [];
-          text.push('<ul class="' + chart.id + '-legend">');
+          var list = document.createElement('ul');
           var data = chart.data;
           var datasets = data.datasets;
           var labels = data.labels;
+          var i, ilen, listItem, listItemSpan;
+          list.setAttribute('class', chart.id + '-legend');
 
           if (datasets.length) {
-            for (var i = 0; i < datasets[0].data.length; ++i) {
-              text.push('<li><span style="background-color:' + datasets[0].backgroundColor[i] + '"></span>');
+            for (i = 0, ilen = datasets[0].data.length; i < ilen; ++i) {
+              listItem = list.appendChild(document.createElement('li'));
+              listItemSpan = listItem.appendChild(document.createElement('span'));
+              listItemSpan.style.backgroundColor = datasets[0].backgroundColor[i];
 
               if (labels[i]) {
-                text.push(labels[i]);
+                listItem.appendChild(document.createTextNode(labels[i]));
               }
-
-              text.push('</li>');
             }
           }
 
-          text.push('</ul>');
-          return text.join('');
+          return list.outerHTML;
         },
         legend: {
           labels: {
@@ -14775,19 +16360,13 @@
               if (data.labels.length && data.datasets.length) {
                 return data.labels.map(function (label, i) {
                   var meta = chart.getDatasetMeta(0);
-                  var ds = data.datasets[0];
-                  var arc = meta.data[i];
-                  var custom = arc && arc.custom || {};
-                  var arcOpts = chart.options.elements.arc;
-                  var fill = resolve$3([custom.backgroundColor, ds.backgroundColor, arcOpts.backgroundColor], undefined, i);
-                  var stroke = resolve$3([custom.borderColor, ds.borderColor, arcOpts.borderColor], undefined, i);
-                  var bw = resolve$3([custom.borderWidth, ds.borderWidth, arcOpts.borderWidth], undefined, i);
+                  var style = meta.controller.getStyle(i);
                   return {
                     text: label,
-                    fillStyle: fill,
-                    strokeStyle: stroke,
-                    lineWidth: bw,
-                    hidden: isNaN(ds.data[i]) || meta.data[i].hidden,
+                    fillStyle: style.backgroundColor,
+                    strokeStyle: style.borderColor,
+                    lineWidth: style.borderWidth,
+                    hidden: isNaN(data.datasets[0].data[i]) || meta.data[i].hidden,
                     // Extra data used for toggling the correct item
                     index: i
                   };
@@ -14816,9 +16395,9 @@
         // The percentage of the chart that we cut out of the middle.
         cutoutPercentage: 50,
         // The rotation of the chart, where the first data arc begins.
-        rotation: Math.PI * -0.5,
+        rotation: -HALF_PI$1,
         // The total circumference of the chart.
-        circumference: Math.PI * 2.0,
+        circumference: DOUBLE_PI$1,
         // Need to override these to give a nice default
         tooltips: {
           callbacks: {
@@ -14847,6 +16426,11 @@
       var controller_doughnut = core_datasetController.extend({
         dataElementType: elements.Arc,
         linkScales: helpers$1.noop,
+
+        /**
+         * @private
+         */
+        _dataElementOptions: ['backgroundColor', 'borderColor', 'borderWidth', 'borderAlign', 'hoverBackgroundColor', 'hoverBorderColor', 'hoverBorderWidth'],
         // Get index of the dataset in relation to the visible datasets. This allows determining the inner and outer radius correctly
         getRingIndex: function (datasetIndex) {
           var ringIndex = 0;
@@ -14864,68 +16448,53 @@
           var chart = me.chart;
           var chartArea = chart.chartArea;
           var opts = chart.options;
-          var availableWidth = chartArea.right - chartArea.left;
-          var availableHeight = chartArea.bottom - chartArea.top;
-          var minSize = Math.min(availableWidth, availableHeight);
-          var offset = {
-            x: 0,
-            y: 0
-          };
+          var ratioX = 1;
+          var ratioY = 1;
+          var offsetX = 0;
+          var offsetY = 0;
           var meta = me.getMeta();
           var arcs = meta.data;
-          var cutoutPercentage = opts.cutoutPercentage;
+          var cutout = opts.cutoutPercentage / 100 || 0;
           var circumference = opts.circumference;
 
           var chartWeight = me._getRingWeight(me.index);
 
-          var i, ilen; // If the chart's circumference isn't a full circle, calculate minSize as a ratio of the width/height of the arc
+          var maxWidth, maxHeight, i, ilen; // If the chart's circumference isn't a full circle, calculate size as a ratio of the width/height of the arc
 
-          if (circumference < Math.PI * 2.0) {
-            var startAngle = opts.rotation % (Math.PI * 2.0);
-            startAngle += Math.PI * 2.0 * (startAngle >= Math.PI ? -1 : startAngle < -Math.PI ? 1 : 0);
+          if (circumference < DOUBLE_PI$1) {
+            var startAngle = opts.rotation % DOUBLE_PI$1;
+            startAngle += startAngle >= PI$1 ? -DOUBLE_PI$1 : startAngle < -PI$1 ? DOUBLE_PI$1 : 0;
             var endAngle = startAngle + circumference;
-            var start = {
-              x: Math.cos(startAngle),
-              y: Math.sin(startAngle)
-            };
-            var end = {
-              x: Math.cos(endAngle),
-              y: Math.sin(endAngle)
-            };
-            var contains0 = startAngle <= 0 && endAngle >= 0 || startAngle <= Math.PI * 2.0 && Math.PI * 2.0 <= endAngle;
-            var contains90 = startAngle <= Math.PI * 0.5 && Math.PI * 0.5 <= endAngle || startAngle <= Math.PI * 2.5 && Math.PI * 2.5 <= endAngle;
-            var contains180 = startAngle <= -Math.PI && -Math.PI <= endAngle || startAngle <= Math.PI && Math.PI <= endAngle;
-            var contains270 = startAngle <= -Math.PI * 0.5 && -Math.PI * 0.5 <= endAngle || startAngle <= Math.PI * 1.5 && Math.PI * 1.5 <= endAngle;
-            var cutout = cutoutPercentage / 100.0;
-            var min = {
-              x: contains180 ? -1 : Math.min(start.x * (start.x < 0 ? 1 : cutout), end.x * (end.x < 0 ? 1 : cutout)),
-              y: contains270 ? -1 : Math.min(start.y * (start.y < 0 ? 1 : cutout), end.y * (end.y < 0 ? 1 : cutout))
-            };
-            var max = {
-              x: contains0 ? 1 : Math.max(start.x * (start.x > 0 ? 1 : cutout), end.x * (end.x > 0 ? 1 : cutout)),
-              y: contains90 ? 1 : Math.max(start.y * (start.y > 0 ? 1 : cutout), end.y * (end.y > 0 ? 1 : cutout))
-            };
-            var size = {
-              width: (max.x - min.x) * 0.5,
-              height: (max.y - min.y) * 0.5
-            };
-            minSize = Math.min(availableWidth / size.width, availableHeight / size.height);
-            offset = {
-              x: (max.x + min.x) * -0.5,
-              y: (max.y + min.y) * -0.5
-            };
+            var startX = Math.cos(startAngle);
+            var startY = Math.sin(startAngle);
+            var endX = Math.cos(endAngle);
+            var endY = Math.sin(endAngle);
+            var contains0 = startAngle <= 0 && endAngle >= 0 || endAngle >= DOUBLE_PI$1;
+            var contains90 = startAngle <= HALF_PI$1 && endAngle >= HALF_PI$1 || endAngle >= DOUBLE_PI$1 + HALF_PI$1;
+            var contains180 = startAngle === -PI$1 || endAngle >= PI$1;
+            var contains270 = startAngle <= -HALF_PI$1 && endAngle >= -HALF_PI$1 || endAngle >= PI$1 + HALF_PI$1;
+            var minX = contains180 ? -1 : Math.min(startX, startX * cutout, endX, endX * cutout);
+            var minY = contains270 ? -1 : Math.min(startY, startY * cutout, endY, endY * cutout);
+            var maxX = contains0 ? 1 : Math.max(startX, startX * cutout, endX, endX * cutout);
+            var maxY = contains90 ? 1 : Math.max(startY, startY * cutout, endY, endY * cutout);
+            ratioX = (maxX - minX) / 2;
+            ratioY = (maxY - minY) / 2;
+            offsetX = -(maxX + minX) / 2;
+            offsetY = -(maxY + minY) / 2;
           }
 
           for (i = 0, ilen = arcs.length; i < ilen; ++i) {
-            arcs[i]._options = me._resolveElementOptions(arcs[i], i);
+            arcs[i]._options = me._resolveDataElementOptions(arcs[i], i);
           }
 
           chart.borderWidth = me.getMaxBorderWidth();
-          chart.outerRadius = Math.max((minSize - chart.borderWidth) / 2, 0);
-          chart.innerRadius = Math.max(cutoutPercentage ? chart.outerRadius / 100 * cutoutPercentage : 0, 0);
+          maxWidth = (chartArea.right - chartArea.left - chart.borderWidth) / ratioX;
+          maxHeight = (chartArea.bottom - chartArea.top - chart.borderWidth) / ratioY;
+          chart.outerRadius = Math.max(Math.min(maxWidth, maxHeight) / 2, 0);
+          chart.innerRadius = Math.max(chart.outerRadius * cutout, 0);
           chart.radiusLength = (chart.outerRadius - chart.innerRadius) / (me._getVisibleDatasetWeightTotal() || 1);
-          chart.offsetX = offset.x * chart.outerRadius;
-          chart.offsetY = offset.y * chart.outerRadius;
+          chart.offsetX = offsetX * chart.outerRadius;
+          chart.offsetY = offsetY * chart.outerRadius;
           meta.total = me.calculateTotal();
           me.outerRadius = chart.outerRadius - chart.radiusLength * me._getRingWeightOffset(me.index);
           me.innerRadius = Math.max(me.outerRadius - chart.radiusLength * chartWeight, 0);
@@ -14947,7 +16516,7 @@
           var endAngle = opts.rotation; // non reset case handled later
 
           var dataset = me.getDataset();
-          var circumference = reset && animationOpts.animateRotate ? 0 : arc.hidden ? 0 : me.calculateCircumference(dataset.data[index]) * (opts.circumference / (2.0 * Math.PI));
+          var circumference = reset && animationOpts.animateRotate ? 0 : arc.hidden ? 0 : me.calculateCircumference(dataset.data[index]) * (opts.circumference / DOUBLE_PI$1);
           var innerRadius = reset && animationOpts.animateScale ? 0 : me.innerRadius;
           var outerRadius = reset && animationOpts.animateScale ? 0 : me.outerRadius;
           var options = arc._options || {};
@@ -15007,7 +16576,7 @@
           var total = this.getMeta().total;
 
           if (total > 0 && !isNaN(value)) {
-            return Math.PI * 2.0 * (Math.abs(value) / total);
+            return DOUBLE_PI$1 * (Math.abs(value) / total);
           }
 
           return 0;
@@ -15041,7 +16610,14 @@
 
           for (i = 0, ilen = arcs.length; i < ilen; ++i) {
             arc = arcs[i];
-            options = controller ? controller._resolveElementOptions(arc, i) : arc._options;
+
+            if (controller) {
+              controller._configure();
+
+              options = controller._resolveDataElementOptions(arc, i);
+            } else {
+              options = arc._options;
+            }
 
             if (options.borderAlign !== 'inner') {
               borderWidth = options.borderWidth;
@@ -15066,37 +16642,9 @@
             borderColor: model.borderColor,
             borderWidth: model.borderWidth
           };
-          model.backgroundColor = valueOrDefault$4(options.hoverBackgroundColor, getHoverColor(options.backgroundColor));
-          model.borderColor = valueOrDefault$4(options.hoverBorderColor, getHoverColor(options.borderColor));
-          model.borderWidth = valueOrDefault$4(options.hoverBorderWidth, options.borderWidth);
-        },
-
-        /**
-         * @private
-         */
-        _resolveElementOptions: function (arc, index) {
-          var me = this;
-          var chart = me.chart;
-          var dataset = me.getDataset();
-          var custom = arc.custom || {};
-          var options = chart.options.elements.arc;
-          var values = {};
-          var i, ilen, key; // Scriptable options
-
-          var context = {
-            chart: chart,
-            dataIndex: index,
-            dataset: dataset,
-            datasetIndex: me.index
-          };
-          var keys = ['backgroundColor', 'borderColor', 'borderWidth', 'borderAlign', 'hoverBackgroundColor', 'hoverBorderColor', 'hoverBorderWidth'];
-
-          for (i = 0, ilen = keys.length; i < ilen; ++i) {
-            key = keys[i];
-            values[key] = resolve$3([custom[key], dataset[key], options[key]], context, index);
-          }
-
-          return values;
+          model.backgroundColor = valueOrDefault$5(options.hoverBackgroundColor, getHoverColor(options.backgroundColor));
+          model.borderColor = valueOrDefault$5(options.hoverBorderColor, getHoverColor(options.borderColor));
+          model.borderWidth = valueOrDefault$5(options.hoverBorderWidth, options.borderWidth);
         },
 
         /**
@@ -15119,7 +16667,7 @@
          * @private
          */
         _getRingWeight: function (dataSetIndex) {
-          return Math.max(valueOrDefault$4(this.chart.data.datasets[dataSetIndex].weight, 1), 0);
+          return Math.max(valueOrDefault$5(this.chart.data.datasets[dataSetIndex].weight, 1), 0);
         },
 
         /**
@@ -15144,8 +16692,6 @@
           yAxes: [{
             type: 'category',
             position: 'left',
-            categoryPercentage: 0.8,
-            barPercentage: 0.9,
             offset: true,
             gridLines: {
               offsetGridLines: true
@@ -15160,6 +16706,15 @@
         tooltips: {
           mode: 'index',
           axis: 'y'
+        }
+      });
+
+      core_defaults._set('global', {
+        datasets: {
+          horizontalBar: {
+            categoryPercentage: 0.8,
+            barPercentage: 0.9
+          }
         }
       });
 
@@ -15178,8 +16733,8 @@
           return this.getMeta().yAxisID;
         }
       });
-      var valueOrDefault$5 = helpers$1.valueOrDefault;
-      var resolve$4 = helpers$1.options.resolve;
+      var valueOrDefault$6 = helpers$1.valueOrDefault;
+      var resolve$2 = helpers$1.options.resolve;
       var isPointInArea = helpers$1.canvas._isPointInArea;
 
       core_defaults._set('line', {
@@ -15200,36 +16755,99 @@
         }
       });
 
-      function lineEnabled(dataset, options) {
-        return valueOrDefault$5(dataset.showLine, options.showLines);
+      function scaleClip(scale, halfBorderWidth) {
+        var tickOpts = scale && scale.options.ticks || {};
+        var reverse = tickOpts.reverse;
+        var min = tickOpts.min === undefined ? halfBorderWidth : 0;
+        var max = tickOpts.max === undefined ? halfBorderWidth : 0;
+        return {
+          start: reverse ? max : min,
+          end: reverse ? min : max
+        };
+      }
+
+      function defaultClip(xScale, yScale, borderWidth) {
+        var halfBorderWidth = borderWidth / 2;
+        var x = scaleClip(xScale, halfBorderWidth);
+        var y = scaleClip(yScale, halfBorderWidth);
+        return {
+          top: y.end,
+          right: x.end,
+          bottom: y.start,
+          left: x.start
+        };
+      }
+
+      function toClip(value) {
+        var t, r, b, l;
+
+        if (helpers$1.isObject(value)) {
+          t = value.top;
+          r = value.right;
+          b = value.bottom;
+          l = value.left;
+        } else {
+          t = r = b = l = value;
+        }
+
+        return {
+          top: t,
+          right: r,
+          bottom: b,
+          left: l
+        };
       }
 
       var controller_line = core_datasetController.extend({
         datasetElementType: elements.Line,
         dataElementType: elements.Point,
+
+        /**
+         * @private
+         */
+        _datasetElementOptions: ['backgroundColor', 'borderCapStyle', 'borderColor', 'borderDash', 'borderDashOffset', 'borderJoinStyle', 'borderWidth', 'cubicInterpolationMode', 'fill'],
+
+        /**
+         * @private
+         */
+        _dataElementOptions: {
+          backgroundColor: 'pointBackgroundColor',
+          borderColor: 'pointBorderColor',
+          borderWidth: 'pointBorderWidth',
+          hitRadius: 'pointHitRadius',
+          hoverBackgroundColor: 'pointHoverBackgroundColor',
+          hoverBorderColor: 'pointHoverBorderColor',
+          hoverBorderWidth: 'pointHoverBorderWidth',
+          hoverRadius: 'pointHoverRadius',
+          pointStyle: 'pointStyle',
+          radius: 'pointRadius',
+          rotation: 'pointRotation'
+        },
         update: function (reset) {
           var me = this;
           var meta = me.getMeta();
           var line = meta.dataset;
           var points = meta.data || [];
-          var scale = me.getScaleForId(meta.yAxisID);
-          var dataset = me.getDataset();
-          var showLine = lineEnabled(dataset, me.chart.options);
-          var i, ilen; // Update Line
+          var options = me.chart.options;
+          var config = me._config;
+          var showLine = me._showLine = valueOrDefault$6(config.showLine, options.showLines);
+          var i, ilen;
+          me._xScale = me.getScaleForId(meta.xAxisID);
+          me._yScale = me.getScaleForId(meta.yAxisID); // Update Line
 
           if (showLine) {
             // Compatibility: If the properties are defined with only the old name, use those values
-            if (dataset.tension !== undefined && dataset.lineTension === undefined) {
-              dataset.lineTension = dataset.tension;
+            if (config.tension !== undefined && config.lineTension === undefined) {
+              config.lineTension = config.tension;
             } // Utility
 
 
-            line._scale = scale;
+            line._scale = me._yScale;
             line._datasetIndex = me.index; // Data
 
             line._children = points; // Model
 
-            line._model = me._resolveLineOptions(line);
+            line._model = me._resolveDatasetElementOptions(line);
             line.pivot();
           } // Update Points
 
@@ -15254,12 +16872,12 @@
           var dataset = me.getDataset();
           var datasetIndex = me.index;
           var value = dataset.data[index];
-          var yScale = me.getScaleForId(meta.yAxisID);
-          var xScale = me.getScaleForId(meta.xAxisID);
+          var xScale = me._xScale;
+          var yScale = me._yScale;
           var lineModel = meta.dataset._model;
           var x, y;
 
-          var options = me._resolvePointOptions(point, index);
+          var options = me._resolveDataElementOptions(point, index);
 
           x = xScale.getPixelForValue(typeof value === 'object' ? value : NaN, index, datasetIndex);
           y = reset ? yScale.getBasePixel() : me.calculatePointY(value, index, datasetIndex); // Utility
@@ -15281,7 +16899,7 @@
             backgroundColor: options.backgroundColor,
             borderColor: options.borderColor,
             borderWidth: options.borderWidth,
-            tension: valueOrDefault$5(custom.tension, lineModel ? lineModel.tension : 0),
+            tension: valueOrDefault$6(custom.tension, lineModel ? lineModel.tension : 0),
             steppedLine: lineModel ? lineModel.steppedLine : false,
             // Tooltip
             hitRadius: options.hitRadius
@@ -15291,87 +16909,48 @@
         /**
          * @private
          */
-        _resolvePointOptions: function (element, index) {
+        _resolveDatasetElementOptions: function (element) {
           var me = this;
-          var chart = me.chart;
-          var dataset = chart.data.datasets[me.index];
+          var config = me._config;
           var custom = element.custom || {};
-          var options = chart.options.elements.point;
-          var values = {};
-          var i, ilen, key; // Scriptable options
+          var options = me.chart.options;
+          var lineOptions = options.elements.line;
 
-          var context = {
-            chart: chart,
-            dataIndex: index,
-            dataset: dataset,
-            datasetIndex: me.index
-          };
-          var ELEMENT_OPTIONS = {
-            backgroundColor: 'pointBackgroundColor',
-            borderColor: 'pointBorderColor',
-            borderWidth: 'pointBorderWidth',
-            hitRadius: 'pointHitRadius',
-            hoverBackgroundColor: 'pointHoverBackgroundColor',
-            hoverBorderColor: 'pointHoverBorderColor',
-            hoverBorderWidth: 'pointHoverBorderWidth',
-            hoverRadius: 'pointHoverRadius',
-            pointStyle: 'pointStyle',
-            radius: 'pointRadius',
-            rotation: 'pointRotation'
-          };
-          var keys = Object.keys(ELEMENT_OPTIONS);
-
-          for (i = 0, ilen = keys.length; i < ilen; ++i) {
-            key = keys[i];
-            values[key] = resolve$4([custom[key], dataset[ELEMENT_OPTIONS[key]], dataset[key], options[key]], context, index);
-          }
-
-          return values;
-        },
-
-        /**
-         * @private
-         */
-        _resolveLineOptions: function (element) {
-          var me = this;
-          var chart = me.chart;
-          var dataset = chart.data.datasets[me.index];
-          var custom = element.custom || {};
-          var options = chart.options;
-          var elementOptions = options.elements.line;
-          var values = {};
-          var i, ilen, key;
-          var keys = ['backgroundColor', 'borderWidth', 'borderColor', 'borderCapStyle', 'borderDash', 'borderDashOffset', 'borderJoinStyle', 'fill', 'cubicInterpolationMode'];
-
-          for (i = 0, ilen = keys.length; i < ilen; ++i) {
-            key = keys[i];
-            values[key] = resolve$4([custom[key], dataset[key], elementOptions[key]]);
-          } // The default behavior of lines is to break at null values, according
+          var values = core_datasetController.prototype._resolveDatasetElementOptions.apply(me, arguments); // The default behavior of lines is to break at null values, according
           // to https://github.com/chartjs/Chart.js/issues/2435#issuecomment-216718158
           // This option gives lines the ability to span gaps
 
 
-          values.spanGaps = valueOrDefault$5(dataset.spanGaps, options.spanGaps);
-          values.tension = valueOrDefault$5(dataset.lineTension, elementOptions.tension);
-          values.steppedLine = resolve$4([custom.steppedLine, dataset.steppedLine, elementOptions.stepped]);
+          values.spanGaps = valueOrDefault$6(config.spanGaps, options.spanGaps);
+          values.tension = valueOrDefault$6(config.lineTension, lineOptions.tension);
+          values.steppedLine = resolve$2([custom.steppedLine, config.steppedLine, lineOptions.stepped]);
+          values.clip = toClip(valueOrDefault$6(config.clip, defaultClip(me._xScale, me._yScale, values.borderWidth)));
           return values;
         },
         calculatePointY: function (value, index, datasetIndex) {
           var me = this;
           var chart = me.chart;
-          var meta = me.getMeta();
-          var yScale = me.getScaleForId(meta.yAxisID);
+          var yScale = me._yScale;
           var sumPos = 0;
           var sumNeg = 0;
-          var i, ds, dsMeta;
+          var i, ds, dsMeta, stackedRightValue, rightValue, metasets, ilen;
 
           if (yScale.options.stacked) {
-            for (i = 0; i < datasetIndex; i++) {
-              ds = chart.data.datasets[i];
-              dsMeta = chart.getDatasetMeta(i);
+            rightValue = +yScale.getRightValue(value);
+            metasets = chart._getSortedVisibleDatasetMetas();
+            ilen = metasets.length;
 
-              if (dsMeta.type === 'line' && dsMeta.yAxisID === yScale.id && chart.isDatasetVisible(i)) {
-                var stackedRightValue = Number(yScale.getRightValue(ds.data[index]));
+            for (i = 0; i < ilen; ++i) {
+              dsMeta = metasets[i];
+
+              if (dsMeta.index === datasetIndex) {
+                break;
+              }
+
+              ds = chart.data.datasets[dsMeta.index];
+
+              if (dsMeta.type === 'line' && dsMeta.yAxisID === yScale.id) {
+                stackedRightValue = +yScale.getRightValue(ds.data[index]);
 
                 if (stackedRightValue < 0) {
                   sumNeg += stackedRightValue || 0;
@@ -15380,8 +16959,6 @@
                 }
               }
             }
-
-            var rightValue = Number(yScale.getRightValue(value));
 
             if (rightValue < 0) {
               return yScale.getPixelForValue(sumNeg + rightValue);
@@ -15448,17 +17025,18 @@
           var meta = me.getMeta();
           var points = meta.data || [];
           var area = chart.chartArea;
-          var ilen = points.length;
-          var halfBorderWidth;
+          var canvas = chart.canvas;
           var i = 0;
+          var ilen = points.length;
+          var clip;
 
-          if (lineEnabled(me.getDataset(), chart.options)) {
-            halfBorderWidth = (meta.dataset._model.borderWidth || 0) / 2;
+          if (me._showLine) {
+            clip = meta.dataset._model.clip;
             helpers$1.canvas.clipArea(chart.ctx, {
-              left: area.left,
-              right: area.right,
-              top: area.top - halfBorderWidth,
-              bottom: area.bottom + halfBorderWidth
+              left: clip.left === false ? 0 : area.left - clip.left,
+              right: clip.right === false ? canvas.width : area.right + clip.right,
+              top: clip.top === false ? 0 : area.top - clip.top,
+              bottom: clip.bottom === false ? canvas.height : area.bottom + clip.bottom
             });
             meta.dataset.draw();
             helpers$1.canvas.unclipArea(chart.ctx);
@@ -15483,13 +17061,13 @@
             borderWidth: model.borderWidth,
             radius: model.radius
           };
-          model.backgroundColor = valueOrDefault$5(options.hoverBackgroundColor, getHoverColor(options.backgroundColor));
-          model.borderColor = valueOrDefault$5(options.hoverBorderColor, getHoverColor(options.borderColor));
-          model.borderWidth = valueOrDefault$5(options.hoverBorderWidth, options.borderWidth);
-          model.radius = valueOrDefault$5(options.hoverRadius, options.radius);
+          model.backgroundColor = valueOrDefault$6(options.hoverBackgroundColor, getHoverColor(options.backgroundColor));
+          model.borderColor = valueOrDefault$6(options.hoverBorderColor, getHoverColor(options.borderColor));
+          model.borderWidth = valueOrDefault$6(options.hoverBorderWidth, options.borderWidth);
+          model.radius = valueOrDefault$6(options.hoverRadius, options.radius);
         }
       });
-      var resolve$5 = helpers$1.options.resolve;
+      var resolve$3 = helpers$1.options.resolve;
 
       core_defaults._set('polarArea', {
         scale: {
@@ -15514,26 +17092,26 @@
         },
         startAngle: -0.5 * Math.PI,
         legendCallback: function (chart) {
-          var text = [];
-          text.push('<ul class="' + chart.id + '-legend">');
+          var list = document.createElement('ul');
           var data = chart.data;
           var datasets = data.datasets;
           var labels = data.labels;
+          var i, ilen, listItem, listItemSpan;
+          list.setAttribute('class', chart.id + '-legend');
 
           if (datasets.length) {
-            for (var i = 0; i < datasets[0].data.length; ++i) {
-              text.push('<li><span style="background-color:' + datasets[0].backgroundColor[i] + '"></span>');
+            for (i = 0, ilen = datasets[0].data.length; i < ilen; ++i) {
+              listItem = list.appendChild(document.createElement('li'));
+              listItemSpan = listItem.appendChild(document.createElement('span'));
+              listItemSpan.style.backgroundColor = datasets[0].backgroundColor[i];
 
               if (labels[i]) {
-                text.push(labels[i]);
+                listItem.appendChild(document.createTextNode(labels[i]));
               }
-
-              text.push('</li>');
             }
           }
 
-          text.push('</ul>');
-          return text.join('');
+          return list.outerHTML;
         },
         legend: {
           labels: {
@@ -15543,19 +17121,13 @@
               if (data.labels.length && data.datasets.length) {
                 return data.labels.map(function (label, i) {
                   var meta = chart.getDatasetMeta(0);
-                  var ds = data.datasets[0];
-                  var arc = meta.data[i];
-                  var custom = arc.custom || {};
-                  var arcOpts = chart.options.elements.arc;
-                  var fill = resolve$5([custom.backgroundColor, ds.backgroundColor, arcOpts.backgroundColor], undefined, i);
-                  var stroke = resolve$5([custom.borderColor, ds.borderColor, arcOpts.borderColor], undefined, i);
-                  var bw = resolve$5([custom.borderWidth, ds.borderWidth, arcOpts.borderWidth], undefined, i);
+                  var style = meta.controller.getStyle(i);
                   return {
                     text: label,
-                    fillStyle: fill,
-                    strokeStyle: stroke,
-                    lineWidth: bw,
-                    hidden: isNaN(ds.data[i]) || meta.data[i].hidden,
+                    fillStyle: style.backgroundColor,
+                    strokeStyle: style.borderColor,
+                    lineWidth: style.borderWidth,
+                    hidden: isNaN(data.datasets[0].data[i]) || meta.data[i].hidden,
                     // Extra data used for toggling the correct item
                     index: i
                   };
@@ -15594,6 +17166,25 @@
       var controller_polarArea = core_datasetController.extend({
         dataElementType: elements.Arc,
         linkScales: helpers$1.noop,
+
+        /**
+         * @private
+         */
+        _dataElementOptions: ['backgroundColor', 'borderColor', 'borderWidth', 'borderAlign', 'hoverBackgroundColor', 'hoverBorderColor', 'hoverBorderWidth'],
+
+        /**
+         * @private
+         */
+        _getIndexScaleId: function () {
+          return this.chart.scale.id;
+        },
+
+        /**
+         * @private
+         */
+        _getValueScaleId: function () {
+          return this.chart.scale.id;
+        },
         update: function (reset) {
           var me = this;
           var dataset = me.getDataset();
@@ -15616,7 +17207,7 @@
           }
 
           for (i = 0, ilen = arcs.length; i < ilen; ++i) {
-            arcs[i]._options = me._resolveElementOptions(arcs[i], i);
+            arcs[i]._options = me._resolveDataElementOptions(arcs[i], i);
             me.updateElement(arcs[i], i, reset);
           }
         },
@@ -15708,34 +17299,6 @@
         /**
          * @private
          */
-        _resolveElementOptions: function (arc, index) {
-          var me = this;
-          var chart = me.chart;
-          var dataset = me.getDataset();
-          var custom = arc.custom || {};
-          var options = chart.options.elements.arc;
-          var values = {};
-          var i, ilen, key; // Scriptable options
-
-          var context = {
-            chart: chart,
-            dataIndex: index,
-            dataset: dataset,
-            datasetIndex: me.index
-          };
-          var keys = ['backgroundColor', 'borderColor', 'borderWidth', 'borderAlign', 'hoverBackgroundColor', 'hoverBorderColor', 'hoverBorderWidth'];
-
-          for (i = 0, ilen = keys.length; i < ilen; ++i) {
-            key = keys[i];
-            values[key] = resolve$5([custom[key], dataset[key], options[key]], context, index);
-          }
-
-          return values;
-        },
-
-        /**
-         * @private
-         */
         _computeAngle: function (index) {
           var me = this;
           var count = this.getMeta().count;
@@ -15753,7 +17316,7 @@
             dataset: dataset,
             datasetIndex: me.index
           };
-          return resolve$5([me.chart.options.elements.arc.angle, 2 * Math.PI / count], context, index);
+          return resolve$3([me.chart.options.elements.arc.angle, 2 * Math.PI / count], context, index);
         }
       });
 
@@ -15765,15 +17328,16 @@
 
 
       var controller_pie = controller_doughnut;
-      var valueOrDefault$6 = helpers$1.valueOrDefault;
-      var resolve$6 = helpers$1.options.resolve;
+      var valueOrDefault$7 = helpers$1.valueOrDefault;
 
       core_defaults._set('radar', {
+        spanGaps: false,
         scale: {
           type: 'radialLinear'
         },
         elements: {
           line: {
+            fill: 'start',
             tension: 0 // no bezier in radar
 
           }
@@ -15784,17 +17348,53 @@
         datasetElementType: elements.Line,
         dataElementType: elements.Point,
         linkScales: helpers$1.noop,
+
+        /**
+         * @private
+         */
+        _datasetElementOptions: ['backgroundColor', 'borderWidth', 'borderColor', 'borderCapStyle', 'borderDash', 'borderDashOffset', 'borderJoinStyle', 'fill'],
+
+        /**
+         * @private
+         */
+        _dataElementOptions: {
+          backgroundColor: 'pointBackgroundColor',
+          borderColor: 'pointBorderColor',
+          borderWidth: 'pointBorderWidth',
+          hitRadius: 'pointHitRadius',
+          hoverBackgroundColor: 'pointHoverBackgroundColor',
+          hoverBorderColor: 'pointHoverBorderColor',
+          hoverBorderWidth: 'pointHoverBorderWidth',
+          hoverRadius: 'pointHoverRadius',
+          pointStyle: 'pointStyle',
+          radius: 'pointRadius',
+          rotation: 'pointRotation'
+        },
+
+        /**
+         * @private
+         */
+        _getIndexScaleId: function () {
+          return this.chart.scale.id;
+        },
+
+        /**
+         * @private
+         */
+        _getValueScaleId: function () {
+          return this.chart.scale.id;
+        },
         update: function (reset) {
           var me = this;
           var meta = me.getMeta();
           var line = meta.dataset;
           var points = meta.data || [];
           var scale = me.chart.scale;
-          var dataset = me.getDataset();
+          var config = me._config;
           var i, ilen; // Compatibility: If the properties are defined with only the old name, use those values
 
-          if (dataset.tension !== undefined && dataset.lineTension === undefined) {
-            dataset.lineTension = dataset.tension;
+          if (config.tension !== undefined && config.lineTension === undefined) {
+            config.lineTension = config.tension;
           } // Utility
 
 
@@ -15804,7 +17404,7 @@
           line._children = points;
           line._loop = true; // Model
 
-          line._model = me._resolveLineOptions(line);
+          line._model = me._resolveDatasetElementOptions(line);
           line.pivot(); // Update Points
 
           for (i = 0, ilen = points.length; i < ilen; ++i) {
@@ -15825,7 +17425,7 @@
           var scale = me.chart.scale;
           var pointPosition = scale.getPointPositionForValue(index, dataset.data[index]);
 
-          var options = me._resolvePointOptions(point, index);
+          var options = me._resolveDataElementOptions(point, index);
 
           var lineModel = me.getMeta().dataset._model;
 
@@ -15849,7 +17449,7 @@
             backgroundColor: options.backgroundColor,
             borderColor: options.borderColor,
             borderWidth: options.borderWidth,
-            tension: valueOrDefault$6(custom.tension, lineModel ? lineModel.tension : 0),
+            tension: valueOrDefault$7(custom.tension, lineModel ? lineModel.tension : 0),
             // Tooltip
             hitRadius: options.hitRadius
           };
@@ -15858,63 +17458,15 @@
         /**
          * @private
          */
-        _resolvePointOptions: function (element, index) {
+        _resolveDatasetElementOptions: function () {
           var me = this;
-          var chart = me.chart;
-          var dataset = chart.data.datasets[me.index];
-          var custom = element.custom || {};
-          var options = chart.options.elements.point;
-          var values = {};
-          var i, ilen, key; // Scriptable options
+          var config = me._config;
+          var options = me.chart.options;
 
-          var context = {
-            chart: chart,
-            dataIndex: index,
-            dataset: dataset,
-            datasetIndex: me.index
-          };
-          var ELEMENT_OPTIONS = {
-            backgroundColor: 'pointBackgroundColor',
-            borderColor: 'pointBorderColor',
-            borderWidth: 'pointBorderWidth',
-            hitRadius: 'pointHitRadius',
-            hoverBackgroundColor: 'pointHoverBackgroundColor',
-            hoverBorderColor: 'pointHoverBorderColor',
-            hoverBorderWidth: 'pointHoverBorderWidth',
-            hoverRadius: 'pointHoverRadius',
-            pointStyle: 'pointStyle',
-            radius: 'pointRadius',
-            rotation: 'pointRotation'
-          };
-          var keys = Object.keys(ELEMENT_OPTIONS);
+          var values = core_datasetController.prototype._resolveDatasetElementOptions.apply(me, arguments);
 
-          for (i = 0, ilen = keys.length; i < ilen; ++i) {
-            key = keys[i];
-            values[key] = resolve$6([custom[key], dataset[ELEMENT_OPTIONS[key]], dataset[key], options[key]], context, index);
-          }
-
-          return values;
-        },
-
-        /**
-         * @private
-         */
-        _resolveLineOptions: function (element) {
-          var me = this;
-          var chart = me.chart;
-          var dataset = chart.data.datasets[me.index];
-          var custom = element.custom || {};
-          var options = chart.options.elements.line;
-          var values = {};
-          var i, ilen, key;
-          var keys = ['backgroundColor', 'borderWidth', 'borderColor', 'borderCapStyle', 'borderDash', 'borderDashOffset', 'borderJoinStyle', 'fill'];
-
-          for (i = 0, ilen = keys.length; i < ilen; ++i) {
-            key = keys[i];
-            values[key] = resolve$6([custom[key], dataset[key], options[key]]);
-          }
-
-          values.tension = valueOrDefault$6(dataset.lineTension, options.tension);
+          values.spanGaps = valueOrDefault$7(config.spanGaps, options.spanGaps);
+          values.tension = valueOrDefault$7(config.lineTension, options.elements.line.tension);
           return values;
         },
         updateBezierControlPoints: function () {
@@ -15922,7 +17474,13 @@
           var meta = me.getMeta();
           var area = me.chart.chartArea;
           var points = meta.data || [];
-          var i, ilen, model, controlPoints;
+          var i, ilen, model, controlPoints; // Only consider points that are drawn in case the spanGaps option is used
+
+          if (meta.dataset._model.spanGaps) {
+            points = points.filter(function (pt) {
+              return !pt._model.skip;
+            });
+          }
 
           function capControlPoint(pt, min, max) {
             return Math.max(Math.min(pt, max), min);
@@ -15948,10 +17506,10 @@
             borderWidth: model.borderWidth,
             radius: model.radius
           };
-          model.backgroundColor = valueOrDefault$6(options.hoverBackgroundColor, getHoverColor(options.backgroundColor));
-          model.borderColor = valueOrDefault$6(options.hoverBorderColor, getHoverColor(options.borderColor));
-          model.borderWidth = valueOrDefault$6(options.hoverBorderWidth, options.borderWidth);
-          model.radius = valueOrDefault$6(options.hoverRadius, options.radius);
+          model.backgroundColor = valueOrDefault$7(options.hoverBackgroundColor, getHoverColor(options.backgroundColor));
+          model.borderColor = valueOrDefault$7(options.hoverBorderColor, getHoverColor(options.borderColor));
+          model.borderWidth = valueOrDefault$7(options.hoverBorderWidth, options.borderWidth);
+          model.radius = valueOrDefault$7(options.hoverRadius, options.radius);
         }
       });
 
@@ -15973,7 +17531,6 @@
             position: 'left'
           }]
         },
-        showLines: false,
         tooltips: {
           callbacks: {
             title: function () {
@@ -15982,6 +17539,14 @@
             label: function (item) {
               return '(' + item.xLabel + ', ' + item.yLabel + ')';
             }
+          }
+        }
+      });
+
+      core_defaults._set('global', {
+        datasets: {
+          scatter: {
+            showLine: false
           }
         }
       }); // Scatter charts use line controllers
@@ -16027,18 +17592,15 @@
 
 
       function parseVisibleItems(chart, handler) {
-        var datasets = chart.data.datasets;
-        var meta, i, j, ilen, jlen;
+        var metasets = chart._getSortedVisibleDatasetMetas();
 
-        for (i = 0, ilen = datasets.length; i < ilen; ++i) {
-          if (!chart.isDatasetVisible(i)) {
-            continue;
-          }
+        var metadata, i, j, ilen, jlen, element;
 
-          meta = chart.getDatasetMeta(i);
+        for (i = 0, ilen = metasets.length; i < ilen; ++i) {
+          metadata = metasets[i].data;
 
-          for (j = 0, jlen = meta.data.length; j < jlen; ++j) {
-            var element = meta.data[j];
+          for (j = 0, jlen = metadata.length; j < jlen; ++j) {
+            element = metadata[j];
 
             if (!element._view.skip) {
               handler(element);
@@ -16123,16 +17685,14 @@
           return [];
         }
 
-        chart.data.datasets.forEach(function (dataset, datasetIndex) {
-          if (chart.isDatasetVisible(datasetIndex)) {
-            var meta = chart.getDatasetMeta(datasetIndex);
-            var element = meta.data[items[0]._index]; // don't count items that are skipped (null data)
+        chart._getSortedVisibleDatasetMetas().forEach(function (meta) {
+          var element = meta.data[items[0]._index]; // don't count items that are skipped (null data)
 
-            if (element && !element._view.skip) {
-              elements.push(element);
-            }
+          if (element && !element._view.skip) {
+            elements.push(element);
           }
         });
+
         return elements;
       }
       /**
@@ -16309,54 +17869,194 @@
           }
         }
       };
+      var extend = helpers$1.extend;
 
       function filterByPosition(array, position) {
         return helpers$1.where(array, function (v) {
-          return v.position === position;
+          return v.pos === position;
         });
       }
 
       function sortByWeight(array, reverse) {
-        array.forEach(function (v, i) {
-          v._tmpIndex_ = i;
-          return v;
-        });
-        array.sort(function (a, b) {
+        return array.sort(function (a, b) {
           var v0 = reverse ? b : a;
           var v1 = reverse ? a : b;
-          return v0.weight === v1.weight ? v0._tmpIndex_ - v1._tmpIndex_ : v0.weight - v1.weight;
-        });
-        array.forEach(function (v) {
-          delete v._tmpIndex_;
+          return v0.weight === v1.weight ? v0.index - v1.index : v0.weight - v1.weight;
         });
       }
 
-      function findMaxPadding(boxes) {
-        var top = 0;
-        var left = 0;
-        var bottom = 0;
-        var right = 0;
-        helpers$1.each(boxes, function (box) {
-          if (box.getPadding) {
-            var boxPadding = box.getPadding();
-            top = Math.max(top, boxPadding.top);
-            left = Math.max(left, boxPadding.left);
-            bottom = Math.max(bottom, boxPadding.bottom);
-            right = Math.max(right, boxPadding.right);
-          }
-        });
+      function wrapBoxes(boxes) {
+        var layoutBoxes = [];
+        var i, ilen, box;
+
+        for (i = 0, ilen = (boxes || []).length; i < ilen; ++i) {
+          box = boxes[i];
+          layoutBoxes.push({
+            index: i,
+            box: box,
+            pos: box.position,
+            horizontal: box.isHorizontal(),
+            weight: box.weight
+          });
+        }
+
+        return layoutBoxes;
+      }
+
+      function setLayoutDims(layouts, params) {
+        var i, ilen, layout;
+
+        for (i = 0, ilen = layouts.length; i < ilen; ++i) {
+          layout = layouts[i]; // store width used instead of chartArea.w in fitBoxes
+
+          layout.width = layout.horizontal ? layout.box.fullWidth && params.availableWidth : params.vBoxMaxWidth; // store height used instead of chartArea.h in fitBoxes
+
+          layout.height = layout.horizontal && params.hBoxMaxHeight;
+        }
+      }
+
+      function buildLayoutBoxes(boxes) {
+        var layoutBoxes = wrapBoxes(boxes);
+        var left = sortByWeight(filterByPosition(layoutBoxes, 'left'), true);
+        var right = sortByWeight(filterByPosition(layoutBoxes, 'right'));
+        var top = sortByWeight(filterByPosition(layoutBoxes, 'top'), true);
+        var bottom = sortByWeight(filterByPosition(layoutBoxes, 'bottom'));
         return {
-          top: top,
-          left: left,
-          bottom: bottom,
-          right: right
+          leftAndTop: left.concat(top),
+          rightAndBottom: right.concat(bottom),
+          chartArea: filterByPosition(layoutBoxes, 'chartArea'),
+          vertical: left.concat(right),
+          horizontal: top.concat(bottom)
         };
       }
 
-      function addSizeByPosition(boxes, size) {
-        helpers$1.each(boxes, function (box) {
-          size[box.position] += box.isHorizontal() ? box.height : box.width;
-        });
+      function getCombinedMax(maxPadding, chartArea, a, b) {
+        return Math.max(maxPadding[a], chartArea[a]) + Math.max(maxPadding[b], chartArea[b]);
+      }
+
+      function updateDims(chartArea, params, layout) {
+        var box = layout.box;
+        var maxPadding = chartArea.maxPadding;
+        var newWidth, newHeight;
+
+        if (layout.size) {
+          // this layout was already counted for, lets first reduce old size
+          chartArea[layout.pos] -= layout.size;
+        }
+
+        layout.size = layout.horizontal ? box.height : box.width;
+        chartArea[layout.pos] += layout.size;
+
+        if (box.getPadding) {
+          var boxPadding = box.getPadding();
+          maxPadding.top = Math.max(maxPadding.top, boxPadding.top);
+          maxPadding.left = Math.max(maxPadding.left, boxPadding.left);
+          maxPadding.bottom = Math.max(maxPadding.bottom, boxPadding.bottom);
+          maxPadding.right = Math.max(maxPadding.right, boxPadding.right);
+        }
+
+        newWidth = params.outerWidth - getCombinedMax(maxPadding, chartArea, 'left', 'right');
+        newHeight = params.outerHeight - getCombinedMax(maxPadding, chartArea, 'top', 'bottom');
+
+        if (newWidth !== chartArea.w || newHeight !== chartArea.h) {
+          chartArea.w = newWidth;
+          chartArea.h = newHeight; // return true if chart area changed in layout's direction
+
+          return layout.horizontal ? newWidth !== chartArea.w : newHeight !== chartArea.h;
+        }
+      }
+
+      function handleMaxPadding(chartArea) {
+        var maxPadding = chartArea.maxPadding;
+
+        function updatePos(pos) {
+          var change = Math.max(maxPadding[pos] - chartArea[pos], 0);
+          chartArea[pos] += change;
+          return change;
+        }
+
+        chartArea.y += updatePos('top');
+        chartArea.x += updatePos('left');
+        updatePos('right');
+        updatePos('bottom');
+      }
+
+      function getMargins(horizontal, chartArea) {
+        var maxPadding = chartArea.maxPadding;
+
+        function marginForPositions(positions) {
+          var margin = {
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: 0
+          };
+          positions.forEach(function (pos) {
+            margin[pos] = Math.max(chartArea[pos], maxPadding[pos]);
+          });
+          return margin;
+        }
+
+        return horizontal ? marginForPositions(['left', 'right']) : marginForPositions(['top', 'bottom']);
+      }
+
+      function fitBoxes(boxes, chartArea, params) {
+        var refitBoxes = [];
+        var i, ilen, layout, box, refit, changed;
+
+        for (i = 0, ilen = boxes.length; i < ilen; ++i) {
+          layout = boxes[i];
+          box = layout.box;
+          box.update(layout.width || chartArea.w, layout.height || chartArea.h, getMargins(layout.horizontal, chartArea));
+
+          if (updateDims(chartArea, params, layout)) {
+            changed = true;
+
+            if (refitBoxes.length) {
+              // Dimensions changed and there were non full width boxes before this
+              // -> we have to refit those
+              refit = true;
+            }
+          }
+
+          if (!box.fullWidth) {
+            // fullWidth boxes don't need to be re-fitted in any case
+            refitBoxes.push(layout);
+          }
+        }
+
+        return refit ? fitBoxes(refitBoxes, chartArea, params) || changed : changed;
+      }
+
+      function placeBoxes(boxes, chartArea, params) {
+        var userPadding = params.padding;
+        var x = chartArea.x;
+        var y = chartArea.y;
+        var i, ilen, layout, box;
+
+        for (i = 0, ilen = boxes.length; i < ilen; ++i) {
+          layout = boxes[i];
+          box = layout.box;
+
+          if (layout.horizontal) {
+            box.left = box.fullWidth ? userPadding.left : chartArea.left;
+            box.right = box.fullWidth ? params.outerWidth - userPadding.right : chartArea.left + chartArea.w;
+            box.top = y;
+            box.bottom = y + box.height;
+            box.width = box.right - box.left;
+            y = box.bottom;
+          } else {
+            box.left = x;
+            box.right = x + box.width;
+            box.top = chartArea.top;
+            box.bottom = chartArea.top + chartArea.h;
+            box.height = box.bottom - box.top;
+            x = box.right;
+          }
+        }
+
+        chartArea.x = x;
+        chartArea.y = y;
       }
 
       core_defaults._set('global', {
@@ -16408,6 +18108,16 @@
           item.fullWidth = item.fullWidth || false;
           item.position = item.position || 'top';
           item.weight = item.weight || 0;
+
+          item._layers = item._layers || function () {
+            return [{
+              z: 0,
+              draw: function () {
+                item.draw.apply(item, arguments);
+              }
+            }];
+          };
+
           chart.boxes.push(item);
         },
 
@@ -16459,23 +18169,11 @@
 
           var layoutOptions = chart.options.layout || {};
           var padding = helpers$1.options.toPadding(layoutOptions.padding);
-          var leftPadding = padding.left;
-          var rightPadding = padding.right;
-          var topPadding = padding.top;
-          var bottomPadding = padding.bottom;
-          var leftBoxes = filterByPosition(chart.boxes, 'left');
-          var rightBoxes = filterByPosition(chart.boxes, 'right');
-          var topBoxes = filterByPosition(chart.boxes, 'top');
-          var bottomBoxes = filterByPosition(chart.boxes, 'bottom');
-          var chartAreaBoxes = filterByPosition(chart.boxes, 'chartArea'); // Sort boxes by weight. A higher weight is further away from the chart area
-
-          sortByWeight(leftBoxes, true);
-          sortByWeight(rightBoxes, false);
-          sortByWeight(topBoxes, true);
-          sortByWeight(bottomBoxes, false);
-          var verticalBoxes = leftBoxes.concat(rightBoxes);
-          var horizontalBoxes = topBoxes.concat(bottomBoxes);
-          var outerBoxes = verticalBoxes.concat(horizontalBoxes); // Essentially we now have any number of boxes on each of the 4 sides.
+          var availableWidth = width - padding.width;
+          var availableHeight = height - padding.height;
+          var boxes = buildLayoutBoxes(chart.boxes);
+          var verticalBoxes = boxes.vertical;
+          var horizontalBoxes = boxes.horizontal; // Essentially we now have any number of boxes on each of the 4 sides.
           // Our canvas looks like the following.
           // The areas L1 and L2 are the left axes. R1 is the right axis, T1 is the top axis and
           // B1 is the bottom axis
@@ -16501,188 +18199,49 @@
           // |                  B2 (Full Width)                   |
           // |----------------------------------------------------|
           //
-          // What we do to find the best sizing, we do the following
-          // 1. Determine the minimum size of the chart area.
-          // 2. Split the remaining width equally between each vertical axis
-          // 3. Split the remaining height equally between each horizontal axis
-          // 4. Give each layout the maximum size it can be. The layout will return it's minimum size
-          // 5. Adjust the sizes of each axis based on it's minimum reported size.
-          // 6. Refit each axis
-          // 7. Position each axis in the final location
-          // 8. Tell the chart the final location of the chart area
-          // 9. Tell any axes that overlay the chart area the positions of the chart area
-          // Step 1
 
-          var chartWidth = width - leftPadding - rightPadding;
-          var chartHeight = height - topPadding - bottomPadding;
-          var chartAreaWidth = chartWidth / 2; // min 50%
-          // Step 2
+          var params = Object.freeze({
+            outerWidth: width,
+            outerHeight: height,
+            padding: padding,
+            availableWidth: availableWidth,
+            vBoxMaxWidth: availableWidth / 2 / verticalBoxes.length,
+            hBoxMaxHeight: availableHeight / 2
+          });
+          var chartArea = extend({
+            maxPadding: extend({}, padding),
+            w: availableWidth,
+            h: availableHeight,
+            x: padding.left,
+            y: padding.top
+          }, padding);
+          setLayoutDims(verticalBoxes.concat(horizontalBoxes), params); // First fit vertical boxes
 
-          var verticalBoxWidth = (width - chartAreaWidth) / verticalBoxes.length; // Step 3
-          // TODO re-limit horizontal axis height (this limit has affected only padding calculation since PR 1837)
-          // var horizontalBoxHeight = (height - chartAreaHeight) / horizontalBoxes.length;
-          // Step 4
+          fitBoxes(verticalBoxes, chartArea, params); // Then fit horizontal boxes
 
-          var maxChartAreaWidth = chartWidth;
-          var maxChartAreaHeight = chartHeight;
-          var outerBoxSizes = {
-            top: topPadding,
-            left: leftPadding,
-            bottom: bottomPadding,
-            right: rightPadding
-          };
-          var minBoxSizes = [];
-          var maxPadding;
-
-          function getMinimumBoxSize(box) {
-            var minSize;
-            var isHorizontal = box.isHorizontal();
-
-            if (isHorizontal) {
-              minSize = box.update(box.fullWidth ? chartWidth : maxChartAreaWidth, chartHeight / 2);
-              maxChartAreaHeight -= minSize.height;
-            } else {
-              minSize = box.update(verticalBoxWidth, maxChartAreaHeight);
-              maxChartAreaWidth -= minSize.width;
-            }
-
-            minBoxSizes.push({
-              horizontal: isHorizontal,
-              width: minSize.width,
-              box: box
-            });
+          if (fitBoxes(horizontalBoxes, chartArea, params)) {
+            // if the area changed, re-fit vertical boxes
+            fitBoxes(verticalBoxes, chartArea, params);
           }
 
-          helpers$1.each(outerBoxes, getMinimumBoxSize); // If a horizontal box has padding, we move the left boxes over to avoid ugly charts (see issue #2478)
+          handleMaxPadding(chartArea); // Finally place the boxes to correct coordinates
 
-          maxPadding = findMaxPadding(outerBoxes); // At this point, maxChartAreaHeight and maxChartAreaWidth are the size the chart area could
-          // be if the axes are drawn at their minimum sizes.
-          // Steps 5 & 6
-          // Function to fit a box
+          placeBoxes(boxes.leftAndTop, chartArea, params); // Move to opposite side of chart
 
-          function fitBox(box) {
-            var minBoxSize = helpers$1.findNextWhere(minBoxSizes, function (minBox) {
-              return minBox.box === box;
-            });
-
-            if (minBoxSize) {
-              if (minBoxSize.horizontal) {
-                var scaleMargin = {
-                  left: Math.max(outerBoxSizes.left, maxPadding.left),
-                  right: Math.max(outerBoxSizes.right, maxPadding.right),
-                  top: 0,
-                  bottom: 0
-                }; // Don't use min size here because of label rotation. When the labels are rotated, their rotation highly depends
-                // on the margin. Sometimes they need to increase in size slightly
-
-                box.update(box.fullWidth ? chartWidth : maxChartAreaWidth, chartHeight / 2, scaleMargin);
-              } else {
-                box.update(minBoxSize.width, maxChartAreaHeight);
-              }
-            }
-          } // Update, and calculate the left and right margins for the horizontal boxes
-
-
-          helpers$1.each(verticalBoxes, fitBox);
-          addSizeByPosition(verticalBoxes, outerBoxSizes); // Set the Left and Right margins for the horizontal boxes
-
-          helpers$1.each(horizontalBoxes, fitBox);
-          addSizeByPosition(horizontalBoxes, outerBoxSizes);
-
-          function finalFitVerticalBox(box) {
-            var minBoxSize = helpers$1.findNextWhere(minBoxSizes, function (minSize) {
-              return minSize.box === box;
-            });
-            var scaleMargin = {
-              left: 0,
-              right: 0,
-              top: outerBoxSizes.top,
-              bottom: outerBoxSizes.bottom
-            };
-
-            if (minBoxSize) {
-              box.update(minBoxSize.width, maxChartAreaHeight, scaleMargin);
-            }
-          } // Let the left layout know the final margin
-
-
-          helpers$1.each(verticalBoxes, finalFitVerticalBox); // Recalculate because the size of each layout might have changed slightly due to the margins (label rotation for instance)
-
-          outerBoxSizes = {
-            top: topPadding,
-            left: leftPadding,
-            bottom: bottomPadding,
-            right: rightPadding
-          };
-          addSizeByPosition(outerBoxes, outerBoxSizes); // We may be adding some padding to account for rotated x axis labels
-
-          var leftPaddingAddition = Math.max(maxPadding.left - outerBoxSizes.left, 0);
-          outerBoxSizes.left += leftPaddingAddition;
-          outerBoxSizes.right += Math.max(maxPadding.right - outerBoxSizes.right, 0);
-          var topPaddingAddition = Math.max(maxPadding.top - outerBoxSizes.top, 0);
-          outerBoxSizes.top += topPaddingAddition;
-          outerBoxSizes.bottom += Math.max(maxPadding.bottom - outerBoxSizes.bottom, 0); // Figure out if our chart area changed. This would occur if the dataset layout label rotation
-          // changed due to the application of the margins in step 6. Since we can only get bigger, this is safe to do
-          // without calling `fit` again
-
-          var newMaxChartAreaHeight = height - outerBoxSizes.top - outerBoxSizes.bottom;
-          var newMaxChartAreaWidth = width - outerBoxSizes.left - outerBoxSizes.right;
-
-          if (newMaxChartAreaWidth !== maxChartAreaWidth || newMaxChartAreaHeight !== maxChartAreaHeight) {
-            helpers$1.each(verticalBoxes, function (box) {
-              box.height = newMaxChartAreaHeight;
-            });
-            helpers$1.each(horizontalBoxes, function (box) {
-              if (!box.fullWidth) {
-                box.width = newMaxChartAreaWidth;
-              }
-            });
-            maxChartAreaHeight = newMaxChartAreaHeight;
-            maxChartAreaWidth = newMaxChartAreaWidth;
-          } // Step 7 - Position the boxes
-
-
-          var left = leftPadding + leftPaddingAddition;
-          var top = topPadding + topPaddingAddition;
-
-          function placeBox(box) {
-            if (box.isHorizontal()) {
-              box.left = box.fullWidth ? leftPadding : outerBoxSizes.left;
-              box.right = box.fullWidth ? width - rightPadding : outerBoxSizes.left + maxChartAreaWidth;
-              box.top = top;
-              box.bottom = top + box.height; // Move to next point
-
-              top = box.bottom;
-            } else {
-              box.left = left;
-              box.right = left + box.width;
-              box.top = outerBoxSizes.top;
-              box.bottom = outerBoxSizes.top + maxChartAreaHeight; // Move to next point
-
-              left = box.right;
-            }
-          }
-
-          helpers$1.each(leftBoxes.concat(topBoxes), placeBox); // Account for chart width and height
-
-          left += maxChartAreaWidth;
-          top += maxChartAreaHeight;
-          helpers$1.each(rightBoxes, placeBox);
-          helpers$1.each(bottomBoxes, placeBox); // Step 8
-
+          chartArea.x += chartArea.w;
+          chartArea.y += chartArea.h;
+          placeBoxes(boxes.rightAndBottom, chartArea, params);
           chart.chartArea = {
-            left: outerBoxSizes.left,
-            top: outerBoxSizes.top,
-            right: outerBoxSizes.left + maxChartAreaWidth,
-            bottom: outerBoxSizes.top + maxChartAreaHeight
-          }; // Step 9
+            left: chartArea.left,
+            top: chartArea.top,
+            right: chartArea.left + chartArea.w,
+            bottom: chartArea.top + chartArea.h
+          }; // Finally update boxes in chartArea (radial scale for example)
 
-          helpers$1.each(chartAreaBoxes, function (box) {
-            box.left = chart.chartArea.left;
-            box.top = chart.chartArea.top;
-            box.right = chart.chartArea.right;
-            box.bottom = chart.chartArea.bottom;
-            box.update(maxChartAreaWidth, maxChartAreaHeight);
+          helpers$1.each(boxes.chartArea, function (layout) {
+            var box = layout.box;
+            extend(box, chart.chartArea);
+            box.update(chartArea.w, chartArea.h);
           });
         }
       };
@@ -16705,13 +18264,9 @@
       var platform_dom$1 =
       /*#__PURE__*/
       Object.freeze({
-        default: platform_dom
+        __proto__: null,
+        'default': platform_dom
       });
-
-      function getCjsExportFromNamespace(n) {
-        return n && n.default || n;
-      }
-
       var stylesheet = getCjsExportFromNamespace(platform_dom$1);
       var EXPANDO_KEY = '$chartjs';
       var CSS_PREFIX = 'chartjs-';
@@ -16997,19 +18552,25 @@
           resizer.parentNode.removeChild(resizer);
         }
       }
+      /**
+       * Injects CSS styles inline if the styles are not already present.
+       * @param {HTMLDocument|ShadowRoot} rootNode - the node to contain the <style>.
+       * @param {string} css - the CSS to be injected.
+       */
 
-      function injectCSS(platform, css) {
+
+      function injectCSS(rootNode, css) {
         // https://stackoverflow.com/q/3922139
-        var style = platform._style || document.createElement('style');
+        var expando = rootNode[EXPANDO_KEY] || (rootNode[EXPANDO_KEY] = {});
 
-        if (!platform._style) {
-          platform._style = style;
+        if (!expando.containsStyles) {
+          expando.containsStyles = true;
           css = '/* Chart.js */\n' + css;
+          var style = document.createElement('style');
           style.setAttribute('type', 'text/css');
-          document.getElementsByTagName('head')[0].appendChild(style);
+          style.appendChild(document.createTextNode(css));
+          rootNode.appendChild(style);
         }
-
-        style.appendChild(document.createTextNode(css));
       }
 
       var platform_dom$2 = {
@@ -17030,17 +18591,18 @@
         _enabled: typeof window !== 'undefined' && typeof document !== 'undefined',
 
         /**
+         * Initializes resources that depend on platform options.
+         * @param {HTMLCanvasElement} canvas - The Canvas element.
          * @private
          */
-        _ensureLoaded: function () {
-          if (this._loaded) {
-            return;
-          }
-
-          this._loaded = true; // https://github.com/chartjs/Chart.js/issues/5208
-
+        _ensureLoaded: function (canvas) {
           if (!this.disableCSSInjection) {
-            injectCSS(this, stylesheet);
+            // If the canvas is in a shadow DOM, then the styles must also be inserted
+            // into the same shadow DOM.
+            // https://github.com/chartjs/Chart.js/issues/5763
+            var root = canvas.getRootNode ? canvas.getRootNode() : document;
+            var targetNode = root.host ? root : document.head;
+            injectCSS(targetNode, stylesheet);
           }
         },
         acquireContext: function (item, config) {
@@ -17059,10 +18621,7 @@
           // https://github.com/chartjs/Chart.js/issues/2807
 
 
-          var context = item && item.getContext && item.getContext('2d'); // Load platform resources on first chart creation, to make possible to change
-          // platform options after importing the library (e.g. `disableCSSInjection`).
-
-          this._ensureLoaded(); // `instanceof HTMLCanvasElement/CanvasRenderingContext2D` fails when the item is
+          var context = item && item.getContext && item.getContext('2d'); // `instanceof HTMLCanvasElement/CanvasRenderingContext2D` fails when the item is
           // inside an iframe or when running in a protected environment. We could guess the
           // types from their toString() value but let's keep things flexible and assume it's
           // a sufficient condition if the item has a context2D which has item as `canvas`.
@@ -17070,8 +18629,11 @@
           // https://github.com/chartjs/Chart.js/issues/4102
           // https://github.com/chartjs/Chart.js/issues/4152
 
-
           if (context && context.canvas === item) {
+            // Load platform resources on first chart creation, to make it possible to
+            // import the library before setting platform options.
+            this._ensureLoaded(item);
+
             initCanvas(item, config);
             return context;
           }
@@ -17424,7 +18986,8 @@
           });
         }
       };
-      var valueOrDefault$7 = helpers$1.valueOrDefault;
+      var valueOrDefault$8 = helpers$1.valueOrDefault;
+      var getRtlHelper = helpers$1.rtl.getRtlAdapter;
 
       core_defaults._set('global', {
         tooltips: {
@@ -17667,26 +19230,29 @@
           yPadding: tooltipOpts.yPadding,
           xAlign: tooltipOpts.xAlign,
           yAlign: tooltipOpts.yAlign,
+          // Drawing direction and text direction
+          rtl: tooltipOpts.rtl,
+          textDirection: tooltipOpts.textDirection,
           // Body
           bodyFontColor: tooltipOpts.bodyFontColor,
-          _bodyFontFamily: valueOrDefault$7(tooltipOpts.bodyFontFamily, globalDefaults.defaultFontFamily),
-          _bodyFontStyle: valueOrDefault$7(tooltipOpts.bodyFontStyle, globalDefaults.defaultFontStyle),
+          _bodyFontFamily: valueOrDefault$8(tooltipOpts.bodyFontFamily, globalDefaults.defaultFontFamily),
+          _bodyFontStyle: valueOrDefault$8(tooltipOpts.bodyFontStyle, globalDefaults.defaultFontStyle),
           _bodyAlign: tooltipOpts.bodyAlign,
-          bodyFontSize: valueOrDefault$7(tooltipOpts.bodyFontSize, globalDefaults.defaultFontSize),
+          bodyFontSize: valueOrDefault$8(tooltipOpts.bodyFontSize, globalDefaults.defaultFontSize),
           bodySpacing: tooltipOpts.bodySpacing,
           // Title
           titleFontColor: tooltipOpts.titleFontColor,
-          _titleFontFamily: valueOrDefault$7(tooltipOpts.titleFontFamily, globalDefaults.defaultFontFamily),
-          _titleFontStyle: valueOrDefault$7(tooltipOpts.titleFontStyle, globalDefaults.defaultFontStyle),
-          titleFontSize: valueOrDefault$7(tooltipOpts.titleFontSize, globalDefaults.defaultFontSize),
+          _titleFontFamily: valueOrDefault$8(tooltipOpts.titleFontFamily, globalDefaults.defaultFontFamily),
+          _titleFontStyle: valueOrDefault$8(tooltipOpts.titleFontStyle, globalDefaults.defaultFontStyle),
+          titleFontSize: valueOrDefault$8(tooltipOpts.titleFontSize, globalDefaults.defaultFontSize),
           _titleAlign: tooltipOpts.titleAlign,
           titleSpacing: tooltipOpts.titleSpacing,
           titleMarginBottom: tooltipOpts.titleMarginBottom,
           // Footer
           footerFontColor: tooltipOpts.footerFontColor,
-          _footerFontFamily: valueOrDefault$7(tooltipOpts.footerFontFamily, globalDefaults.defaultFontFamily),
-          _footerFontStyle: valueOrDefault$7(tooltipOpts.footerFontStyle, globalDefaults.defaultFontStyle),
-          footerFontSize: valueOrDefault$7(tooltipOpts.footerFontSize, globalDefaults.defaultFontSize),
+          _footerFontFamily: valueOrDefault$8(tooltipOpts.footerFontFamily, globalDefaults.defaultFontFamily),
+          _footerFontStyle: valueOrDefault$8(tooltipOpts.footerFontStyle, globalDefaults.defaultFontStyle),
+          footerFontSize: valueOrDefault$8(tooltipOpts.footerFontSize, globalDefaults.defaultFontSize),
           _footerAlign: tooltipOpts.footerAlign,
           footerSpacing: tooltipOpts.footerSpacing,
           footerMarginTop: tooltipOpts.footerMarginTop,
@@ -17917,7 +19483,7 @@
         return pushOrConcat([], splitNewlines(callback));
       }
 
-      var exports$3 = core_element.extend({
+      var exports$4 = core_element.extend({
         initialize: function () {
           this._model = getBaseModel(this._options);
           this._lastActive = [];
@@ -18152,22 +19718,24 @@
         },
         drawTitle: function (pt, vm, ctx) {
           var title = vm.title;
+          var length = title.length;
+          var titleFontSize, titleSpacing, i;
 
-          if (title.length) {
+          if (length) {
+            var rtlHelper = getRtlHelper(vm.rtl, vm.x, vm.width);
             pt.x = getAlignedX(vm, vm._titleAlign);
-            ctx.textAlign = vm._titleAlign;
-            ctx.textBaseline = 'top';
-            var titleFontSize = vm.titleFontSize;
-            var titleSpacing = vm.titleSpacing;
+            ctx.textAlign = rtlHelper.textAlign(vm._titleAlign);
+            ctx.textBaseline = 'middle';
+            titleFontSize = vm.titleFontSize;
+            titleSpacing = vm.titleSpacing;
             ctx.fillStyle = vm.titleFontColor;
             ctx.font = helpers$1.fontString(titleFontSize, vm._titleFontStyle, vm._titleFontFamily);
-            var i, len;
 
-            for (i = 0, len = title.length; i < len; ++i) {
-              ctx.fillText(title[i], pt.x, pt.y);
+            for (i = 0; i < length; ++i) {
+              ctx.fillText(title[i], rtlHelper.x(pt.x), pt.y + titleFontSize / 2);
               pt.y += titleFontSize + titleSpacing; // Line Height and spacing
 
-              if (i + 1 === title.length) {
+              if (i + 1 === length) {
                 pt.y += vm.titleMarginBottom - titleSpacing; // If Last, add margin, remove spacing
               }
             }
@@ -18179,49 +19747,57 @@
           var bodyAlign = vm._bodyAlign;
           var body = vm.body;
           var drawColorBoxes = vm.displayColors;
-          var labelColors = vm.labelColors;
           var xLinePadding = 0;
           var colorX = drawColorBoxes ? getAlignedX(vm, 'left') : 0;
-          var textColor;
-          ctx.textAlign = bodyAlign;
-          ctx.textBaseline = 'top';
-          ctx.font = helpers$1.fontString(bodyFontSize, vm._bodyFontStyle, vm._bodyFontFamily);
-          pt.x = getAlignedX(vm, bodyAlign); // Before Body
+          var rtlHelper = getRtlHelper(vm.rtl, vm.x, vm.width);
 
           var fillLineOfText = function (line) {
-            ctx.fillText(line, pt.x + xLinePadding, pt.y);
+            ctx.fillText(line, rtlHelper.x(pt.x + xLinePadding), pt.y + bodyFontSize / 2);
             pt.y += bodyFontSize + bodySpacing;
-          }; // Before body lines
+          };
 
+          var bodyItem, textColor, labelColors, lines, i, j, ilen, jlen;
+          var bodyAlignForCalculation = rtlHelper.textAlign(bodyAlign);
+          ctx.textAlign = bodyAlign;
+          ctx.textBaseline = 'middle';
+          ctx.font = helpers$1.fontString(bodyFontSize, vm._bodyFontStyle, vm._bodyFontFamily);
+          pt.x = getAlignedX(vm, bodyAlignForCalculation); // Before body lines
 
           ctx.fillStyle = vm.bodyFontColor;
           helpers$1.each(vm.beforeBody, fillLineOfText);
-          xLinePadding = drawColorBoxes && bodyAlign !== 'right' ? bodyAlign === 'center' ? bodyFontSize / 2 + 1 : bodyFontSize + 2 : 0; // Draw body lines now
+          xLinePadding = drawColorBoxes && bodyAlignForCalculation !== 'right' ? bodyAlign === 'center' ? bodyFontSize / 2 + 1 : bodyFontSize + 2 : 0; // Draw body lines now
 
-          helpers$1.each(body, function (bodyItem, i) {
+          for (i = 0, ilen = body.length; i < ilen; ++i) {
+            bodyItem = body[i];
             textColor = vm.labelTextColors[i];
+            labelColors = vm.labelColors[i];
             ctx.fillStyle = textColor;
             helpers$1.each(bodyItem.before, fillLineOfText);
-            helpers$1.each(bodyItem.lines, function (line) {
+            lines = bodyItem.lines;
+
+            for (j = 0, jlen = lines.length; j < jlen; ++j) {
               // Draw Legend-like boxes if needed
               if (drawColorBoxes) {
-                // Fill a white rect so that colours merge nicely if the opacity is < 1
+                var rtlColorX = rtlHelper.x(colorX); // Fill a white rect so that colours merge nicely if the opacity is < 1
+
                 ctx.fillStyle = vm.legendColorBackground;
-                ctx.fillRect(colorX, pt.y, bodyFontSize, bodyFontSize); // Border
+                ctx.fillRect(rtlHelper.leftForLtr(rtlColorX, bodyFontSize), pt.y, bodyFontSize, bodyFontSize); // Border
 
                 ctx.lineWidth = 1;
-                ctx.strokeStyle = labelColors[i].borderColor;
-                ctx.strokeRect(colorX, pt.y, bodyFontSize, bodyFontSize); // Inner square
+                ctx.strokeStyle = labelColors.borderColor;
+                ctx.strokeRect(rtlHelper.leftForLtr(rtlColorX, bodyFontSize), pt.y, bodyFontSize, bodyFontSize); // Inner square
 
-                ctx.fillStyle = labelColors[i].backgroundColor;
-                ctx.fillRect(colorX + 1, pt.y + 1, bodyFontSize - 2, bodyFontSize - 2);
+                ctx.fillStyle = labelColors.backgroundColor;
+                ctx.fillRect(rtlHelper.leftForLtr(rtlHelper.xPlus(rtlColorX, 1), bodyFontSize - 2), pt.y + 1, bodyFontSize - 2, bodyFontSize - 2);
                 ctx.fillStyle = textColor;
               }
 
-              fillLineOfText(line);
-            });
+              fillLineOfText(lines[j]);
+            }
+
             helpers$1.each(bodyItem.after, fillLineOfText);
-          }); // Reset back to 0 for after body
+          } // Reset back to 0 for after body
+
 
           xLinePadding = 0; // After body lines
 
@@ -18230,18 +19806,23 @@
         },
         drawFooter: function (pt, vm, ctx) {
           var footer = vm.footer;
+          var length = footer.length;
+          var footerFontSize, i;
 
-          if (footer.length) {
+          if (length) {
+            var rtlHelper = getRtlHelper(vm.rtl, vm.x, vm.width);
             pt.x = getAlignedX(vm, vm._footerAlign);
             pt.y += vm.footerMarginTop;
-            ctx.textAlign = vm._footerAlign;
-            ctx.textBaseline = 'top';
+            ctx.textAlign = rtlHelper.textAlign(vm._footerAlign);
+            ctx.textBaseline = 'middle';
+            footerFontSize = vm.footerFontSize;
             ctx.fillStyle = vm.footerFontColor;
-            ctx.font = helpers$1.fontString(vm.footerFontSize, vm._footerFontStyle, vm._footerFontFamily);
-            helpers$1.each(footer, function (line) {
-              ctx.fillText(line, pt.x, pt.y);
-              pt.y += vm.footerFontSize + vm.footerSpacing;
-            });
+            ctx.font = helpers$1.fontString(footerFontSize, vm._footerFontStyle, vm._footerFontFamily);
+
+            for (i = 0; i < length; ++i) {
+              ctx.fillText(footer[i], rtlHelper.x(pt.x), pt.y + footerFontSize / 2);
+              pt.y += footerFontSize + vm.footerSpacing;
+            }
           }
         },
         drawBackground: function (pt, vm, ctx, tooltipSize) {
@@ -18319,13 +19900,15 @@
 
             this.drawBackground(pt, vm, ctx, tooltipSize); // Draw Title, Body, and Footer
 
-            pt.y += vm.yPadding; // Titles
+            pt.y += vm.yPadding;
+            helpers$1.rtl.overrideTextDirection(ctx, vm.textDirection); // Titles
 
             this.drawTitle(pt, vm, ctx); // Body
 
             this.drawBody(pt, vm, ctx); // Footer
 
             this.drawFooter(pt, vm, ctx);
+            helpers$1.rtl.restoreTextDirection(ctx, vm.textDirection);
             ctx.restore();
           }
         },
@@ -18346,6 +19929,10 @@
             me._active = [];
           } else {
             me._active = me._chart.getElementsAtEventForMode(e, options.mode, options);
+
+            if (options.reverse) {
+              me._active.reverse();
+            }
           } // Remember Last Actives
 
 
@@ -18372,9 +19959,9 @@
        */
 
       var positioners_1 = positioners;
-      var core_tooltip = exports$3;
+      var core_tooltip = exports$4;
       core_tooltip.positioners = positioners_1;
-      var valueOrDefault$8 = helpers$1.valueOrDefault;
+      var valueOrDefault$9 = helpers$1.valueOrDefault;
 
       core_defaults._set('global', {
         elements: {},
@@ -18412,7 +19999,7 @@
 
               for (i = 0; i < slen; ++i) {
                 scale = source[key][i];
-                type = valueOrDefault$8(scale.type, key === 'xAxes' ? 'category' : 'linear');
+                type = valueOrDefault$9(scale.type, key === 'xAxes' ? 'category' : 'linear');
 
                 if (i >= target[key].length) {
                   target[key].push({});
@@ -18486,8 +20073,28 @@
         chart.tooltip.initialize();
       }
 
+      function nextAvailableScaleId(axesOpts, prefix, index) {
+        var id;
+
+        var hasId = function (obj) {
+          return obj.id === id;
+        };
+
+        do {
+          id = prefix + index++;
+        } while (helpers$1.findIndex(axesOpts, hasId) >= 0);
+
+        return id;
+      }
+
       function positionIsHorizontal(position) {
         return position === 'top' || position === 'bottom';
+      }
+
+      function compare2Level(l1, l2) {
+        return function (a, b) {
+          return a[l1] === b[l1] ? a[l2] - b[l2] : a[l1] - b[l1];
+        };
       }
 
       var Chart = function (item, config) {
@@ -18517,6 +20124,7 @@
           me.aspectRatio = height ? width / height : null;
           me.options = config.options;
           me._bufferedRender = false;
+          me._layers = [];
           /**
            * Provided for backward compatibility, Chart and Chart.Controller have been merged,
            * the "instance" still need to be defined since it might be called from plugins.
@@ -18567,11 +20175,8 @@
           if (me.options.responsive) {
             // Initial resize before chart draws (must be silent to preserve initial animations).
             me.resize(true);
-          } // Make sure scales have IDs and are built before we build any controllers.
+          }
 
-
-          me.ensureScalesHaveIDs();
-          me.buildOrUpdateScales();
           me.initToolTip(); // After init plugin notification
 
           core_plugins.notify(me, 'afterInit');
@@ -18630,10 +20235,14 @@
           var scalesOptions = options.scales || {};
           var scaleOptions = options.scale;
           helpers$1.each(scalesOptions.xAxes, function (xAxisOptions, index) {
-            xAxisOptions.id = xAxisOptions.id || 'x-axis-' + index;
+            if (!xAxisOptions.id) {
+              xAxisOptions.id = nextAvailableScaleId(scalesOptions.xAxes, 'x-axis-', index);
+            }
           });
           helpers$1.each(scalesOptions.yAxes, function (yAxisOptions, index) {
-            yAxisOptions.id = yAxisOptions.id || 'y-axis-' + index;
+            if (!yAxisOptions.id) {
+              yAxisOptions.id = nextAvailableScaleId(scalesOptions.yAxes, 'y-axis-', index);
+            }
           });
 
           if (scaleOptions) {
@@ -18682,7 +20291,7 @@
           helpers$1.each(items, function (item) {
             var scaleOptions = item.options;
             var id = scaleOptions.id;
-            var scaleType = valueOrDefault$8(scaleOptions.type, item.dtype);
+            var scaleType = valueOrDefault$9(scaleOptions.type, item.dtype);
 
             if (positionIsHorizontal(scaleOptions.position) !== positionIsHorizontal(item.dposition)) {
               scaleOptions.position = item.dposition;
@@ -18733,19 +20342,25 @@
         buildOrUpdateControllers: function () {
           var me = this;
           var newControllers = [];
-          helpers$1.each(me.data.datasets, function (dataset, datasetIndex) {
-            var meta = me.getDatasetMeta(datasetIndex);
+          var datasets = me.data.datasets;
+          var i, ilen;
+
+          for (i = 0, ilen = datasets.length; i < ilen; i++) {
+            var dataset = datasets[i];
+            var meta = me.getDatasetMeta(i);
             var type = dataset.type || me.config.type;
 
             if (meta.type && meta.type !== type) {
-              me.destroyDatasetMeta(datasetIndex);
-              meta = me.getDatasetMeta(datasetIndex);
+              me.destroyDatasetMeta(i);
+              meta = me.getDatasetMeta(i);
             }
 
             meta.type = type;
+            meta.order = dataset.order || 0;
+            meta.index = i;
 
             if (meta.controller) {
-              meta.controller.updateIndex(datasetIndex);
+              meta.controller.updateIndex(i);
               meta.controller.linkScales();
             } else {
               var ControllerClass = controllers[meta.type];
@@ -18754,10 +20369,11 @@
                 throw new Error('"' + meta.type + '" is not a chart type.');
               }
 
-              meta.controller = new ControllerClass(me, datasetIndex);
+              meta.controller = new ControllerClass(me, i);
               newControllers.push(meta.controller);
             }
-          }, me);
+          }
+
           return newControllers;
         },
 
@@ -18781,6 +20397,7 @@
         },
         update: function (config) {
           var me = this;
+          var i, ilen;
 
           if (!config || typeof config !== 'object') {
             // backwards compatibility
@@ -18804,9 +20421,10 @@
 
           var newControllers = me.buildOrUpdateControllers(); // Make sure all dataset controllers have correct meta data counts
 
-          helpers$1.each(me.data.datasets, function (dataset, datasetIndex) {
-            me.getDatasetMeta(datasetIndex).controller.buildOrUpdateElements();
-          }, me);
+          for (i = 0, ilen = me.data.datasets.length; i < ilen; i++) {
+            me.getDatasetMeta(i).controller.buildOrUpdateElements();
+          }
+
           me.updateLayout(); // Can only reset the new controllers after the scales have been updated
 
           if (me.options.animation && me.options.animation.duration) {
@@ -18824,6 +20442,8 @@
           me.lastActive = []; // Do this before render so that any plugins that need final scale updates can use it
 
           core_plugins.notify(me, 'afterUpdate');
+
+          me._layers.sort(compare2Level('z', '_idx'));
 
           if (me._bufferedRender) {
             me._bufferedRequest = {
@@ -18849,6 +20469,20 @@
           }
 
           core_layouts.update(this, this.width, this.height);
+          me._layers = [];
+          helpers$1.each(me.boxes, function (box) {
+            // _configure is called twice, once in core.scale.update and once here.
+            // Here the boxes are fully updated and at their final positions.
+            if (box._configure) {
+              box._configure();
+            }
+
+            me._layers.push.apply(me._layers, box._layers());
+          }, me);
+
+          me._layers.forEach(function (item, index) {
+            item._idx = index;
+          });
           /**
            * Provided for backward compatibility, use `afterLayout` instead.
            * @method IPlugin#afterScaleUpdate
@@ -18856,6 +20490,7 @@
            * @todo remove at version 3
            * @private
            */
+
 
           core_plugins.notify(me, 'afterScaleUpdate');
           core_plugins.notify(me, 'afterLayout');
@@ -18897,7 +20532,8 @@
             return;
           }
 
-          meta.controller.update();
+          meta.controller._update();
+
           core_plugins.notify(me, 'afterDatasetUpdate', [args]);
         },
         render: function (config) {
@@ -18912,7 +20548,7 @@
           }
 
           var animationOptions = me.options.animation;
-          var duration = valueOrDefault$8(config.duration, animationOptions && animationOptions.duration);
+          var duration = valueOrDefault$9(config.duration, animationOptions && animationOptions.duration);
           var lazy = config.lazy;
 
           if (core_plugins.notify(me, 'beforeRender') === false) {
@@ -18952,6 +20588,7 @@
         },
         draw: function (easingValue) {
           var me = this;
+          var i, layers;
           me.clear();
 
           if (helpers$1.isNullOrUndef(easingValue)) {
@@ -18966,13 +20603,22 @@
 
           if (core_plugins.notify(me, 'beforeDraw', [easingValue]) === false) {
             return;
-          } // Draw all the scales
+          } // Because of plugin hooks (before/afterDatasetsDraw), datasets can't
+          // currently be part of layers. Instead, we draw
+          // layers <= 0 before(default, backward compat), and the rest after
 
 
-          helpers$1.each(me.boxes, function (box) {
-            box.draw(me.chartArea);
-          }, me);
-          me.drawDatasets(easingValue);
+          layers = me._layers;
+
+          for (i = 0; i < layers.length && layers[i].z <= 0; ++i) {
+            layers[i].draw(me.chartArea);
+          }
+
+          me.drawDatasets(easingValue); // Rest of layers
+
+          for (; i < layers.length; ++i) {
+            layers[i].draw(me.chartArea);
+          }
 
           me._drawTooltip(easingValue);
 
@@ -18995,22 +20641,48 @@
         },
 
         /**
+         * @private
+         */
+        _getSortedDatasetMetas: function (filterVisible) {
+          var me = this;
+          var datasets = me.data.datasets || [];
+          var result = [];
+          var i, ilen;
+
+          for (i = 0, ilen = datasets.length; i < ilen; ++i) {
+            if (!filterVisible || me.isDatasetVisible(i)) {
+              result.push(me.getDatasetMeta(i));
+            }
+          }
+
+          result.sort(compare2Level('order', 'index'));
+          return result;
+        },
+
+        /**
+         * @private
+         */
+        _getSortedVisibleDatasetMetas: function () {
+          return this._getSortedDatasetMetas(true);
+        },
+
+        /**
          * Draws all datasets unless a plugin returns `false` to the `beforeDatasetsDraw`
          * hook, in which case, plugins will not be called on `afterDatasetsDraw`.
          * @private
          */
         drawDatasets: function (easingValue) {
           var me = this;
+          var metasets, i;
 
           if (core_plugins.notify(me, 'beforeDatasetsDraw', [easingValue]) === false) {
             return;
-          } // Draw datasets reversed to support proper line stacking
+          }
 
+          metasets = me._getSortedVisibleDatasetMetas();
 
-          for (var i = (me.data.datasets || []).length - 1; i >= 0; --i) {
-            if (me.isDatasetVisible(i)) {
-              me.drawDataset(i, easingValue);
-            }
+          for (i = metasets.length - 1; i >= 0; --i) {
+            me.drawDataset(metasets[i], easingValue);
           }
 
           core_plugins.notify(me, 'afterDatasetsDraw', [easingValue]);
@@ -19021,12 +20693,11 @@
          * hook, in which case, plugins will not be called on `afterDatasetDraw`.
          * @private
          */
-        drawDataset: function (index, easingValue) {
+        drawDataset: function (meta, easingValue) {
           var me = this;
-          var meta = me.getDatasetMeta(index);
           var args = {
             meta: meta,
-            index: index,
+            index: meta.index,
             easingValue: easingValue
           };
 
@@ -19109,7 +20780,9 @@
               hidden: null,
               // See isDatasetVisible() comment
               xAxisID: null,
-              yAxisID: null
+              yAxisID: null,
+              order: dataset.order || 0,
+              index: datasetIndex
             };
           }
 
@@ -19228,15 +20901,19 @@
           });
         },
         updateHoverStyle: function (elements, mode, enabled) {
-          var method = enabled ? 'setHoverStyle' : 'removeHoverStyle';
+          var prefix = enabled ? 'set' : 'remove';
           var element, i, ilen;
 
           for (i = 0, ilen = elements.length; i < ilen; ++i) {
             element = elements[i];
 
             if (element) {
-              this.getDatasetMeta(element._datasetIndex).controller[method](element);
+              this.getDatasetMeta(element._datasetIndex).controller[prefix + 'HoverStyle'](element);
             }
+          }
+
+          if (mode === 'dataset') {
+            this.getDatasetMeta(elements[0]._datasetIndex).controller['_' + prefix + 'DatasetHoverStyle']();
           }
         },
 
@@ -19448,7 +21125,7 @@
 
         helpers$1.almostWhole = function (x, epsilon) {
           var rounded = Math.round(x);
-          return rounded - epsilon < x && rounded + epsilon > x;
+          return rounded - epsilon <= x && rounded + epsilon >= x;
         };
 
         helpers$1.max = function (array) {
@@ -19481,17 +21158,6 @@
           }
 
           return x > 0 ? 1 : -1;
-        };
-        helpers$1.log10 = Math.log10 ? function (x) {
-          return Math.log10(x);
-        } : function (x) {
-          var exponent = Math.log(x) * Math.LOG10E; // Math.LOG10E = 1 / Math.LN10.
-          // Check for whole powers of 10,
-          // which due to floating point rounding error should be corrected.
-
-          var powerOf10 = Math.round(exponent);
-          var isPowerOf10 = x === Math.pow(10, powerOf10);
-          return isPowerOf10 ? powerOf10 : exponent;
         };
 
         helpers$1.toRadians = function (degrees) {
@@ -19962,25 +21628,31 @@
 
           ctx.font = font;
           var longest = 0;
-          helpers$1.each(arrayOfThings, function (thing) {
-            // Undefined strings and arrays should not be measured
+          var ilen = arrayOfThings.length;
+          var i, j, jlen, thing, nestedThing;
+
+          for (i = 0; i < ilen; i++) {
+            thing = arrayOfThings[i]; // Undefined strings and arrays should not be measured
+
             if (thing !== undefined && thing !== null && helpers$1.isArray(thing) !== true) {
               longest = helpers$1.measureText(ctx, data, gc, longest, thing);
             } else if (helpers$1.isArray(thing)) {
               // if it is an array lets measure each element
               // to do maybe simplify this function a bit so we can do this more recursively?
-              helpers$1.each(thing, function (nestedThing) {
-                // Undefined strings and arrays should not be measured
+              for (j = 0, jlen = thing.length; j < jlen; j++) {
+                nestedThing = thing[j]; // Undefined strings and arrays should not be measured
+
                 if (nestedThing !== undefined && nestedThing !== null && !helpers$1.isArray(nestedThing)) {
                   longest = helpers$1.measureText(ctx, data, gc, longest, nestedThing);
                 }
-              });
+              }
             }
-          });
+          }
+
           var gcLen = gc.length / 2;
 
           if (gcLen > arrayOfThings.length) {
-            for (var i = 0; i < gcLen; i++) {
+            for (i = 0; i < gcLen; i++) {
               delete data[gc[i]];
             }
 
@@ -20004,6 +21676,10 @@
 
           return longest;
         };
+        /**
+         * @deprecated
+         */
+
 
         helpers$1.numberOfLabelLines = function (arrayOfThings) {
           var numberOfLines = 1;
@@ -20197,7 +21873,9 @@
               if (maxTick < 1e-4) {
                 // all ticks are small numbers; use scientific notation
                 var logTick = helpers$1.log10(Math.abs(tickValue));
-                tickString = tickValue.toExponential(Math.floor(logTick) - Math.floor(logDelta));
+                var numExponential = Math.floor(logTick) - Math.floor(logDelta);
+                numExponential = Math.max(Math.min(numExponential, 20), 0);
+                tickString = tickValue.toExponential(numExponential);
               } else {
                 var numDecimal = -1 * Math.floor(logDelta);
                 numDecimal = Math.max(Math.min(numDecimal, 20), 0); // toFixed has a max of 20 decimal places
@@ -20223,7 +21901,9 @@
           }
         }
       };
-      var valueOrDefault$9 = helpers$1.valueOrDefault;
+      var isArray = helpers$1.isArray;
+      var isNullOrUndef = helpers$1.isNullOrUndef;
+      var valueOrDefault$a = helpers$1.valueOrDefault;
       var valueAtIndexOrDefault = helpers$1.valueAtIndexOrDefault;
 
       core_defaults._set('scale', {
@@ -20233,7 +21913,7 @@
         // grid line settings
         gridLines: {
           display: true,
-          color: 'rgba(0, 0, 0, 0.1)',
+          color: 'rgba(0,0,0,0.1)',
           lineWidth: 1,
           drawBorder: true,
           drawOnChartArea: true,
@@ -20277,39 +21957,288 @@
           major: {}
         }
       });
+      /** Returns a new array containing numItems from arr */
 
-      function labelsFromTicks(ticks) {
-        var labels = [];
-        var i, ilen;
 
-        for (i = 0, ilen = ticks.length; i < ilen; ++i) {
-          labels.push(ticks[i].label);
+      function sample(arr, numItems) {
+        var result = [];
+        var increment = arr.length / numItems;
+        var i = 0;
+        var len = arr.length;
+
+        for (; i < len; i += increment) {
+          result.push(arr[Math.floor(i)]);
         }
 
-        return labels;
+        return result;
       }
 
       function getPixelForGridLine(scale, index, offsetGridLines) {
-        var lineValue = scale.getPixelForTick(index);
+        var length = scale.getTicks().length;
+        var validIndex = Math.min(index, length - 1);
+        var lineValue = scale.getPixelForTick(validIndex);
+        var start = scale._startPixel;
+        var end = scale._endPixel;
+        var epsilon = 1e-6; // 1e-6 is margin in pixels for accumulated error.
+
+        var offset;
 
         if (offsetGridLines) {
-          if (scale.getTicks().length === 1) {
-            lineValue -= scale.isHorizontal() ? Math.max(lineValue - scale.left, scale.right - lineValue) : Math.max(lineValue - scale.top, scale.bottom - lineValue);
+          if (length === 1) {
+            offset = Math.max(lineValue - start, end - lineValue);
           } else if (index === 0) {
-            lineValue -= (scale.getPixelForTick(1) - lineValue) / 2;
+            offset = (scale.getPixelForTick(1) - lineValue) / 2;
           } else {
-            lineValue -= (lineValue - scale.getPixelForTick(index - 1)) / 2;
+            offset = (lineValue - scale.getPixelForTick(validIndex - 1)) / 2;
+          }
+
+          lineValue += validIndex < index ? offset : -offset; // Return undefined if the pixel is out of the range
+
+          if (lineValue < start - epsilon || lineValue > end + epsilon) {
+            return;
           }
         }
 
         return lineValue;
       }
 
-      function computeTextSize(context, tick, font) {
-        return helpers$1.isArray(tick) ? helpers$1.longestText(context, font, tick) : context.measureText(tick).width;
+      function garbageCollect(caches, length) {
+        helpers$1.each(caches, function (cache) {
+          var gc = cache.gc;
+          var gcLen = gc.length / 2;
+          var i;
+
+          if (gcLen > length) {
+            for (i = 0; i < gcLen; ++i) {
+              delete cache.data[gc[i]];
+            }
+
+            gc.splice(0, gcLen);
+          }
+        });
+      }
+      /**
+       * Returns {width, height, offset} objects for the first, last, widest, highest tick
+       * labels where offset indicates the anchor point offset from the top in pixels.
+       */
+
+
+      function computeLabelSizes(ctx, tickFonts, ticks, caches) {
+        var length = ticks.length;
+        var widths = [];
+        var heights = [];
+        var offsets = [];
+        var i, j, jlen, label, tickFont, fontString, cache, lineHeight, width, height, nestedLabel, widest, highest;
+
+        for (i = 0; i < length; ++i) {
+          label = ticks[i].label;
+          tickFont = ticks[i].major ? tickFonts.major : tickFonts.minor;
+          ctx.font = fontString = tickFont.string;
+          cache = caches[fontString] = caches[fontString] || {
+            data: {},
+            gc: []
+          };
+          lineHeight = tickFont.lineHeight;
+          width = height = 0; // Undefined labels and arrays should not be measured
+
+          if (!isNullOrUndef(label) && !isArray(label)) {
+            width = helpers$1.measureText(ctx, cache.data, cache.gc, width, label);
+            height = lineHeight;
+          } else if (isArray(label)) {
+            // if it is an array let's measure each element
+            for (j = 0, jlen = label.length; j < jlen; ++j) {
+              nestedLabel = label[j]; // Undefined labels and arrays should not be measured
+
+              if (!isNullOrUndef(nestedLabel) && !isArray(nestedLabel)) {
+                width = helpers$1.measureText(ctx, cache.data, cache.gc, width, nestedLabel);
+                height += lineHeight;
+              }
+            }
+          }
+
+          widths.push(width);
+          heights.push(height);
+          offsets.push(lineHeight / 2);
+        }
+
+        garbageCollect(caches, length);
+        widest = widths.indexOf(Math.max.apply(null, widths));
+        highest = heights.indexOf(Math.max.apply(null, heights));
+
+        function valueAt(idx) {
+          return {
+            width: widths[idx] || 0,
+            height: heights[idx] || 0,
+            offset: offsets[idx] || 0
+          };
+        }
+
+        return {
+          first: valueAt(0),
+          last: valueAt(length - 1),
+          widest: valueAt(widest),
+          highest: valueAt(highest)
+        };
       }
 
-      var core_scale = core_element.extend({
+      function getTickMarkLength(options) {
+        return options.drawTicks ? options.tickMarkLength : 0;
+      }
+
+      function getScaleLabelHeight(options) {
+        var font, padding;
+
+        if (!options.display) {
+          return 0;
+        }
+
+        font = helpers$1.options._parseFont(options);
+        padding = helpers$1.options.toPadding(options.padding);
+        return font.lineHeight + padding.height;
+      }
+
+      function parseFontOptions(options, nestedOpts) {
+        return helpers$1.extend(helpers$1.options._parseFont({
+          fontFamily: valueOrDefault$a(nestedOpts.fontFamily, options.fontFamily),
+          fontSize: valueOrDefault$a(nestedOpts.fontSize, options.fontSize),
+          fontStyle: valueOrDefault$a(nestedOpts.fontStyle, options.fontStyle),
+          lineHeight: valueOrDefault$a(nestedOpts.lineHeight, options.lineHeight)
+        }), {
+          color: helpers$1.options.resolve([nestedOpts.fontColor, options.fontColor, core_defaults.global.defaultFontColor])
+        });
+      }
+
+      function parseTickFontOptions(options) {
+        var minor = parseFontOptions(options, options.minor);
+        var major = options.major.enabled ? parseFontOptions(options, options.major) : minor;
+        return {
+          minor: minor,
+          major: major
+        };
+      }
+
+      function nonSkipped(ticksToFilter) {
+        var filtered = [];
+        var item, index, len;
+
+        for (index = 0, len = ticksToFilter.length; index < len; ++index) {
+          item = ticksToFilter[index];
+
+          if (typeof item._index !== 'undefined') {
+            filtered.push(item);
+          }
+        }
+
+        return filtered;
+      }
+
+      function getEvenSpacing(arr) {
+        var len = arr.length;
+        var i, diff;
+
+        if (len < 2) {
+          return false;
+        }
+
+        for (diff = arr[0], i = 1; i < len; ++i) {
+          if (arr[i] - arr[i - 1] !== diff) {
+            return false;
+          }
+        }
+
+        return diff;
+      }
+
+      function calculateSpacing(majorIndices, ticks, axisLength, ticksLimit) {
+        var evenMajorSpacing = getEvenSpacing(majorIndices);
+        var spacing = (ticks.length - 1) / ticksLimit;
+        var factors, factor, i, ilen; // If the major ticks are evenly spaced apart, place the minor ticks
+        // so that they divide the major ticks into even chunks
+
+        if (!evenMajorSpacing) {
+          return Math.max(spacing, 1);
+        }
+
+        factors = helpers$1.math._factorize(evenMajorSpacing);
+
+        for (i = 0, ilen = factors.length - 1; i < ilen; i++) {
+          factor = factors[i];
+
+          if (factor > spacing) {
+            return factor;
+          }
+        }
+
+        return Math.max(spacing, 1);
+      }
+
+      function getMajorIndices(ticks) {
+        var result = [];
+        var i, ilen;
+
+        for (i = 0, ilen = ticks.length; i < ilen; i++) {
+          if (ticks[i].major) {
+            result.push(i);
+          }
+        }
+
+        return result;
+      }
+
+      function skipMajors(ticks, majorIndices, spacing) {
+        var count = 0;
+        var next = majorIndices[0];
+        var i, tick;
+        spacing = Math.ceil(spacing);
+
+        for (i = 0; i < ticks.length; i++) {
+          tick = ticks[i];
+
+          if (i === next) {
+            tick._index = i;
+            count++;
+            next = majorIndices[count * spacing];
+          } else {
+            delete tick.label;
+          }
+        }
+      }
+
+      function skip(ticks, spacing, majorStart, majorEnd) {
+        var start = valueOrDefault$a(majorStart, 0);
+        var end = Math.min(valueOrDefault$a(majorEnd, ticks.length), ticks.length);
+        var count = 0;
+        var length, i, tick, next;
+        spacing = Math.ceil(spacing);
+
+        if (majorEnd) {
+          length = majorEnd - majorStart;
+          spacing = length / Math.floor(length / spacing);
+        }
+
+        next = start;
+
+        while (next < 0) {
+          count++;
+          next = Math.round(start + count * spacing);
+        }
+
+        for (i = Math.max(start, 0); i < end; i++) {
+          tick = ticks[i];
+
+          if (i === next) {
+            tick._index = i;
+            count++;
+            next = Math.round(start + count * spacing);
+          } else {
+            delete tick.label;
+          }
+        }
+      }
+
+      var Scale = core_element.extend({
+        zeroLineIndex: 0,
+
         /**
          * Get the padding needed for the scale
          * @method getPadding
@@ -20333,42 +22262,43 @@
         getTicks: function () {
           return this._ticks;
         },
+
+        /**
+        * @private
+        */
+        _getLabels: function () {
+          var data = this.chart.data;
+          return this.options.labels || (this.isHorizontal() ? data.xLabels : data.yLabels) || data.labels || [];
+        },
         // These methods are ordered by lifecyle. Utilities then follow.
         // Any function defined here is inherited by all scale types.
         // Any function can be extended by the scale type
-        mergeTicksOptions: function () {
-          var ticks = this.options.ticks;
 
-          if (ticks.minor === false) {
-            ticks.minor = {
-              display: false
-            };
-          }
-
-          if (ticks.major === false) {
-            ticks.major = {
-              display: false
-            };
-          }
-
-          for (var key in ticks) {
-            if (key !== 'major' && key !== 'minor') {
-              if (typeof ticks.minor[key] === 'undefined') {
-                ticks.minor[key] = ticks[key];
-              }
-
-              if (typeof ticks.major[key] === 'undefined') {
-                ticks.major[key] = ticks[key];
-              }
-            }
-          }
+        /**
+         * Provided for backward compatibility, not available anymore
+         * @function Chart.Scale.mergeTicksOptions
+         * @deprecated since version 2.8.0
+         * @todo remove at version 3
+         */
+        mergeTicksOptions: function () {// noop
         },
         beforeUpdate: function () {
           helpers$1.callback(this.options.beforeUpdate, [this]);
         },
+
+        /**
+         * @param {number} maxWidth - the max width in pixels
+         * @param {number} maxHeight - the max height in pixels
+         * @param {object} margins - the space between the edge of the other scales and edge of the chart
+         *   This space comes from two sources:
+         *     - padding - space that's required to show the labels at the edges of the scale
+         *     - thickness of scales or legends in another orientation
+         */
         update: function (maxWidth, maxHeight, margins) {
           var me = this;
-          var i, ilen, labels, label, ticks, tick; // Update Lifecycle - Probably don't want to ever extend or overwrite this function ;)
+          var tickOpts = me.options.ticks;
+          var sampleSize = tickOpts.sampleSize;
+          var i, ilen, labels, ticks, samplingEnabled; // Update Lifecycle - Probably don't want to ever extend or overwrite this function ;)
 
           me.beforeUpdate(); // Absorb the master measurements
 
@@ -20380,9 +22310,14 @@
             top: 0,
             bottom: 0
           }, margins);
+          me._ticks = null;
+          me.ticks = null;
+          me._labelSizes = null;
           me._maxLabelLines = 0;
           me.longestLabelWidth = 0;
-          me.longestTextCache = me.longestTextCache || {}; // Dimensions
+          me.longestTextCache = me.longestTextCache || {};
+          me._gridLineItems = null;
+          me._labelItems = null; // Dimensions
 
           me.beforeSetDimensions();
           me.setDimensions();
@@ -20402,43 +22337,76 @@
 
           ticks = me.buildTicks() || []; // Allow modification of ticks in callback.
 
-          ticks = me.afterBuildTicks(ticks) || ticks;
-          me.beforeTickToLabelConversion(); // New implementations should return the formatted tick labels but for BACKWARD
-          // COMPAT, we still support no return (`this.ticks` internally changed by calling
-          // this method and supposed to contain only string values).
+          ticks = me.afterBuildTicks(ticks) || ticks; // Ensure ticks contains ticks in new tick format
 
-          labels = me.convertTicksToLabels(ticks) || me.ticks;
-          me.afterTickToLabelConversion();
-          me.ticks = labels; // BACKWARD COMPATIBILITY
-          // IMPORTANT: from this point, we consider that `this.ticks` will NEVER change!
-          // BACKWARD COMPAT: synchronize `_ticks` with labels (so potentially `this.ticks`)
+          if ((!ticks || !ticks.length) && me.ticks) {
+            ticks = [];
 
-          for (i = 0, ilen = labels.length; i < ilen; ++i) {
-            label = labels[i];
-            tick = ticks[i];
-
-            if (!tick) {
-              ticks.push(tick = {
-                label: label,
+            for (i = 0, ilen = me.ticks.length; i < ilen; ++i) {
+              ticks.push({
+                value: me.ticks[i],
                 major: false
               });
-            } else {
-              tick.label = label;
             }
           }
 
-          me._ticks = ticks; // Tick Rotation
+          me._ticks = ticks; // Compute tick rotation and fit using a sampled subset of labels
+          // We generally don't need to compute the size of every single label for determining scale size
+
+          samplingEnabled = sampleSize < ticks.length;
+          labels = me._convertTicksToLabels(samplingEnabled ? sample(ticks, sampleSize) : ticks); // _configure is called twice, once here, once from core.controller.updateLayout.
+          // Here we haven't been positioned yet, but dimensions are correct.
+          // Variables set in _configure are needed for calculateTickRotation, and
+          // it's ok that coordinates are not correct there, only dimensions matter.
+
+          me._configure(); // Tick Rotation
+
 
           me.beforeCalculateTickRotation();
           me.calculateTickRotation();
-          me.afterCalculateTickRotation(); // Fit
-
+          me.afterCalculateTickRotation();
           me.beforeFit();
           me.fit();
-          me.afterFit(); //
+          me.afterFit(); // Auto-skip
 
-          me.afterUpdate();
+          me._ticksToDraw = tickOpts.display && (tickOpts.autoSkip || tickOpts.source === 'auto') ? me._autoSkip(ticks) : ticks;
+
+          if (samplingEnabled) {
+            // Generate labels using all non-skipped ticks
+            labels = me._convertTicksToLabels(me._ticksToDraw);
+          }
+
+          me.ticks = labels; // BACKWARD COMPATIBILITY
+          // IMPORTANT: after this point, we consider that `this.ticks` will NEVER change!
+
+          me.afterUpdate(); // TODO(v3): remove minSize as a public property and return value from all layout boxes. It is unused
+          // make maxWidth and maxHeight private
+
           return me.minSize;
+        },
+
+        /**
+         * @private
+         */
+        _configure: function () {
+          var me = this;
+          var reversePixels = me.options.ticks.reverse;
+          var startPixel, endPixel;
+
+          if (me.isHorizontal()) {
+            startPixel = me.left;
+            endPixel = me.right;
+          } else {
+            startPixel = me.top;
+            endPixel = me.bottom; // by default vertical scales are from bottom to top, so pixels are reversed
+
+            reversePixels = !reversePixels;
+          }
+
+          me._startPixel = startPixel;
+          me._endPixel = endPixel;
+          me._reversePixels = reversePixels;
+          me._length = endPixel - startPixel;
         },
         afterUpdate: function () {
           helpers$1.callback(this.options.afterUpdate, [this]);
@@ -20487,7 +22455,7 @@
         afterBuildTicks: function (ticks) {
           var me = this; // ticks is empty for old axis implementations here
 
-          if (helpers$1.isArray(ticks) && ticks.length) {
+          if (isArray(ticks) && ticks.length) {
             return helpers$1.callback(me.options.afterBuildTicks, [me, ticks]);
           } // Support old implementations (that modified `this.ticks` directly in buildTicks)
 
@@ -20513,37 +22481,33 @@
         },
         calculateTickRotation: function () {
           var me = this;
-          var context = me.ctx;
-          var tickOpts = me.options.ticks;
-          var labels = labelsFromTicks(me._ticks); // Get the width of each grid by calculating the difference
-          // between x offsets between 0 and 1.
+          var options = me.options;
+          var tickOpts = options.ticks;
+          var numTicks = me.getTicks().length;
+          var minRotation = tickOpts.minRotation || 0;
+          var maxRotation = tickOpts.maxRotation;
+          var labelRotation = minRotation;
+          var labelSizes, maxLabelWidth, maxLabelHeight, maxWidth, tickWidth, maxHeight, maxLabelDiagonal;
 
-          var tickFont = helpers$1.options._parseFont(tickOpts);
+          if (!me._isVisible() || !tickOpts.display || minRotation >= maxRotation || numTicks <= 1 || !me.isHorizontal()) {
+            me.labelRotation = minRotation;
+            return;
+          }
 
-          context.font = tickFont.string;
-          var labelRotation = tickOpts.minRotation || 0;
+          labelSizes = me._getLabelSizes();
+          maxLabelWidth = labelSizes.widest.width;
+          maxLabelHeight = labelSizes.highest.height - labelSizes.highest.offset; // Estimate the width of each grid based on the canvas width, the maximum
+          // label width and the number of tick intervals
 
-          if (labels.length && me.options.display && me.isHorizontal()) {
-            var originalLabelWidth = helpers$1.longestText(context, tickFont.string, labels, me.longestTextCache);
-            var labelWidth = originalLabelWidth;
-            var cosRotation, sinRotation; // Allow 3 pixels x2 padding either side for label readability
+          maxWidth = Math.min(me.maxWidth, me.chart.width - maxLabelWidth);
+          tickWidth = options.offset ? me.maxWidth / numTicks : maxWidth / (numTicks - 1); // Allow 3 pixels x2 padding either side for label readability
 
-            var tickWidth = me.getPixelForTick(1) - me.getPixelForTick(0) - 6; // Max label rotation can be set or default to 90 - also act as a loop counter
-
-            while (labelWidth > tickWidth && labelRotation < tickOpts.maxRotation) {
-              var angleRadians = helpers$1.toRadians(labelRotation);
-              cosRotation = Math.cos(angleRadians);
-              sinRotation = Math.sin(angleRadians);
-
-              if (sinRotation * originalLabelWidth > me.maxHeight) {
-                // go back one step
-                labelRotation--;
-                break;
-              }
-
-              labelRotation++;
-              labelWidth = cosRotation * originalLabelWidth;
-            }
+          if (maxLabelWidth + 6 > tickWidth) {
+            tickWidth = maxWidth / (numTicks - (options.offset ? 0.5 : 1));
+            maxHeight = me.maxHeight - getTickMarkLength(options.gridLines) - tickOpts.padding - getScaleLabelHeight(options.scaleLabel);
+            maxLabelDiagonal = Math.sqrt(maxLabelWidth * maxLabelWidth + maxLabelHeight * maxLabelHeight);
+            labelRotation = helpers$1.toDegrees(Math.min(Math.asin(Math.min((labelSizes.highest.height + 6) / tickWidth, 1)), Math.asin(Math.min(maxHeight / maxLabelDiagonal, 1)) - Math.asin(maxLabelHeight / maxLabelDiagonal)));
+            labelRotation = Math.max(minRotation, Math.min(maxRotation, labelRotation));
           }
 
           me.labelRotation = labelRotation;
@@ -20562,7 +22526,7 @@
             width: 0,
             height: 0
           };
-          var labels = labelsFromTicks(me._ticks);
+          var chart = me.chart;
           var opts = me.options;
           var tickOpts = opts.ticks;
           var scaleLabelOpts = opts.scaleLabel;
@@ -20570,96 +22534,82 @@
 
           var display = me._isVisible();
 
-          var position = opts.position;
-          var isHorizontal = me.isHorizontal();
-          var parseFont = helpers$1.options._parseFont;
-          var tickFont = parseFont(tickOpts);
-          var tickMarkLength = opts.gridLines.tickMarkLength; // Width
+          var isBottom = opts.position === 'bottom';
+          var isHorizontal = me.isHorizontal(); // Width
 
           if (isHorizontal) {
-            // subtract the margins to line up with the chartArea if we are a full width scale
-            minSize.width = me.isFullWidth() ? me.maxWidth - me.margins.left - me.margins.right : me.maxWidth;
-          } else {
-            minSize.width = display && gridLineOpts.drawTicks ? tickMarkLength : 0;
+            minSize.width = me.maxWidth;
+          } else if (display) {
+            minSize.width = getTickMarkLength(gridLineOpts) + getScaleLabelHeight(scaleLabelOpts);
           } // height
 
 
-          if (isHorizontal) {
-            minSize.height = display && gridLineOpts.drawTicks ? tickMarkLength : 0;
-          } else {
+          if (!isHorizontal) {
             minSize.height = me.maxHeight; // fill all the height
-          } // Are we showing a title for the scale?
-
-
-          if (scaleLabelOpts.display && display) {
-            var scaleLabelFont = parseFont(scaleLabelOpts);
-            var scaleLabelPadding = helpers$1.options.toPadding(scaleLabelOpts.padding);
-            var deltaHeight = scaleLabelFont.lineHeight + scaleLabelPadding.height;
-
-            if (isHorizontal) {
-              minSize.height += deltaHeight;
-            } else {
-              minSize.width += deltaHeight;
-            }
+          } else if (display) {
+            minSize.height = getTickMarkLength(gridLineOpts) + getScaleLabelHeight(scaleLabelOpts);
           } // Don't bother fitting the ticks if we are not showing the labels
 
 
           if (tickOpts.display && display) {
-            var largestTextWidth = helpers$1.longestText(me.ctx, tickFont.string, labels, me.longestTextCache);
-            var tallestLabelHeightInLines = helpers$1.numberOfLabelLines(labels);
-            var lineSpace = tickFont.size * 0.5;
-            var tickPadding = me.options.ticks.padding; // Store max number of lines and widest label for _autoSkip
+            var tickFonts = parseTickFontOptions(tickOpts);
 
-            me._maxLabelLines = tallestLabelHeightInLines;
-            me.longestLabelWidth = largestTextWidth;
+            var labelSizes = me._getLabelSizes();
+
+            var firstLabelSize = labelSizes.first;
+            var lastLabelSize = labelSizes.last;
+            var widestLabelSize = labelSizes.widest;
+            var highestLabelSize = labelSizes.highest;
+            var lineSpace = tickFonts.minor.lineHeight * 0.4;
+            var tickPadding = tickOpts.padding;
 
             if (isHorizontal) {
+              // A horizontal axis is more constrained by the height.
+              var isRotated = me.labelRotation !== 0;
               var angleRadians = helpers$1.toRadians(me.labelRotation);
               var cosRotation = Math.cos(angleRadians);
-              var sinRotation = Math.sin(angleRadians); // TODO - improve this calculation
-
-              var labelHeight = sinRotation * largestTextWidth + tickFont.lineHeight * tallestLabelHeightInLines + lineSpace; // padding
+              var sinRotation = Math.sin(angleRadians);
+              var labelHeight = sinRotation * widestLabelSize.width + cosRotation * (highestLabelSize.height - (isRotated ? highestLabelSize.offset : 0)) + (isRotated ? 0 : lineSpace); // padding
 
               minSize.height = Math.min(me.maxHeight, minSize.height + labelHeight + tickPadding);
-              me.ctx.font = tickFont.string;
-              var firstLabelWidth = computeTextSize(me.ctx, labels[0], tickFont.string);
-              var lastLabelWidth = computeTextSize(me.ctx, labels[labels.length - 1], tickFont.string);
               var offsetLeft = me.getPixelForTick(0) - me.left;
-              var offsetRight = me.right - me.getPixelForTick(labels.length - 1);
+              var offsetRight = me.right - me.getPixelForTick(me.getTicks().length - 1);
               var paddingLeft, paddingRight; // Ensure that our ticks are always inside the canvas. When rotated, ticks are right aligned
               // which means that the right padding is dominated by the font height
 
-              if (me.labelRotation !== 0) {
-                paddingLeft = position === 'bottom' ? cosRotation * firstLabelWidth : cosRotation * lineSpace;
-                paddingRight = position === 'bottom' ? cosRotation * lineSpace : cosRotation * lastLabelWidth;
+              if (isRotated) {
+                paddingLeft = isBottom ? cosRotation * firstLabelSize.width + sinRotation * firstLabelSize.offset : sinRotation * (firstLabelSize.height - firstLabelSize.offset);
+                paddingRight = isBottom ? sinRotation * (lastLabelSize.height - lastLabelSize.offset) : cosRotation * lastLabelSize.width + sinRotation * lastLabelSize.offset;
               } else {
-                paddingLeft = firstLabelWidth / 2;
-                paddingRight = lastLabelWidth / 2;
-              }
+                paddingLeft = firstLabelSize.width / 2;
+                paddingRight = lastLabelSize.width / 2;
+              } // Adjust padding taking into account changes in offsets
+              // and add 3 px to move away from canvas edges
 
-              me.paddingLeft = Math.max(paddingLeft - offsetLeft, 0) + 3; // add 3 px to move away from canvas edges
 
-              me.paddingRight = Math.max(paddingRight - offsetRight, 0) + 3;
+              me.paddingLeft = Math.max((paddingLeft - offsetLeft) * me.width / (me.width - offsetLeft), 0) + 3;
+              me.paddingRight = Math.max((paddingRight - offsetRight) * me.width / (me.width - offsetRight), 0) + 3;
             } else {
               // A vertical axis is more constrained by the width. Labels are the
               // dominant factor here, so get that length first and account for padding
-              if (tickOpts.mirror) {
-                largestTextWidth = 0;
-              } else {
-                // use lineSpace for consistency with horizontal axis
-                // tickPadding is not implemented for horizontal
-                largestTextWidth += tickPadding + lineSpace;
-              }
-
-              minSize.width = Math.min(me.maxWidth, minSize.width + largestTextWidth);
-              me.paddingTop = tickFont.size / 2;
-              me.paddingBottom = tickFont.size / 2;
+              var labelWidth = tickOpts.mirror ? 0 : // use lineSpace for consistency with horizontal axis
+              // tickPadding is not implemented for horizontal
+              widestLabelSize.width + tickPadding + lineSpace;
+              minSize.width = Math.min(me.maxWidth, minSize.width + labelWidth);
+              me.paddingTop = firstLabelSize.height / 2;
+              me.paddingBottom = lastLabelSize.height / 2;
             }
           }
 
           me.handleMargins();
-          me.width = minSize.width;
-          me.height = minSize.height;
+
+          if (isHorizontal) {
+            me.width = me._length = chart.width - me.margins.left - me.margins.right;
+            me.height = minSize.height;
+          } else {
+            me.width = minSize.width;
+            me.height = me._length = chart.height - me.margins.top - me.margins.bottom;
+          }
         },
 
         /**
@@ -20670,10 +22620,10 @@
           var me = this;
 
           if (me.margins) {
-            me.paddingLeft = Math.max(me.paddingLeft - me.margins.left, 0);
-            me.paddingTop = Math.max(me.paddingTop - me.margins.top, 0);
-            me.paddingRight = Math.max(me.paddingRight - me.margins.right, 0);
-            me.paddingBottom = Math.max(me.paddingBottom - me.margins.bottom, 0);
+            me.margins.left = Math.max(me.paddingLeft, me.margins.left);
+            me.margins.top = Math.max(me.paddingTop, me.margins.top);
+            me.margins.right = Math.max(me.paddingRight, me.margins.right);
+            me.margins.bottom = Math.max(me.paddingBottom, me.margins.bottom);
           }
         },
         afterFit: function () {
@@ -20681,7 +22631,8 @@
         },
         // Shared Methods
         isHorizontal: function () {
-          return this.options.position === 'top' || this.options.position === 'bottom';
+          var pos = this.options.position;
+          return pos === 'top' || pos === 'bottom';
         },
         isFullWidth: function () {
           return this.options.fullWidth;
@@ -20689,7 +22640,7 @@
         // Get the correct value. NaN bad inputs, If the value type is object get the x or y based on whether we are horizontal or not
         getRightValue: function (rawValue) {
           // Null and undefined values first
-          if (helpers$1.isNullOrUndef(rawValue)) {
+          if (isNullOrUndef(rawValue)) {
             return NaN;
           } // isNaN(object) returns true, so make sure NaN is checking for a number; Discard Infinite values
 
@@ -20711,6 +22662,80 @@
 
 
           return rawValue;
+        },
+        _convertTicksToLabels: function (ticks) {
+          var me = this;
+          var labels, i, ilen;
+          me.ticks = ticks.map(function (tick) {
+            return tick.value;
+          });
+          me.beforeTickToLabelConversion(); // New implementations should return the formatted tick labels but for BACKWARD
+          // COMPAT, we still support no return (`this.ticks` internally changed by calling
+          // this method and supposed to contain only string values).
+
+          labels = me.convertTicksToLabels(ticks) || me.ticks;
+          me.afterTickToLabelConversion(); // BACKWARD COMPAT: synchronize `_ticks` with labels (so potentially `this.ticks`)
+
+          for (i = 0, ilen = ticks.length; i < ilen; ++i) {
+            ticks[i].label = labels[i];
+          }
+
+          return labels;
+        },
+
+        /**
+         * @private
+         */
+        _getLabelSizes: function () {
+          var me = this;
+          var labelSizes = me._labelSizes;
+
+          if (!labelSizes) {
+            me._labelSizes = labelSizes = computeLabelSizes(me.ctx, parseTickFontOptions(me.options.ticks), me.getTicks(), me.longestTextCache);
+            me.longestLabelWidth = labelSizes.widest.width;
+          }
+
+          return labelSizes;
+        },
+
+        /**
+         * @private
+         */
+        _parseValue: function (value) {
+          var start, end, min, max;
+
+          if (isArray(value)) {
+            start = +this.getRightValue(value[0]);
+            end = +this.getRightValue(value[1]);
+            min = Math.min(start, end);
+            max = Math.max(start, end);
+          } else {
+            value = +this.getRightValue(value);
+            start = undefined;
+            end = value;
+            min = value;
+            max = value;
+          }
+
+          return {
+            min: min,
+            max: max,
+            start: start,
+            end: end
+          };
+        },
+
+        /**
+        * @private
+        */
+        _getScaleLabel: function (rawValue) {
+          var v = this._parseValue(rawValue);
+
+          if (v.start !== undefined) {
+            return '[' + v.start + ', ' + v.end + ']';
+          }
+
+          return +this.getRightValue(rawValue);
         },
 
         /**
@@ -20743,23 +22768,9 @@
         getPixelForTick: function (index) {
           var me = this;
           var offset = me.options.offset;
-
-          if (me.isHorizontal()) {
-            var innerWidth = me.width - (me.paddingLeft + me.paddingRight);
-            var tickWidth = innerWidth / Math.max(me._ticks.length - (offset ? 0 : 1), 1);
-            var pixel = tickWidth * index + me.paddingLeft;
-
-            if (offset) {
-              pixel += tickWidth / 2;
-            }
-
-            var finalVal = me.left + pixel;
-            finalVal += me.isFullWidth() ? me.margins.left : 0;
-            return finalVal;
-          }
-
-          var innerHeight = me.height - (me.paddingTop + me.paddingBottom);
-          return me.top + index * (innerHeight / (me._ticks.length - 1));
+          var numTicks = me._ticks.length;
+          var tickWidth = 1 / Math.max(numTicks - (offset ? 0 : 1), 1);
+          return index < 0 || index > numTicks - 1 ? null : me.getPixelForDecimal(index * tickWidth + (offset ? tickWidth / 2 : 0));
         },
 
         /**
@@ -20769,15 +22780,15 @@
         getPixelForDecimal: function (decimal) {
           var me = this;
 
-          if (me.isHorizontal()) {
-            var innerWidth = me.width - (me.paddingLeft + me.paddingRight);
-            var valueOffset = innerWidth * decimal + me.paddingLeft;
-            var finalVal = me.left + valueOffset;
-            finalVal += me.isFullWidth() ? me.margins.left : 0;
-            return finalVal;
+          if (me._reversePixels) {
+            decimal = 1 - decimal;
           }
 
-          return me.top + decimal * me.height;
+          return me._startPixel + decimal * me._length;
+        },
+        getDecimalForPixel: function (pixel) {
+          var decimal = (pixel - this._startPixel) / this._length;
+          return this._reversePixels ? 1 - decimal : decimal;
         },
 
         /**
@@ -20800,41 +22811,35 @@
          */
         _autoSkip: function (ticks) {
           var me = this;
-          var isHorizontal = me.isHorizontal();
-          var optionTicks = me.options.ticks.minor;
-          var tickCount = ticks.length;
-          var skipRatio = false;
-          var maxTicks = optionTicks.maxTicksLimit; // Total space needed to display all ticks. First and last ticks are
-          // drawn as their center at end of axis, so tickCount-1
+          var tickOpts = me.options.ticks;
+          var axisLength = me._length;
+          var ticksLimit = tickOpts.maxTicksLimit || axisLength / me._tickSize() + 1;
+          var majorIndices = tickOpts.major.enabled ? getMajorIndices(ticks) : [];
+          var numMajorIndices = majorIndices.length;
+          var first = majorIndices[0];
+          var last = majorIndices[numMajorIndices - 1];
+          var i, ilen, spacing, avgMajorSpacing; // If there are too many major ticks to display them all
 
-          var ticksLength = me._tickSize() * (tickCount - 1); // Axis length
-
-          var axisLength = isHorizontal ? me.width - (me.paddingLeft + me.paddingRight) : me.height - (me.paddingTop + me.PaddingBottom);
-          var result = [];
-          var i, tick;
-
-          if (ticksLength > axisLength) {
-            skipRatio = 1 + Math.floor(ticksLength / axisLength);
-          } // if they defined a max number of optionTicks,
-          // increase skipRatio until that number is met
-
-
-          if (tickCount > maxTicks) {
-            skipRatio = Math.max(skipRatio, 1 + Math.floor(tickCount / maxTicks));
+          if (numMajorIndices > ticksLimit) {
+            skipMajors(ticks, majorIndices, numMajorIndices / ticksLimit);
+            return nonSkipped(ticks);
           }
 
-          for (i = 0; i < tickCount; i++) {
-            tick = ticks[i];
+          spacing = calculateSpacing(majorIndices, ticks, axisLength, ticksLimit);
 
-            if (skipRatio > 1 && i % skipRatio > 0) {
-              // leave tick in place but make sure it's not displayed (#4635)
-              delete tick.label;
+          if (numMajorIndices > 0) {
+            for (i = 0, ilen = numMajorIndices - 1; i < ilen; i++) {
+              skip(ticks, spacing, majorIndices[i], majorIndices[i + 1]);
             }
 
-            result.push(tick);
+            avgMajorSpacing = numMajorIndices > 1 ? (last - first) / (numMajorIndices - 1) : null;
+            skip(ticks, spacing, helpers$1.isNullOrUndef(avgMajorSpacing) ? 0 : first - avgMajorSpacing, first);
+            skip(ticks, spacing, last, helpers$1.isNullOrUndef(avgMajorSpacing) ? ticks.length : last + avgMajorSpacing);
+            return nonSkipped(ticks);
           }
 
-          return result;
+          skip(ticks, spacing);
+          return nonSkipped(ticks);
         },
 
         /**
@@ -20842,20 +22847,19 @@
          */
         _tickSize: function () {
           var me = this;
-          var isHorizontal = me.isHorizontal();
-          var optionTicks = me.options.ticks.minor; // Calculate space needed by label in axis direction.
+          var optionTicks = me.options.ticks; // Calculate space needed by label in axis direction.
 
           var rot = helpers$1.toRadians(me.labelRotation);
           var cos = Math.abs(Math.cos(rot));
           var sin = Math.abs(Math.sin(rot));
+
+          var labelSizes = me._getLabelSizes();
+
           var padding = optionTicks.autoSkipPadding || 0;
-          var w = me.longestLabelWidth + padding || 0;
+          var w = labelSizes ? labelSizes.widest.width + padding : 0;
+          var h = labelSizes ? labelSizes.highest.height + padding : 0; // Calculate space needed for 1 tick in axis direction.
 
-          var tickFont = helpers$1.options._parseFont(optionTicks);
-
-          var h = me._maxLabelLines * tickFont.lineHeight + padding || 0; // Calculate space needed for 1 tick in axis direction.
-
-          return isHorizontal ? h * cos > w * sin ? w / cos : h / sin : h * sin < w * cos ? h / cos : w / sin;
+          return me.isHorizontal() ? h * cos > w * sin ? w / cos : h / sin : h * sin < w * cos ? h / cos : w / sin;
         },
 
         /**
@@ -20886,147 +22890,92 @@
         },
 
         /**
-         * Actually draw the scale on the canvas
-         * @param {object} chartArea - the area of the chart to draw full grid lines on
+         * @private
          */
-        draw: function (chartArea) {
+        _computeGridLineItems: function (chartArea) {
           var me = this;
-          var options = me.options;
-
-          if (!me._isVisible()) {
-            return;
-          }
-
           var chart = me.chart;
-          var context = me.ctx;
-          var globalDefaults = core_defaults.global;
-          var defaultFontColor = globalDefaults.defaultFontColor;
-          var optionTicks = options.ticks.minor;
-          var optionMajorTicks = options.ticks.major || optionTicks;
+          var options = me.options;
           var gridLines = options.gridLines;
-          var scaleLabel = options.scaleLabel;
           var position = options.position;
-          var isRotated = me.labelRotation !== 0;
-          var isMirrored = optionTicks.mirror;
+          var offsetGridLines = gridLines.offsetGridLines;
           var isHorizontal = me.isHorizontal();
-          var parseFont = helpers$1.options._parseFont;
-          var ticks = optionTicks.display && optionTicks.autoSkip ? me._autoSkip(me.getTicks()) : me.getTicks();
-          var tickFontColor = valueOrDefault$9(optionTicks.fontColor, defaultFontColor);
-          var tickFont = parseFont(optionTicks);
-          var lineHeight = tickFont.lineHeight;
-          var majorTickFontColor = valueOrDefault$9(optionMajorTicks.fontColor, defaultFontColor);
-          var majorTickFont = parseFont(optionMajorTicks);
-          var tickPadding = optionTicks.padding;
-          var labelOffset = optionTicks.labelOffset;
-          var tl = gridLines.drawTicks ? gridLines.tickMarkLength : 0;
-          var scaleLabelFontColor = valueOrDefault$9(scaleLabel.fontColor, defaultFontColor);
-          var scaleLabelFont = parseFont(scaleLabel);
-          var scaleLabelPadding = helpers$1.options.toPadding(scaleLabel.padding);
-          var labelRotationRadians = helpers$1.toRadians(me.labelRotation);
-          var itemsToDraw = [];
+          var ticks = me._ticksToDraw;
+          var ticksLength = ticks.length + (offsetGridLines ? 1 : 0);
+          var tl = getTickMarkLength(gridLines);
+          var items = [];
           var axisWidth = gridLines.drawBorder ? valueAtIndexOrDefault(gridLines.lineWidth, 0, 0) : 0;
+          var axisHalfWidth = axisWidth / 2;
           var alignPixel = helpers$1._alignPixel;
-          var borderValue, tickStart, tickEnd;
+
+          var alignBorderValue = function (pixel) {
+            return alignPixel(chart, pixel, axisWidth);
+          };
+
+          var borderValue, i, tick, lineValue, alignedLineValue;
+          var tx1, ty1, tx2, ty2, x1, y1, x2, y2, lineWidth, lineColor, borderDash, borderDashOffset;
 
           if (position === 'top') {
-            borderValue = alignPixel(chart, me.bottom, axisWidth);
-            tickStart = me.bottom - tl;
-            tickEnd = borderValue - axisWidth / 2;
+            borderValue = alignBorderValue(me.bottom);
+            ty1 = me.bottom - tl;
+            ty2 = borderValue - axisHalfWidth;
+            y1 = alignBorderValue(chartArea.top) + axisHalfWidth;
+            y2 = chartArea.bottom;
           } else if (position === 'bottom') {
-            borderValue = alignPixel(chart, me.top, axisWidth);
-            tickStart = borderValue + axisWidth / 2;
-            tickEnd = me.top + tl;
+            borderValue = alignBorderValue(me.top);
+            y1 = chartArea.top;
+            y2 = alignBorderValue(chartArea.bottom) - axisHalfWidth;
+            ty1 = borderValue + axisHalfWidth;
+            ty2 = me.top + tl;
           } else if (position === 'left') {
-            borderValue = alignPixel(chart, me.right, axisWidth);
-            tickStart = me.right - tl;
-            tickEnd = borderValue - axisWidth / 2;
+            borderValue = alignBorderValue(me.right);
+            tx1 = me.right - tl;
+            tx2 = borderValue - axisHalfWidth;
+            x1 = alignBorderValue(chartArea.left) + axisHalfWidth;
+            x2 = chartArea.right;
           } else {
-            borderValue = alignPixel(chart, me.left, axisWidth);
-            tickStart = borderValue + axisWidth / 2;
-            tickEnd = me.left + tl;
+            borderValue = alignBorderValue(me.left);
+            x1 = chartArea.left;
+            x2 = alignBorderValue(chartArea.right) - axisHalfWidth;
+            tx1 = borderValue + axisHalfWidth;
+            tx2 = me.left + tl;
           }
 
-          var epsilon = 0.0000001; // 0.0000001 is margin in pixels for Accumulated error.
+          for (i = 0; i < ticksLength; ++i) {
+            tick = ticks[i] || {}; // autoskipper skipped this tick (#4635)
 
-          helpers$1.each(ticks, function (tick, index) {
-            // autoskipper skipped this tick (#4635)
-            if (helpers$1.isNullOrUndef(tick.label)) {
-              return;
+            if (isNullOrUndef(tick.label) && i < ticks.length) {
+              continue;
             }
 
-            var label = tick.label;
-            var lineWidth, lineColor, borderDash, borderDashOffset;
-
-            if (index === me.zeroLineIndex && options.offset === gridLines.offsetGridLines) {
+            if (i === me.zeroLineIndex && options.offset === offsetGridLines) {
               // Draw the first index specially
               lineWidth = gridLines.zeroLineWidth;
               lineColor = gridLines.zeroLineColor;
               borderDash = gridLines.zeroLineBorderDash || [];
               borderDashOffset = gridLines.zeroLineBorderDashOffset || 0.0;
             } else {
-              lineWidth = valueAtIndexOrDefault(gridLines.lineWidth, index);
-              lineColor = valueAtIndexOrDefault(gridLines.color, index);
+              lineWidth = valueAtIndexOrDefault(gridLines.lineWidth, i, 1);
+              lineColor = valueAtIndexOrDefault(gridLines.color, i, 'rgba(0,0,0,0.1)');
               borderDash = gridLines.borderDash || [];
               borderDashOffset = gridLines.borderDashOffset || 0.0;
-            } // Common properties
-
-
-            var tx1, ty1, tx2, ty2, x1, y1, x2, y2, labelX, labelY, textOffset, textAlign;
-            var labelCount = helpers$1.isArray(label) ? label.length : 1;
-            var lineValue = getPixelForGridLine(me, index, gridLines.offsetGridLines);
-
-            if (isHorizontal) {
-              var labelYOffset = tl + tickPadding;
-
-              if (lineValue < me.left - epsilon) {
-                lineColor = 'rgba(0,0,0,0)';
-              }
-
-              tx1 = tx2 = x1 = x2 = alignPixel(chart, lineValue, lineWidth);
-              ty1 = tickStart;
-              ty2 = tickEnd;
-              labelX = me.getPixelForTick(index) + labelOffset; // x values for optionTicks (need to consider offsetLabel option)
-
-              if (position === 'top') {
-                y1 = alignPixel(chart, chartArea.top, axisWidth) + axisWidth / 2;
-                y2 = chartArea.bottom;
-                textOffset = ((!isRotated ? 0.5 : 1) - labelCount) * lineHeight;
-                textAlign = !isRotated ? 'center' : 'left';
-                labelY = me.bottom - labelYOffset;
-              } else {
-                y1 = chartArea.top;
-                y2 = alignPixel(chart, chartArea.bottom, axisWidth) - axisWidth / 2;
-                textOffset = (!isRotated ? 0.5 : 0) * lineHeight;
-                textAlign = !isRotated ? 'center' : 'right';
-                labelY = me.top + labelYOffset;
-              }
-            } else {
-              var labelXOffset = (isMirrored ? 0 : tl) + tickPadding;
-
-              if (lineValue < me.top - epsilon) {
-                lineColor = 'rgba(0,0,0,0)';
-              }
-
-              tx1 = tickStart;
-              tx2 = tickEnd;
-              ty1 = ty2 = y1 = y2 = alignPixel(chart, lineValue, lineWidth);
-              labelY = me.getPixelForTick(index) + labelOffset;
-              textOffset = (1 - labelCount) * lineHeight / 2;
-
-              if (position === 'left') {
-                x1 = alignPixel(chart, chartArea.left, axisWidth) + axisWidth / 2;
-                x2 = chartArea.right;
-                textAlign = isMirrored ? 'left' : 'right';
-                labelX = me.right - labelXOffset;
-              } else {
-                x1 = chartArea.left;
-                x2 = alignPixel(chart, chartArea.right, axisWidth) - axisWidth / 2;
-                textAlign = isMirrored ? 'right' : 'left';
-                labelX = me.left + labelXOffset;
-              }
             }
 
-            itemsToDraw.push({
+            lineValue = getPixelForGridLine(me, tick._index || i, offsetGridLines); // Skip if the pixel is out of the range
+
+            if (lineValue === undefined) {
+              continue;
+            }
+
+            alignedLineValue = alignPixel(chart, lineValue, lineWidth);
+
+            if (isHorizontal) {
+              tx1 = tx2 = x1 = x2 = alignedLineValue;
+            } else {
+              ty1 = ty2 = y1 = y2 = alignedLineValue;
+            }
+
+            items.push({
               tx1: tx1,
               ty1: ty1,
               tx2: tx2,
@@ -21035,113 +22984,145 @@
               y1: y1,
               x2: x2,
               y2: y2,
-              labelX: labelX,
-              labelY: labelY,
-              glWidth: lineWidth,
-              glColor: lineColor,
-              glBorderDash: borderDash,
-              glBorderDashOffset: borderDashOffset,
-              rotation: -1 * labelRotationRadians,
+              width: lineWidth,
+              color: lineColor,
+              borderDash: borderDash,
+              borderDashOffset: borderDashOffset
+            });
+          }
+
+          items.ticksLength = ticksLength;
+          items.borderValue = borderValue;
+          return items;
+        },
+
+        /**
+         * @private
+         */
+        _computeLabelItems: function () {
+          var me = this;
+          var options = me.options;
+          var optionTicks = options.ticks;
+          var position = options.position;
+          var isMirrored = optionTicks.mirror;
+          var isHorizontal = me.isHorizontal();
+          var ticks = me._ticksToDraw;
+          var fonts = parseTickFontOptions(optionTicks);
+          var tickPadding = optionTicks.padding;
+          var tl = getTickMarkLength(options.gridLines);
+          var rotation = -helpers$1.toRadians(me.labelRotation);
+          var items = [];
+          var i, ilen, tick, label, x, y, textAlign, pixel, font, lineHeight, lineCount, textOffset;
+
+          if (position === 'top') {
+            y = me.bottom - tl - tickPadding;
+            textAlign = !rotation ? 'center' : 'left';
+          } else if (position === 'bottom') {
+            y = me.top + tl + tickPadding;
+            textAlign = !rotation ? 'center' : 'right';
+          } else if (position === 'left') {
+            x = me.right - (isMirrored ? 0 : tl) - tickPadding;
+            textAlign = isMirrored ? 'left' : 'right';
+          } else {
+            x = me.left + (isMirrored ? 0 : tl) + tickPadding;
+            textAlign = isMirrored ? 'right' : 'left';
+          }
+
+          for (i = 0, ilen = ticks.length; i < ilen; ++i) {
+            tick = ticks[i];
+            label = tick.label; // autoskipper skipped this tick (#4635)
+
+            if (isNullOrUndef(label)) {
+              continue;
+            }
+
+            pixel = me.getPixelForTick(tick._index || i) + optionTicks.labelOffset;
+            font = tick.major ? fonts.major : fonts.minor;
+            lineHeight = font.lineHeight;
+            lineCount = isArray(label) ? label.length : 1;
+
+            if (isHorizontal) {
+              x = pixel;
+              textOffset = position === 'top' ? ((!rotation ? 0.5 : 1) - lineCount) * lineHeight : (!rotation ? 0.5 : 0) * lineHeight;
+            } else {
+              y = pixel;
+              textOffset = (1 - lineCount) * lineHeight / 2;
+            }
+
+            items.push({
+              x: x,
+              y: y,
+              rotation: rotation,
               label: label,
-              major: tick.major,
+              font: font,
               textOffset: textOffset,
               textAlign: textAlign
             });
-          }); // Draw all of the tick labels, tick marks, and grid lines at the correct places
+          }
 
-          helpers$1.each(itemsToDraw, function (itemToDraw) {
-            var glWidth = itemToDraw.glWidth;
-            var glColor = itemToDraw.glColor;
+          return items;
+        },
 
-            if (gridLines.display && glWidth && glColor) {
-              context.save();
-              context.lineWidth = glWidth;
-              context.strokeStyle = glColor;
+        /**
+         * @private
+         */
+        _drawGrid: function (chartArea) {
+          var me = this;
+          var gridLines = me.options.gridLines;
 
-              if (context.setLineDash) {
-                context.setLineDash(itemToDraw.glBorderDash);
-                context.lineDashOffset = itemToDraw.glBorderDashOffset;
+          if (!gridLines.display) {
+            return;
+          }
+
+          var ctx = me.ctx;
+          var chart = me.chart;
+          var alignPixel = helpers$1._alignPixel;
+          var axisWidth = gridLines.drawBorder ? valueAtIndexOrDefault(gridLines.lineWidth, 0, 0) : 0;
+
+          var items = me._gridLineItems || (me._gridLineItems = me._computeGridLineItems(chartArea));
+
+          var width, color, i, ilen, item;
+
+          for (i = 0, ilen = items.length; i < ilen; ++i) {
+            item = items[i];
+            width = item.width;
+            color = item.color;
+
+            if (width && color) {
+              ctx.save();
+              ctx.lineWidth = width;
+              ctx.strokeStyle = color;
+
+              if (ctx.setLineDash) {
+                ctx.setLineDash(item.borderDash);
+                ctx.lineDashOffset = item.borderDashOffset;
               }
 
-              context.beginPath();
+              ctx.beginPath();
 
               if (gridLines.drawTicks) {
-                context.moveTo(itemToDraw.tx1, itemToDraw.ty1);
-                context.lineTo(itemToDraw.tx2, itemToDraw.ty2);
+                ctx.moveTo(item.tx1, item.ty1);
+                ctx.lineTo(item.tx2, item.ty2);
               }
 
               if (gridLines.drawOnChartArea) {
-                context.moveTo(itemToDraw.x1, itemToDraw.y1);
-                context.lineTo(itemToDraw.x2, itemToDraw.y2);
+                ctx.moveTo(item.x1, item.y1);
+                ctx.lineTo(item.x2, item.y2);
               }
 
-              context.stroke();
-              context.restore();
+              ctx.stroke();
+              ctx.restore();
             }
-
-            if (optionTicks.display) {
-              // Make sure we draw text in the correct color and font
-              context.save();
-              context.translate(itemToDraw.labelX, itemToDraw.labelY);
-              context.rotate(itemToDraw.rotation);
-              context.font = itemToDraw.major ? majorTickFont.string : tickFont.string;
-              context.fillStyle = itemToDraw.major ? majorTickFontColor : tickFontColor;
-              context.textBaseline = 'middle';
-              context.textAlign = itemToDraw.textAlign;
-              var label = itemToDraw.label;
-              var y = itemToDraw.textOffset;
-
-              if (helpers$1.isArray(label)) {
-                for (var i = 0; i < label.length; ++i) {
-                  // We just make sure the multiline element is a string here..
-                  context.fillText('' + label[i], 0, y);
-                  y += lineHeight;
-                }
-              } else {
-                context.fillText(label, 0, y);
-              }
-
-              context.restore();
-            }
-          });
-
-          if (scaleLabel.display) {
-            // Draw the scale label
-            var scaleLabelX;
-            var scaleLabelY;
-            var rotation = 0;
-            var halfLineHeight = scaleLabelFont.lineHeight / 2;
-
-            if (isHorizontal) {
-              scaleLabelX = me.left + (me.right - me.left) / 2; // midpoint of the width
-
-              scaleLabelY = position === 'bottom' ? me.bottom - halfLineHeight - scaleLabelPadding.bottom : me.top + halfLineHeight + scaleLabelPadding.top;
-            } else {
-              var isLeft = position === 'left';
-              scaleLabelX = isLeft ? me.left + halfLineHeight + scaleLabelPadding.top : me.right - halfLineHeight - scaleLabelPadding.top;
-              scaleLabelY = me.top + (me.bottom - me.top) / 2;
-              rotation = isLeft ? -0.5 * Math.PI : 0.5 * Math.PI;
-            }
-
-            context.save();
-            context.translate(scaleLabelX, scaleLabelY);
-            context.rotate(rotation);
-            context.textAlign = 'center';
-            context.textBaseline = 'middle';
-            context.fillStyle = scaleLabelFontColor; // render in correct colour
-
-            context.font = scaleLabelFont.string;
-            context.fillText(scaleLabel.labelString, 0, 0);
-            context.restore();
           }
 
           if (axisWidth) {
             // Draw the line at the edge of the axis
             var firstLineWidth = axisWidth;
-            var lastLineWidth = valueAtIndexOrDefault(gridLines.lineWidth, ticks.length - 1, 0);
+            var lastLineWidth = valueAtIndexOrDefault(gridLines.lineWidth, items.ticksLength - 1, 1);
+            var borderValue = items.borderValue;
             var x1, x2, y1, y2;
 
-            if (isHorizontal) {
+            if (me.isHorizontal()) {
               x1 = alignPixel(chart, me.left, firstLineWidth) - firstLineWidth / 2;
               x2 = alignPixel(chart, me.right, lastLineWidth) + lastLineWidth / 2;
               y1 = y2 = borderValue;
@@ -21151,55 +23132,215 @@
               x1 = x2 = borderValue;
             }
 
-            context.lineWidth = axisWidth;
-            context.strokeStyle = valueAtIndexOrDefault(gridLines.color, 0);
-            context.beginPath();
-            context.moveTo(x1, y1);
-            context.lineTo(x2, y2);
-            context.stroke();
+            ctx.lineWidth = axisWidth;
+            ctx.strokeStyle = valueAtIndexOrDefault(gridLines.color, 0);
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
           }
+        },
+
+        /**
+         * @private
+         */
+        _drawLabels: function () {
+          var me = this;
+          var optionTicks = me.options.ticks;
+
+          if (!optionTicks.display) {
+            return;
+          }
+
+          var ctx = me.ctx;
+
+          var items = me._labelItems || (me._labelItems = me._computeLabelItems());
+
+          var i, j, ilen, jlen, item, tickFont, label, y;
+
+          for (i = 0, ilen = items.length; i < ilen; ++i) {
+            item = items[i];
+            tickFont = item.font; // Make sure we draw text in the correct color and font
+
+            ctx.save();
+            ctx.translate(item.x, item.y);
+            ctx.rotate(item.rotation);
+            ctx.font = tickFont.string;
+            ctx.fillStyle = tickFont.color;
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = item.textAlign;
+            label = item.label;
+            y = item.textOffset;
+
+            if (isArray(label)) {
+              for (j = 0, jlen = label.length; j < jlen; ++j) {
+                // We just make sure the multiline element is a string here..
+                ctx.fillText('' + label[j], 0, y);
+                y += tickFont.lineHeight;
+              }
+            } else {
+              ctx.fillText(label, 0, y);
+            }
+
+            ctx.restore();
+          }
+        },
+
+        /**
+         * @private
+         */
+        _drawTitle: function () {
+          var me = this;
+          var ctx = me.ctx;
+          var options = me.options;
+          var scaleLabel = options.scaleLabel;
+
+          if (!scaleLabel.display) {
+            return;
+          }
+
+          var scaleLabelFontColor = valueOrDefault$a(scaleLabel.fontColor, core_defaults.global.defaultFontColor);
+
+          var scaleLabelFont = helpers$1.options._parseFont(scaleLabel);
+
+          var scaleLabelPadding = helpers$1.options.toPadding(scaleLabel.padding);
+          var halfLineHeight = scaleLabelFont.lineHeight / 2;
+          var position = options.position;
+          var rotation = 0;
+          var scaleLabelX, scaleLabelY;
+
+          if (me.isHorizontal()) {
+            scaleLabelX = me.left + me.width / 2; // midpoint of the width
+
+            scaleLabelY = position === 'bottom' ? me.bottom - halfLineHeight - scaleLabelPadding.bottom : me.top + halfLineHeight + scaleLabelPadding.top;
+          } else {
+            var isLeft = position === 'left';
+            scaleLabelX = isLeft ? me.left + halfLineHeight + scaleLabelPadding.top : me.right - halfLineHeight - scaleLabelPadding.top;
+            scaleLabelY = me.top + me.height / 2;
+            rotation = isLeft ? -0.5 * Math.PI : 0.5 * Math.PI;
+          }
+
+          ctx.save();
+          ctx.translate(scaleLabelX, scaleLabelY);
+          ctx.rotate(rotation);
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = scaleLabelFontColor; // render in correct colour
+
+          ctx.font = scaleLabelFont.string;
+          ctx.fillText(scaleLabel.labelString, 0, 0);
+          ctx.restore();
+        },
+        draw: function (chartArea) {
+          var me = this;
+
+          if (!me._isVisible()) {
+            return;
+          }
+
+          me._drawGrid(chartArea);
+
+          me._drawTitle();
+
+          me._drawLabels();
+        },
+
+        /**
+         * @private
+         */
+        _layers: function () {
+          var me = this;
+          var opts = me.options;
+          var tz = opts.ticks && opts.ticks.z || 0;
+          var gz = opts.gridLines && opts.gridLines.z || 0;
+
+          if (!me._isVisible() || tz === gz || me.draw !== me._draw) {
+            // backward compatibility: draw has been overridden by custom scale
+            return [{
+              z: tz,
+              draw: function () {
+                me.draw.apply(me, arguments);
+              }
+            }];
+          }
+
+          return [{
+            z: gz,
+            draw: function () {
+              me._drawGrid.apply(me, arguments);
+
+              me._drawTitle.apply(me, arguments);
+            }
+          }, {
+            z: tz,
+            draw: function () {
+              me._drawLabels.apply(me, arguments);
+            }
+          }];
+        },
+
+        /**
+         * @private
+         */
+        _getMatchingVisibleMetas: function (type) {
+          var me = this;
+          var isHorizontal = me.isHorizontal();
+          return me.chart._getSortedVisibleDatasetMetas().filter(function (meta) {
+            return (!type || meta.type === type) && (isHorizontal ? meta.xAxisID === me.id : meta.yAxisID === me.id);
+          });
         }
       });
+      Scale.prototype._draw = Scale.prototype.draw;
+      var core_scale = Scale;
+      var isNullOrUndef$1 = helpers$1.isNullOrUndef;
       var defaultConfig = {
         position: 'bottom'
       };
       var scale_category = core_scale.extend({
-        /**
-        * Internal function to get the correct labels. If data.xLabels or data.yLabels are defined, use those
-        * else fall back to data.labels
-        * @private
-        */
-        getLabels: function () {
-          var data = this.chart.data;
-          return this.options.labels || (this.isHorizontal() ? data.xLabels : data.yLabels) || data.labels;
-        },
         determineDataLimits: function () {
           var me = this;
-          var labels = me.getLabels();
-          me.minIndex = 0;
-          me.maxIndex = labels.length - 1;
+
+          var labels = me._getLabels();
+
+          var ticksOpts = me.options.ticks;
+          var min = ticksOpts.min;
+          var max = ticksOpts.max;
+          var minIndex = 0;
+          var maxIndex = labels.length - 1;
           var findIndex;
 
-          if (me.options.ticks.min !== undefined) {
+          if (min !== undefined) {
             // user specified min value
-            findIndex = labels.indexOf(me.options.ticks.min);
-            me.minIndex = findIndex !== -1 ? findIndex : me.minIndex;
+            findIndex = labels.indexOf(min);
+
+            if (findIndex >= 0) {
+              minIndex = findIndex;
+            }
           }
 
-          if (me.options.ticks.max !== undefined) {
+          if (max !== undefined) {
             // user specified max value
-            findIndex = labels.indexOf(me.options.ticks.max);
-            me.maxIndex = findIndex !== -1 ? findIndex : me.maxIndex;
+            findIndex = labels.indexOf(max);
+
+            if (findIndex >= 0) {
+              maxIndex = findIndex;
+            }
           }
 
-          me.min = labels[me.minIndex];
-          me.max = labels[me.maxIndex];
+          me.minIndex = minIndex;
+          me.maxIndex = maxIndex;
+          me.min = labels[minIndex];
+          me.max = labels[maxIndex];
         },
         buildTicks: function () {
           var me = this;
-          var labels = me.getLabels(); // If we are viewing some subset of labels, slice the original array
 
-          me.ticks = me.minIndex === 0 && me.maxIndex === labels.length - 1 ? labels : labels.slice(me.minIndex, me.maxIndex + 1);
+          var labels = me._getLabels();
+
+          var minIndex = me.minIndex;
+          var maxIndex = me.maxIndex; // If we are viewing some subset of labels, slice the original array
+
+          me.ticks = minIndex === 0 && maxIndex === labels.length - 1 ? labels : labels.slice(minIndex, maxIndex + 1);
         },
         getLabelForIndex: function (index, datasetIndex) {
           var me = this;
@@ -21209,72 +23350,63 @@
             return me.getRightValue(chart.data.datasets[datasetIndex].data[index]);
           }
 
-          return me.ticks[index - me.minIndex];
+          return me._getLabels()[index];
+        },
+        _configure: function () {
+          var me = this;
+          var offset = me.options.offset;
+          var ticks = me.ticks;
+
+          core_scale.prototype._configure.call(me);
+
+          if (!me.isHorizontal()) {
+            // For backward compatibility, vertical category scale reverse is inverted.
+            me._reversePixels = !me._reversePixels;
+          }
+
+          if (!ticks) {
+            return;
+          }
+
+          me._startValue = me.minIndex - (offset ? 0.5 : 0);
+          me._valueRange = Math.max(ticks.length - (offset ? 0 : 1), 1);
         },
         // Used to get data value locations.  Value can either be an index or a numerical value
-        getPixelForValue: function (value, index) {
+        getPixelForValue: function (value, index, datasetIndex) {
           var me = this;
-          var offset = me.options.offset; // 1 is added because we need the length but we have the indexes
+          var valueCategory, labels, idx;
 
-          var offsetAmt = Math.max(me.maxIndex + 1 - me.minIndex - (offset ? 0 : 1), 1); // If value is a data object, then index is the index in the data array,
+          if (!isNullOrUndef$1(index) && !isNullOrUndef$1(datasetIndex)) {
+            value = me.chart.data.datasets[datasetIndex].data[index];
+          } // If value is a data object, then index is the index in the data array,
           // not the index of the scale. We need to change that.
 
-          var valueCategory;
 
-          if (value !== undefined && value !== null) {
+          if (!isNullOrUndef$1(value)) {
             valueCategory = me.isHorizontal() ? value.x : value.y;
           }
 
           if (valueCategory !== undefined || value !== undefined && isNaN(index)) {
-            var labels = me.getLabels();
-            value = valueCategory || value;
-            var idx = labels.indexOf(value);
+            labels = me._getLabels();
+            value = helpers$1.valueOrDefault(valueCategory, value);
+            idx = labels.indexOf(value);
             index = idx !== -1 ? idx : index;
-          }
 
-          if (me.isHorizontal()) {
-            var valueWidth = me.width / offsetAmt;
-            var widthOffset = valueWidth * (index - me.minIndex);
-
-            if (offset) {
-              widthOffset += valueWidth / 2;
+            if (isNaN(index)) {
+              index = value;
             }
-
-            return me.left + widthOffset;
           }
 
-          var valueHeight = me.height / offsetAmt;
-          var heightOffset = valueHeight * (index - me.minIndex);
-
-          if (offset) {
-            heightOffset += valueHeight / 2;
-          }
-
-          return me.top + heightOffset;
+          return me.getPixelForDecimal((index - me._startValue) / me._valueRange);
         },
         getPixelForTick: function (index) {
-          return this.getPixelForValue(this.ticks[index], index + this.minIndex, null);
+          var ticks = this.ticks;
+          return index < 0 || index > ticks.length - 1 ? null : this.getPixelForValue(ticks[index], index + this.minIndex);
         },
         getValueForPixel: function (pixel) {
           var me = this;
-          var offset = me.options.offset;
-          var value;
-          var offsetAmt = Math.max(me._ticks.length - (offset ? 0 : 1), 1);
-          var horz = me.isHorizontal();
-          var valueDimension = (horz ? me.width : me.height) / offsetAmt;
-          pixel -= horz ? me.left : me.top;
-
-          if (offset) {
-            pixel -= valueDimension / 2;
-          }
-
-          if (pixel <= 0) {
-            value = 0;
-          } else {
-            value = Math.round(pixel / valueDimension);
-          }
-
-          return value + me.minIndex;
+          var value = Math.round(me._startValue + me.getDecimalForPixel(pixel) * me._valueRange);
+          return Math.min(Math.max(value, 0), me.ticks.length - 1);
         },
         getBasePixel: function () {
           return this.bottom;
@@ -21284,7 +23416,7 @@
       var _defaults = defaultConfig;
       scale_category._defaults = _defaults;
       var noop = helpers$1.noop;
-      var isNullOrUndef = helpers$1.isNullOrUndef;
+      var isNullOrUndef$2 = helpers$1.isNullOrUndef;
       /**
        * Generate a set of linear ticks
        * @param generationOptions the options used to generate the ticks
@@ -21310,7 +23442,7 @@
         var factor, niceMin, niceMax, numSpaces; // Beyond MIN_SPACING floating point numbers being to lose precision
         // such that we can't do the math necessary to generate ticks
 
-        if (spacing < MIN_SPACING && isNullOrUndef(min) && isNullOrUndef(max)) {
+        if (spacing < MIN_SPACING && isNullOrUndef$2(min) && isNullOrUndef$2(max)) {
           return [rmin, rmax];
         }
 
@@ -21321,7 +23453,7 @@
           spacing = helpers$1.niceNum(numSpaces * spacing / maxNumSpaces / unit) * unit;
         }
 
-        if (stepSize || isNullOrUndef(precision)) {
+        if (stepSize || isNullOrUndef$2(precision)) {
           // If a precision is not specified, calculate factor based on spacing
           factor = Math.pow(10, helpers$1._decimalPlaces(spacing));
         } else {
@@ -21335,11 +23467,11 @@
 
         if (stepSize) {
           // If very close to our whole number, use it.
-          if (!isNullOrUndef(min) && helpers$1.almostWhole(min / spacing, spacing / 1000)) {
+          if (!isNullOrUndef$2(min) && helpers$1.almostWhole(min / spacing, spacing / 1000)) {
             niceMin = min;
           }
 
-          if (!isNullOrUndef(max) && helpers$1.almostWhole(max / spacing, spacing / 1000)) {
+          if (!isNullOrUndef$2(max) && helpers$1.almostWhole(max / spacing, spacing / 1000)) {
             niceMax = max;
           }
         }
@@ -21354,13 +23486,13 @@
 
         niceMin = Math.round(niceMin * factor) / factor;
         niceMax = Math.round(niceMax * factor) / factor;
-        ticks.push(isNullOrUndef(min) ? niceMin : min);
+        ticks.push(isNullOrUndef$2(min) ? niceMin : min);
 
         for (var j = 1; j < numSpaces; ++j) {
           ticks.push(Math.round((niceMin + j * spacing) * factor) / factor);
         }
 
-        ticks.push(isNullOrUndef(max) ? niceMax : max);
+        ticks.push(isNullOrUndef$2(max) ? niceMax : max);
         return ticks;
       }
 
@@ -21499,6 +23631,25 @@
           me.ticksAsNumbers = me.ticks.slice();
           me.zeroLineIndex = me.ticks.indexOf(0);
           core_scale.prototype.convertTicksToLabels.call(me);
+        },
+        _configure: function () {
+          var me = this;
+          var ticks = me.getTicks();
+          var start = me.min;
+          var end = me.max;
+          var offset;
+
+          core_scale.prototype._configure.call(me);
+
+          if (me.options.offset && ticks.length) {
+            offset = (end - start) / Math.max(ticks.length - 1, 1) / 2;
+            start -= offset;
+            end += offset;
+          }
+
+          me._startValue = start;
+          me._endValue = end;
+          me._valueRange = end - start;
         }
       });
       var defaultConfig$1 = {
@@ -21507,118 +23658,111 @@
           callback: core_ticks.formatters.linear
         }
       };
+      var DEFAULT_MIN = 0;
+      var DEFAULT_MAX = 1;
+
+      function getOrCreateStack(stacks, stacked, meta) {
+        var key = [meta.type, // we have a separate stack for stack=undefined datasets when the opts.stacked is undefined
+        stacked === undefined && meta.stack === undefined ? meta.index : '', meta.stack].join('.');
+
+        if (stacks[key] === undefined) {
+          stacks[key] = {
+            pos: [],
+            neg: []
+          };
+        }
+
+        return stacks[key];
+      }
+
+      function stackData(scale, stacks, meta, data) {
+        var opts = scale.options;
+        var stacked = opts.stacked;
+        var stack = getOrCreateStack(stacks, stacked, meta);
+        var pos = stack.pos;
+        var neg = stack.neg;
+        var ilen = data.length;
+        var i, value;
+
+        for (i = 0; i < ilen; ++i) {
+          value = scale._parseValue(data[i]);
+
+          if (isNaN(value.min) || isNaN(value.max) || meta.data[i].hidden) {
+            continue;
+          }
+
+          pos[i] = pos[i] || 0;
+          neg[i] = neg[i] || 0;
+
+          if (opts.relativePoints) {
+            pos[i] = 100;
+          } else if (value.min < 0 || value.max < 0) {
+            neg[i] += value.min;
+          } else {
+            pos[i] += value.max;
+          }
+        }
+      }
+
+      function updateMinMax(scale, meta, data) {
+        var ilen = data.length;
+        var i, value;
+
+        for (i = 0; i < ilen; ++i) {
+          value = scale._parseValue(data[i]);
+
+          if (isNaN(value.min) || isNaN(value.max) || meta.data[i].hidden) {
+            continue;
+          }
+
+          scale.min = Math.min(scale.min, value.min);
+          scale.max = Math.max(scale.max, value.max);
+        }
+      }
+
       var scale_linear = scale_linearbase.extend({
         determineDataLimits: function () {
           var me = this;
           var opts = me.options;
           var chart = me.chart;
-          var data = chart.data;
-          var datasets = data.datasets;
-          var isHorizontal = me.isHorizontal();
-          var DEFAULT_MIN = 0;
-          var DEFAULT_MAX = 1;
+          var datasets = chart.data.datasets;
 
-          function IDMatches(meta) {
-            return isHorizontal ? meta.xAxisID === me.id : meta.yAxisID === me.id;
-          } // First Calculate the range
+          var metasets = me._getMatchingVisibleMetas();
 
-
-          me.min = null;
-          me.max = null;
           var hasStacks = opts.stacked;
+          var stacks = {};
+          var ilen = metasets.length;
+          var i, meta, data, values;
+          me.min = Number.POSITIVE_INFINITY;
+          me.max = Number.NEGATIVE_INFINITY;
 
           if (hasStacks === undefined) {
-            helpers$1.each(datasets, function (dataset, datasetIndex) {
-              if (hasStacks) {
-                return;
-              }
-
-              var meta = chart.getDatasetMeta(datasetIndex);
-
-              if (chart.isDatasetVisible(datasetIndex) && IDMatches(meta) && meta.stack !== undefined) {
-                hasStacks = true;
-              }
-            });
+            for (i = 0; !hasStacks && i < ilen; ++i) {
+              meta = metasets[i];
+              hasStacks = meta.stack !== undefined;
+            }
           }
 
-          if (opts.stacked || hasStacks) {
-            var valuesPerStack = {};
-            helpers$1.each(datasets, function (dataset, datasetIndex) {
-              var meta = chart.getDatasetMeta(datasetIndex);
-              var key = [meta.type, // we have a separate stack for stack=undefined datasets when the opts.stacked is undefined
-              opts.stacked === undefined && meta.stack === undefined ? datasetIndex : '', meta.stack].join('.');
+          for (i = 0; i < ilen; ++i) {
+            meta = metasets[i];
+            data = datasets[meta.index].data;
 
-              if (valuesPerStack[key] === undefined) {
-                valuesPerStack[key] = {
-                  positiveValues: [],
-                  negativeValues: []
-                };
-              } // Store these per type
-
-
-              var positiveValues = valuesPerStack[key].positiveValues;
-              var negativeValues = valuesPerStack[key].negativeValues;
-
-              if (chart.isDatasetVisible(datasetIndex) && IDMatches(meta)) {
-                helpers$1.each(dataset.data, function (rawValue, index) {
-                  var value = +me.getRightValue(rawValue);
-
-                  if (isNaN(value) || meta.data[index].hidden) {
-                    return;
-                  }
-
-                  positiveValues[index] = positiveValues[index] || 0;
-                  negativeValues[index] = negativeValues[index] || 0;
-
-                  if (opts.relativePoints) {
-                    positiveValues[index] = 100;
-                  } else if (value < 0) {
-                    negativeValues[index] += value;
-                  } else {
-                    positiveValues[index] += value;
-                  }
-                });
-              }
-            });
-            helpers$1.each(valuesPerStack, function (valuesForType) {
-              var values = valuesForType.positiveValues.concat(valuesForType.negativeValues);
-              var minVal = helpers$1.min(values);
-              var maxVal = helpers$1.max(values);
-              me.min = me.min === null ? minVal : Math.min(me.min, minVal);
-              me.max = me.max === null ? maxVal : Math.max(me.max, maxVal);
-            });
-          } else {
-            helpers$1.each(datasets, function (dataset, datasetIndex) {
-              var meta = chart.getDatasetMeta(datasetIndex);
-
-              if (chart.isDatasetVisible(datasetIndex) && IDMatches(meta)) {
-                helpers$1.each(dataset.data, function (rawValue, index) {
-                  var value = +me.getRightValue(rawValue);
-
-                  if (isNaN(value) || meta.data[index].hidden) {
-                    return;
-                  }
-
-                  if (me.min === null) {
-                    me.min = value;
-                  } else if (value < me.min) {
-                    me.min = value;
-                  }
-
-                  if (me.max === null) {
-                    me.max = value;
-                  } else if (value > me.max) {
-                    me.max = value;
-                  }
-                });
-              }
-            });
+            if (hasStacks) {
+              stackData(me, stacks, meta, data);
+            } else {
+              updateMinMax(me, meta, data);
+            }
           }
 
-          me.min = isFinite(me.min) && !isNaN(me.min) ? me.min : DEFAULT_MIN;
-          me.max = isFinite(me.max) && !isNaN(me.max) ? me.max : DEFAULT_MAX; // Common base implementation to handle ticks.min, ticks.max, ticks.beginAtZero
+          helpers$1.each(stacks, function (stackValues) {
+            values = stackValues.pos.concat(stackValues.neg);
+            me.min = Math.min(me.min, helpers$1.min(values));
+            me.max = Math.max(me.max, helpers$1.max(values));
+          });
+          me.min = helpers$1.isFinite(me.min) && !isNaN(me.min) ? me.min : DEFAULT_MIN;
+          me.max = helpers$1.isFinite(me.max) && !isNaN(me.max) ? me.max : DEFAULT_MAX; // Common base implementation to handle ticks.min, ticks.max, ticks.beginAtZero
 
-          this.handleTickRangeOptions();
+          me.handleTickRangeOptions();
         },
         // Returns the maximum number of ticks based on the scale dimension
         _computeTickLimit: function () {
@@ -21640,41 +23784,31 @@
           }
         },
         getLabelForIndex: function (index, datasetIndex) {
-          return +this.getRightValue(this.chart.data.datasets[datasetIndex].data[index]);
+          return this._getScaleLabel(this.chart.data.datasets[datasetIndex].data[index]);
         },
         // Utils
         getPixelForValue: function (value) {
-          // This must be called after fit has been run so that
-          // this.left, this.top, this.right, and this.bottom have been defined
           var me = this;
-          var start = me.start;
-          var rightValue = +me.getRightValue(value);
-          var pixel;
-          var range = me.end - start;
-
-          if (me.isHorizontal()) {
-            pixel = me.left + me.width / range * (rightValue - start);
-          } else {
-            pixel = me.bottom - me.height / range * (rightValue - start);
-          }
-
-          return pixel;
+          return me.getPixelForDecimal((+me.getRightValue(value) - me._startValue) / me._valueRange);
         },
         getValueForPixel: function (pixel) {
-          var me = this;
-          var isHorizontal = me.isHorizontal();
-          var innerDimension = isHorizontal ? me.width : me.height;
-          var offset = (isHorizontal ? pixel - me.left : me.bottom - pixel) / innerDimension;
-          return me.start + (me.end - me.start) * offset;
+          return this._startValue + this.getDecimalForPixel(pixel) * this._valueRange;
         },
         getPixelForTick: function (index) {
-          return this.getPixelForValue(this.ticksAsNumbers[index]);
+          var ticks = this.ticksAsNumbers;
+
+          if (index < 0 || index > ticks.length - 1) {
+            return null;
+          }
+
+          return this.getPixelForValue(ticks[index]);
         }
       }); // INTERNAL: static default options, registered in src/index.js
 
       var _defaults$1 = defaultConfig$1;
       scale_linear._defaults = _defaults$1;
-      var valueOrDefault$a = helpers$1.valueOrDefault;
+      var valueOrDefault$b = helpers$1.valueOrDefault;
+      var log10 = helpers$1.math.log10;
       /**
        * Generate a set of logarithmic ticks
        * @param generationOptions the options used to generate the ticks
@@ -21684,18 +23818,18 @@
 
       function generateTicks$1(generationOptions, dataRange) {
         var ticks = [];
-        var tickVal = valueOrDefault$a(generationOptions.min, Math.pow(10, Math.floor(helpers$1.log10(dataRange.min))));
-        var endExp = Math.floor(helpers$1.log10(dataRange.max));
+        var tickVal = valueOrDefault$b(generationOptions.min, Math.pow(10, Math.floor(log10(dataRange.min))));
+        var endExp = Math.floor(log10(dataRange.max));
         var endSignificand = Math.ceil(dataRange.max / Math.pow(10, endExp));
         var exp, significand;
 
         if (tickVal === 0) {
-          exp = Math.floor(helpers$1.log10(dataRange.minNotZero));
+          exp = Math.floor(log10(dataRange.minNotZero));
           significand = Math.floor(dataRange.minNotZero / Math.pow(10, exp));
           ticks.push(tickVal);
           tickVal = significand * Math.pow(10, exp);
         } else {
-          exp = Math.floor(helpers$1.log10(tickVal));
+          exp = Math.floor(log10(tickVal));
           significand = Math.floor(tickVal / Math.pow(10, exp));
         }
 
@@ -21714,7 +23848,7 @@
           tickVal = Math.round(significand * Math.pow(10, exp) * precision) / precision;
         } while (exp < endExp || exp === endExp && significand < endSignificand);
 
-        var lastTick = valueOrDefault$a(generationOptions.max, tickVal);
+        var lastTick = valueOrDefault$b(generationOptions.max, tickVal);
         ticks.push(lastTick);
         return ticks;
       }
@@ -21736,38 +23870,36 @@
           var me = this;
           var opts = me.options;
           var chart = me.chart;
-          var data = chart.data;
-          var datasets = data.datasets;
+          var datasets = chart.data.datasets;
           var isHorizontal = me.isHorizontal();
 
           function IDMatches(meta) {
             return isHorizontal ? meta.xAxisID === me.id : meta.yAxisID === me.id;
-          } // Calculate Range
+          }
 
+          var datasetIndex, meta, value, data, i, ilen; // Calculate Range
 
-          me.min = null;
-          me.max = null;
-          me.minNotZero = null;
+          me.min = Number.POSITIVE_INFINITY;
+          me.max = Number.NEGATIVE_INFINITY;
+          me.minNotZero = Number.POSITIVE_INFINITY;
           var hasStacks = opts.stacked;
 
           if (hasStacks === undefined) {
-            helpers$1.each(datasets, function (dataset, datasetIndex) {
-              if (hasStacks) {
-                return;
-              }
-
-              var meta = chart.getDatasetMeta(datasetIndex);
+            for (datasetIndex = 0; datasetIndex < datasets.length; datasetIndex++) {
+              meta = chart.getDatasetMeta(datasetIndex);
 
               if (chart.isDatasetVisible(datasetIndex) && IDMatches(meta) && meta.stack !== undefined) {
                 hasStacks = true;
+                break;
               }
-            });
+            }
           }
 
           if (opts.stacked || hasStacks) {
             var valuesPerStack = {};
-            helpers$1.each(datasets, function (dataset, datasetIndex) {
-              var meta = chart.getDatasetMeta(datasetIndex);
+
+            for (datasetIndex = 0; datasetIndex < datasets.length; datasetIndex++) {
+              meta = chart.getDatasetMeta(datasetIndex);
               var key = [meta.type, // we have a separate stack for stack=undefined datasets when the opts.stacked is undefined
               opts.stacked === undefined && meta.stack === undefined ? datasetIndex : '', meta.stack].join('.');
 
@@ -21776,59 +23908,58 @@
                   valuesPerStack[key] = [];
                 }
 
-                helpers$1.each(dataset.data, function (rawValue, index) {
-                  var values = valuesPerStack[key];
-                  var value = +me.getRightValue(rawValue); // invalid, hidden and negative values are ignored
+                data = datasets[datasetIndex].data;
 
-                  if (isNaN(value) || meta.data[index].hidden || value < 0) {
-                    return;
+                for (i = 0, ilen = data.length; i < ilen; i++) {
+                  var values = valuesPerStack[key];
+                  value = me._parseValue(data[i]); // invalid, hidden and negative values are ignored
+
+                  if (isNaN(value.min) || isNaN(value.max) || meta.data[i].hidden || value.min < 0 || value.max < 0) {
+                    continue;
                   }
 
-                  values[index] = values[index] || 0;
-                  values[index] += value;
-                });
+                  values[i] = values[i] || 0;
+                  values[i] += value.max;
+                }
               }
-            });
+            }
+
             helpers$1.each(valuesPerStack, function (valuesForType) {
               if (valuesForType.length > 0) {
                 var minVal = helpers$1.min(valuesForType);
                 var maxVal = helpers$1.max(valuesForType);
-                me.min = me.min === null ? minVal : Math.min(me.min, minVal);
-                me.max = me.max === null ? maxVal : Math.max(me.max, maxVal);
+                me.min = Math.min(me.min, minVal);
+                me.max = Math.max(me.max, maxVal);
               }
             });
           } else {
-            helpers$1.each(datasets, function (dataset, datasetIndex) {
-              var meta = chart.getDatasetMeta(datasetIndex);
+            for (datasetIndex = 0; datasetIndex < datasets.length; datasetIndex++) {
+              meta = chart.getDatasetMeta(datasetIndex);
 
               if (chart.isDatasetVisible(datasetIndex) && IDMatches(meta)) {
-                helpers$1.each(dataset.data, function (rawValue, index) {
-                  var value = +me.getRightValue(rawValue); // invalid, hidden and negative values are ignored
+                data = datasets[datasetIndex].data;
 
-                  if (isNaN(value) || meta.data[index].hidden || value < 0) {
-                    return;
+                for (i = 0, ilen = data.length; i < ilen; i++) {
+                  value = me._parseValue(data[i]); // invalid, hidden and negative values are ignored
+
+                  if (isNaN(value.min) || isNaN(value.max) || meta.data[i].hidden || value.min < 0 || value.max < 0) {
+                    continue;
                   }
 
-                  if (me.min === null) {
-                    me.min = value;
-                  } else if (value < me.min) {
-                    me.min = value;
-                  }
+                  me.min = Math.min(value.min, me.min);
+                  me.max = Math.max(value.max, me.max);
 
-                  if (me.max === null) {
-                    me.max = value;
-                  } else if (value > me.max) {
-                    me.max = value;
+                  if (value.min !== 0) {
+                    me.minNotZero = Math.min(value.min, me.minNotZero);
                   }
-
-                  if (value !== 0 && (me.minNotZero === null || value < me.minNotZero)) {
-                    me.minNotZero = value;
-                  }
-                });
+                }
               }
-            });
-          } // Common base implementation to handle ticks.min, ticks.max
+            }
+          }
 
+          me.min = helpers$1.isFinite(me.min) ? me.min : null;
+          me.max = helpers$1.isFinite(me.max) ? me.max : null;
+          me.minNotZero = helpers$1.isFinite(me.minNotZero) ? me.minNotZero : null; // Common base implementation to handle ticks.min, ticks.max
 
           this.handleTickRangeOptions();
         },
@@ -21842,8 +23973,8 @@
 
           if (me.min === me.max) {
             if (me.min !== 0 && me.min !== null) {
-              me.min = Math.pow(10, Math.floor(helpers$1.log10(me.min)) - 1);
-              me.max = Math.pow(10, Math.floor(helpers$1.log10(me.max)) + 1);
+              me.min = Math.pow(10, Math.floor(log10(me.min)) - 1);
+              me.max = Math.pow(10, Math.floor(log10(me.max)) + 1);
             } else {
               me.min = DEFAULT_MIN;
               me.max = DEFAULT_MAX;
@@ -21851,18 +23982,18 @@
           }
 
           if (me.min === null) {
-            me.min = Math.pow(10, Math.floor(helpers$1.log10(me.max)) - 1);
+            me.min = Math.pow(10, Math.floor(log10(me.max)) - 1);
           }
 
           if (me.max === null) {
-            me.max = me.min !== 0 ? Math.pow(10, Math.floor(helpers$1.log10(me.min)) + 1) : DEFAULT_MAX;
+            me.max = me.min !== 0 ? Math.pow(10, Math.floor(log10(me.min)) + 1) : DEFAULT_MAX;
           }
 
           if (me.minNotZero === null) {
             if (me.min > 0) {
               me.minNotZero = me.min;
             } else if (me.max < 1) {
-              me.minNotZero = Math.pow(10, Math.floor(helpers$1.log10(me.max)));
+              me.minNotZero = Math.pow(10, Math.floor(log10(me.max)));
             } else {
               me.minNotZero = DEFAULT_MIN;
             }
@@ -21901,10 +24032,16 @@
         },
         // Get the correct tooltip label
         getLabelForIndex: function (index, datasetIndex) {
-          return +this.getRightValue(this.chart.data.datasets[datasetIndex].data[index]);
+          return this._getScaleLabel(this.chart.data.datasets[datasetIndex].data[index]);
         },
         getPixelForTick: function (index) {
-          return this.getPixelForValue(this.tickValues[index]);
+          var ticks = this.tickValues;
+
+          if (index < 0 || index > ticks.length - 1) {
+            return null;
+          }
+
+          return this.getPixelForValue(ticks[index]);
         },
 
         /**
@@ -21914,108 +24051,49 @@
          * @private
          */
         _getFirstTickValue: function (value) {
-          var exp = Math.floor(helpers$1.log10(value));
+          var exp = Math.floor(log10(value));
           var significand = Math.floor(value / Math.pow(10, exp));
           return significand * Math.pow(10, exp);
         },
+        _configure: function () {
+          var me = this;
+          var start = me.min;
+          var offset = 0;
+
+          core_scale.prototype._configure.call(me);
+
+          if (start === 0) {
+            start = me._getFirstTickValue(me.minNotZero);
+            offset = valueOrDefault$b(me.options.ticks.fontSize, core_defaults.global.defaultFontSize) / me._length;
+          }
+
+          me._startValue = log10(start);
+          me._valueOffset = offset;
+          me._valueRange = (log10(me.max) - log10(start)) / (1 - offset);
+        },
         getPixelForValue: function (value) {
           var me = this;
-          var tickOpts = me.options.ticks;
-          var reverse = tickOpts.reverse;
-          var log10 = helpers$1.log10;
-
-          var firstTickValue = me._getFirstTickValue(me.minNotZero);
-
-          var offset = 0;
-          var innerDimension, pixel, start, end, sign;
+          var decimal = 0;
           value = +me.getRightValue(value);
 
-          if (reverse) {
-            start = me.end;
-            end = me.start;
-            sign = -1;
-          } else {
-            start = me.start;
-            end = me.end;
-            sign = 1;
+          if (value > me.min && value > 0) {
+            decimal = (log10(value) - me._startValue) / me._valueRange + me._valueOffset;
           }
 
-          if (me.isHorizontal()) {
-            innerDimension = me.width;
-            pixel = reverse ? me.right : me.left;
-          } else {
-            innerDimension = me.height;
-            sign *= -1; // invert, since the upper-left corner of the canvas is at pixel (0, 0)
-
-            pixel = reverse ? me.top : me.bottom;
-          }
-
-          if (value !== start) {
-            if (start === 0) {
-              // include zero tick
-              offset = valueOrDefault$a(tickOpts.fontSize, core_defaults.global.defaultFontSize);
-              innerDimension -= offset;
-              start = firstTickValue;
-            }
-
-            if (value !== 0) {
-              offset += innerDimension / (log10(end) - log10(start)) * (log10(value) - log10(start));
-            }
-
-            pixel += sign * offset;
-          }
-
-          return pixel;
+          return me.getPixelForDecimal(decimal);
         },
         getValueForPixel: function (pixel) {
           var me = this;
-          var tickOpts = me.options.ticks;
-          var reverse = tickOpts.reverse;
-          var log10 = helpers$1.log10;
-
-          var firstTickValue = me._getFirstTickValue(me.minNotZero);
-
-          var innerDimension, start, end, value;
-
-          if (reverse) {
-            start = me.end;
-            end = me.start;
-          } else {
-            start = me.start;
-            end = me.end;
-          }
-
-          if (me.isHorizontal()) {
-            innerDimension = me.width;
-            value = reverse ? me.right - pixel : pixel - me.left;
-          } else {
-            innerDimension = me.height;
-            value = reverse ? pixel - me.top : me.bottom - pixel;
-          }
-
-          if (value !== start) {
-            if (start === 0) {
-              // include zero tick
-              var offset = valueOrDefault$a(tickOpts.fontSize, core_defaults.global.defaultFontSize);
-              value -= offset;
-              innerDimension -= offset;
-              start = firstTickValue;
-            }
-
-            value *= log10(end) - log10(start);
-            value /= innerDimension;
-            value = Math.pow(10, log10(start) + value);
-          }
-
-          return value;
+          var decimal = me.getDecimalForPixel(pixel);
+          return decimal === 0 && me.min === 0 ? 0 : Math.pow(10, me._startValue + (decimal - me._valueOffset) * me._valueRange);
         }
       }); // INTERNAL: static default options, registered in src/index.js
 
       var _defaults$2 = defaultConfig$2;
       scale_logarithmic._defaults = _defaults$2;
-      var valueOrDefault$b = helpers$1.valueOrDefault;
+      var valueOrDefault$c = helpers$1.valueOrDefault;
       var valueAtIndexOrDefault$1 = helpers$1.valueAtIndexOrDefault;
-      var resolve$7 = helpers$1.options.resolve;
+      var resolve$4 = helpers$1.options.resolve;
       var defaultConfig$3 = {
         display: true,
         // Boolean - Whether to animate scaling the chart from the centre
@@ -22023,7 +24101,7 @@
         position: 'chartArea',
         angleLines: {
           display: true,
-          color: 'rgba(0, 0, 0, 0.1)',
+          color: 'rgba(0,0,0,0.1)',
           lineWidth: 1,
           borderDash: [],
           borderDashOffset: 0.0
@@ -22055,16 +24133,11 @@
         }
       };
 
-      function getValueCount(scale) {
-        var opts = scale.options;
-        return opts.angleLines.display || opts.pointLabels.display ? scale.chart.data.labels.length : 0;
-      }
-
       function getTickBackdropHeight(opts) {
         var tickOpts = opts.ticks;
 
         if (tickOpts.display && opts.display) {
-          return valueOrDefault$b(tickOpts.fontSize, core_defaults.global.defaultFontSize) + tickOpts.backdropPaddingY * 2;
+          return valueOrDefault$c(tickOpts.fontSize, core_defaults.global.defaultFontSize) + tickOpts.backdropPaddingY * 2;
         }
 
         return 0;
@@ -22147,11 +24220,11 @@
         var i, textSize, pointPosition;
         scale.ctx.font = plFont.string;
         scale._pointLabelSizes = [];
-        var valueCount = getValueCount(scale);
+        var valueCount = scale.chart.data.labels.length;
 
         for (i = 0; i < valueCount; i++) {
           pointPosition = scale.getPointPosition(i, scale.drawingArea + 5);
-          textSize = measureLabelSize(scale.ctx, plFont.lineHeight, scale.pointLabels[i] || '');
+          textSize = measureLabelSize(scale.ctx, plFont.lineHeight, scale.pointLabels[i]);
           scale._pointLabelSizes[i] = textSize; // Add quarter circle to make degree 0 mean top of circle
 
           var angleRadians = scale.getIndexAngle(i);
@@ -22218,50 +24291,28 @@
       function drawPointLabels(scale) {
         var ctx = scale.ctx;
         var opts = scale.options;
-        var angleLineOpts = opts.angleLines;
-        var gridLineOpts = opts.gridLines;
         var pointLabelOpts = opts.pointLabels;
-        var lineWidth = valueOrDefault$b(angleLineOpts.lineWidth, gridLineOpts.lineWidth);
-        var lineColor = valueOrDefault$b(angleLineOpts.color, gridLineOpts.color);
         var tickBackdropHeight = getTickBackdropHeight(opts);
-        ctx.save();
-        ctx.lineWidth = lineWidth;
-        ctx.strokeStyle = lineColor;
-
-        if (ctx.setLineDash) {
-          ctx.setLineDash(resolve$7([angleLineOpts.borderDash, gridLineOpts.borderDash, []]));
-          ctx.lineDashOffset = resolve$7([angleLineOpts.borderDashOffset, gridLineOpts.borderDashOffset, 0.0]);
-        }
-
-        var outerDistance = scale.getDistanceFromCenterForValue(opts.ticks.reverse ? scale.min : scale.max); // Point Label Font
+        var outerDistance = scale.getDistanceFromCenterForValue(opts.ticks.reverse ? scale.min : scale.max);
 
         var plFont = helpers$1.options._parseFont(pointLabelOpts);
 
+        ctx.save();
         ctx.font = plFont.string;
         ctx.textBaseline = 'middle';
 
-        for (var i = getValueCount(scale) - 1; i >= 0; i--) {
-          if (angleLineOpts.display && lineWidth && lineColor) {
-            var outerPosition = scale.getPointPosition(i, outerDistance);
-            ctx.beginPath();
-            ctx.moveTo(scale.xCenter, scale.yCenter);
-            ctx.lineTo(outerPosition.x, outerPosition.y);
-            ctx.stroke();
-          }
+        for (var i = scale.chart.data.labels.length - 1; i >= 0; i--) {
+          // Extra pixels out for some label spacing
+          var extra = i === 0 ? tickBackdropHeight / 2 : 0;
+          var pointLabelPosition = scale.getPointPosition(i, outerDistance + extra + 5); // Keep this in loop since we may support array properties here
 
-          if (pointLabelOpts.display) {
-            // Extra pixels out for some label spacing
-            var extra = i === 0 ? tickBackdropHeight / 2 : 0;
-            var pointLabelPosition = scale.getPointPosition(i, outerDistance + extra + 5); // Keep this in loop since we may support array properties here
-
-            var pointLabelFontColor = valueAtIndexOrDefault$1(pointLabelOpts.fontColor, i, core_defaults.global.defaultFontColor);
-            ctx.fillStyle = pointLabelFontColor;
-            var angleRadians = scale.getIndexAngle(i);
-            var angle = helpers$1.toDegrees(angleRadians);
-            ctx.textAlign = getTextAlignForAngle(angle);
-            adjustPointPositionForLabelHeight(angle, scale._pointLabelSizes[i], pointLabelPosition);
-            fillText(ctx, scale.pointLabels[i] || '', pointLabelPosition, plFont.lineHeight);
-          }
+          var pointLabelFontColor = valueAtIndexOrDefault$1(pointLabelOpts.fontColor, i, core_defaults.global.defaultFontColor);
+          ctx.fillStyle = pointLabelFontColor;
+          var angleRadians = scale.getIndexAngle(i);
+          var angle = helpers$1.toDegrees(angleRadians);
+          ctx.textAlign = getTextAlignForAngle(angle);
+          adjustPointPositionForLabelHeight(angle, scale._pointLabelSizes[i], pointLabelPosition);
+          fillText(ctx, scale.pointLabels[i], pointLabelPosition, plFont.lineHeight);
         }
 
         ctx.restore();
@@ -22270,7 +24321,7 @@
       function drawRadiusLine(scale, gridLineOpts, radius, index) {
         var ctx = scale.ctx;
         var circular = gridLineOpts.circular;
-        var valueCount = getValueCount(scale);
+        var valueCount = scale.chart.data.labels.length;
         var lineColor = valueAtIndexOrDefault$1(gridLineOpts.color, index - 1);
         var lineWidth = valueAtIndexOrDefault$1(gridLineOpts.lineWidth, index - 1);
         var pointPosition;
@@ -22357,7 +24408,10 @@
           var me = this;
           scale_linearbase.prototype.convertTicksToLabels.call(me); // Point labels
 
-          me.pointLabels = me.chart.data.labels.map(me.options.pointLabels.callback, me);
+          me.pointLabels = me.chart.data.labels.map(function () {
+            var label = helpers$1.callback(me.options.pointLabels.callback, arguments, me);
+            return label || label === 0 ? label : '';
+          });
         },
         getLabelForIndex: function (index, datasetIndex) {
           return +this.getRightValue(this.chart.data.datasets[datasetIndex].data[index]);
@@ -22400,17 +24454,19 @@
           me.yCenter = Math.floor((maxTop + maxBottom) / 2 + me.top + me.paddingTop);
         },
         getIndexAngle: function (index) {
-          var angleMultiplier = Math.PI * 2 / getValueCount(this);
-          var startAngle = this.chart.options && this.chart.options.startAngle ? this.chart.options.startAngle : 0;
-          var startAngleRadians = startAngle * Math.PI * 2 / 360; // Start from the top instead of right, so remove a quarter of the circle
+          var chart = this.chart;
+          var angleMultiplier = 360 / chart.data.labels.length;
+          var options = chart.options || {};
+          var startAngle = options.startAngle || 0; // Start from the top instead of right, so remove a quarter of the circle
 
-          return index * angleMultiplier + startAngleRadians;
+          var angle = (index * angleMultiplier + startAngle) % 360;
+          return (angle < 0 ? angle + 360 : angle) * Math.PI * 2 / 360;
         },
         getDistanceFromCenterForValue: function (value) {
           var me = this;
 
-          if (value === null) {
-            return 0; // null always in center
+          if (helpers$1.isNullOrUndef(value)) {
+            return NaN;
           } // Take into account half font size + the yPadding of the top value
 
 
@@ -22433,65 +24489,117 @@
         getPointPositionForValue: function (index, value) {
           return this.getPointPosition(index, this.getDistanceFromCenterForValue(value));
         },
-        getBasePosition: function () {
+        getBasePosition: function (index) {
           var me = this;
           var min = me.min;
           var max = me.max;
-          return me.getPointPositionForValue(0, me.beginAtZero ? 0 : min < 0 && max < 0 ? max : min > 0 && max > 0 ? min : 0);
+          return me.getPointPositionForValue(index || 0, me.beginAtZero ? 0 : min < 0 && max < 0 ? max : min > 0 && max > 0 ? min : 0);
         },
-        draw: function () {
+
+        /**
+         * @private
+         */
+        _drawGrid: function () {
           var me = this;
+          var ctx = me.ctx;
           var opts = me.options;
           var gridLineOpts = opts.gridLines;
-          var tickOpts = opts.ticks;
+          var angleLineOpts = opts.angleLines;
+          var lineWidth = valueOrDefault$c(angleLineOpts.lineWidth, gridLineOpts.lineWidth);
+          var lineColor = valueOrDefault$c(angleLineOpts.color, gridLineOpts.color);
+          var i, offset, position;
 
-          if (opts.display) {
-            var ctx = me.ctx;
-            var startAngle = this.getIndexAngle(0);
+          if (opts.pointLabels.display) {
+            drawPointLabels(me);
+          }
 
-            var tickFont = helpers$1.options._parseFont(tickOpts);
-
-            if (opts.angleLines.display || opts.pointLabels.display) {
-              drawPointLabels(me);
-            }
-
+          if (gridLineOpts.display) {
             helpers$1.each(me.ticks, function (label, index) {
-              // Don't draw a centre value (if it is minimum)
-              if (index > 0 || tickOpts.reverse) {
-                var yCenterOffset = me.getDistanceFromCenterForValue(me.ticksAsNumbers[index]); // Draw circular lines around the scale
-
-                if (gridLineOpts.display && index !== 0) {
-                  drawRadiusLine(me, gridLineOpts, yCenterOffset, index);
-                }
-
-                if (tickOpts.display) {
-                  var tickFontColor = valueOrDefault$b(tickOpts.fontColor, core_defaults.global.defaultFontColor);
-                  ctx.font = tickFont.string;
-                  ctx.save();
-                  ctx.translate(me.xCenter, me.yCenter);
-                  ctx.rotate(startAngle);
-
-                  if (tickOpts.showLabelBackdrop) {
-                    var labelWidth = ctx.measureText(label).width;
-                    ctx.fillStyle = tickOpts.backdropColor;
-                    ctx.fillRect(-labelWidth / 2 - tickOpts.backdropPaddingX, -yCenterOffset - tickFont.size / 2 - tickOpts.backdropPaddingY, labelWidth + tickOpts.backdropPaddingX * 2, tickFont.size + tickOpts.backdropPaddingY * 2);
-                  }
-
-                  ctx.textAlign = 'center';
-                  ctx.textBaseline = 'middle';
-                  ctx.fillStyle = tickFontColor;
-                  ctx.fillText(label, 0, -yCenterOffset);
-                  ctx.restore();
-                }
+              if (index !== 0) {
+                offset = me.getDistanceFromCenterForValue(me.ticksAsNumbers[index]);
+                drawRadiusLine(me, gridLineOpts, offset, index);
               }
             });
           }
-        }
+
+          if (angleLineOpts.display && lineWidth && lineColor) {
+            ctx.save();
+            ctx.lineWidth = lineWidth;
+            ctx.strokeStyle = lineColor;
+
+            if (ctx.setLineDash) {
+              ctx.setLineDash(resolve$4([angleLineOpts.borderDash, gridLineOpts.borderDash, []]));
+              ctx.lineDashOffset = resolve$4([angleLineOpts.borderDashOffset, gridLineOpts.borderDashOffset, 0.0]);
+            }
+
+            for (i = me.chart.data.labels.length - 1; i >= 0; i--) {
+              offset = me.getDistanceFromCenterForValue(opts.ticks.reverse ? me.min : me.max);
+              position = me.getPointPosition(i, offset);
+              ctx.beginPath();
+              ctx.moveTo(me.xCenter, me.yCenter);
+              ctx.lineTo(position.x, position.y);
+              ctx.stroke();
+            }
+
+            ctx.restore();
+          }
+        },
+
+        /**
+         * @private
+         */
+        _drawLabels: function () {
+          var me = this;
+          var ctx = me.ctx;
+          var opts = me.options;
+          var tickOpts = opts.ticks;
+
+          if (!tickOpts.display) {
+            return;
+          }
+
+          var startAngle = me.getIndexAngle(0);
+
+          var tickFont = helpers$1.options._parseFont(tickOpts);
+
+          var tickFontColor = valueOrDefault$c(tickOpts.fontColor, core_defaults.global.defaultFontColor);
+          var offset, width;
+          ctx.save();
+          ctx.font = tickFont.string;
+          ctx.translate(me.xCenter, me.yCenter);
+          ctx.rotate(startAngle);
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          helpers$1.each(me.ticks, function (label, index) {
+            if (index === 0 && !tickOpts.reverse) {
+              return;
+            }
+
+            offset = me.getDistanceFromCenterForValue(me.ticksAsNumbers[index]);
+
+            if (tickOpts.showLabelBackdrop) {
+              width = ctx.measureText(label).width;
+              ctx.fillStyle = tickOpts.backdropColor;
+              ctx.fillRect(-width / 2 - tickOpts.backdropPaddingX, -offset - tickFont.size / 2 - tickOpts.backdropPaddingY, width + tickOpts.backdropPaddingX * 2, tickFont.size + tickOpts.backdropPaddingY * 2);
+            }
+
+            ctx.fillStyle = tickFontColor;
+            ctx.fillText(label, 0, -offset);
+          });
+          ctx.restore();
+        },
+
+        /**
+         * @private
+         */
+        _drawTitle: helpers$1.noop
       }); // INTERNAL: static default options, registered in src/index.js
 
       var _defaults$3 = defaultConfig$3;
       scale_radialLinear._defaults = _defaults$3;
-      var valueOrDefault$c = helpers$1.valueOrDefault; // Integer constants are from the ES6 spec.
+      var deprecated$1 = helpers$1._deprecated;
+      var resolve$5 = helpers$1.options.resolve;
+      var valueOrDefault$d = helpers$1.valueOrDefault; // Integer constants are from the ES6 spec.
 
       var MIN_INTEGER = Number.MIN_SAFE_INTEGER || -9007199254740991;
       var MAX_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
@@ -22499,42 +24607,42 @@
         millisecond: {
           common: true,
           size: 1,
-          steps: [1, 2, 5, 10, 20, 50, 100, 250, 500]
+          steps: 1000
         },
         second: {
           common: true,
           size: 1000,
-          steps: [1, 2, 5, 10, 15, 30]
+          steps: 60
         },
         minute: {
           common: true,
           size: 60000,
-          steps: [1, 2, 5, 10, 15, 30]
+          steps: 60
         },
         hour: {
           common: true,
           size: 3600000,
-          steps: [1, 2, 3, 6, 12]
+          steps: 24
         },
         day: {
           common: true,
           size: 86400000,
-          steps: [1, 2, 5]
+          steps: 30
         },
         week: {
           common: false,
           size: 604800000,
-          steps: [1, 2, 3, 4]
+          steps: 4
         },
         month: {
           common: true,
           size: 2.628e9,
-          steps: [1, 2, 3]
+          steps: 12
         },
         quarter: {
           common: false,
           size: 7.884e9,
-          steps: [1, 2, 3, 4]
+          steps: 4
         },
         year: {
           common: true,
@@ -22562,6 +24670,14 @@
         }
 
         return out;
+      }
+
+      function getMin(options) {
+        return helpers$1.valueOrDefault(options.time.min, options.ticks.min);
+      }
+
+      function getMax(options) {
+        return helpers$1.valueOrDefault(options.time.max, options.ticks.max);
       }
       /**
        * Returns an array of {time, pos} objects used to interpolate a specific `time` or position
@@ -22727,33 +24843,6 @@
         return value;
       }
       /**
-       * Returns the number of unit to skip to be able to display up to `capacity` number of ticks
-       * in `unit` for the given `min` / `max` range and respecting the interval steps constraints.
-       */
-
-
-      function determineStepSize(min, max, unit, capacity) {
-        var range = max - min;
-        var interval = INTERVALS[unit];
-        var milliseconds = interval.size;
-        var steps = interval.steps;
-        var i, ilen, factor;
-
-        if (!steps) {
-          return Math.ceil(range / (capacity * milliseconds));
-        }
-
-        for (i = 0, ilen = steps.length; i < ilen; ++i) {
-          factor = steps[i];
-
-          if (Math.ceil(range / (milliseconds * factor)) <= capacity) {
-            break;
-          }
-        }
-
-        return factor;
-      }
-      /**
        * Figures out what unit results in an appropriate number of auto-generated ticks
        */
 
@@ -22764,7 +24853,7 @@
 
         for (i = UNITS.indexOf(minUnit); i < ilen - 1; ++i) {
           interval = INTERVALS[UNITS[i]];
-          factor = interval.steps ? interval.steps[interval.steps.length - 1] : MAX_INTEGER;
+          factor = interval.steps ? interval.steps : MAX_INTEGER;
 
           if (interval.common && Math.ceil((max - min) / (factor * interval.size)) <= capacity) {
             return UNITS[i];
@@ -22778,14 +24867,13 @@
        */
 
 
-      function determineUnitForFormatting(scale, ticks, minUnit, min, max) {
-        var ilen = UNITS.length;
+      function determineUnitForFormatting(scale, numTicks, minUnit, min, max) {
         var i, unit;
 
-        for (i = ilen - 1; i >= UNITS.indexOf(minUnit); i--) {
+        for (i = UNITS.length - 1; i >= UNITS.indexOf(minUnit); i--) {
           unit = UNITS[i];
 
-          if (INTERVALS[unit].common && scale._adapter.diff(max, min, unit) >= ticks.length) {
+          if (INTERVALS[unit].common && scale._adapter.diff(max, min, unit) >= numTicks - 1) {
             return unit;
           }
         }
@@ -22802,7 +24890,7 @@
       }
       /**
        * Generates a maximum of `capacity` timestamps between min and max, rounded to the
-       * `minor` unit, aligned on the `major` unit and using the given scale time `options`.
+       * `minor` unit using the given scale time `options`.
        * Important: this method can return ticks outside the min and max range, it's the
        * responsibility of the calling code to clamp values if needed.
        */
@@ -22813,49 +24901,31 @@
         var options = scale.options;
         var timeOpts = options.time;
         var minor = timeOpts.unit || determineUnitForAutoTicks(timeOpts.minUnit, min, max, capacity);
-        var major = determineMajorUnit(minor);
-        var stepSize = valueOrDefault$c(timeOpts.stepSize, timeOpts.unitStepSize);
+        var stepSize = resolve$5([timeOpts.stepSize, timeOpts.unitStepSize, 1]);
         var weekday = minor === 'week' ? timeOpts.isoWeekday : false;
-        var majorTicksEnabled = options.ticks.major.enabled;
-        var interval = INTERVALS[minor];
         var first = min;
-        var last = max;
         var ticks = [];
-        var time;
-
-        if (!stepSize) {
-          stepSize = determineStepSize(min, max, minor, capacity);
-        } // For 'week' unit, handle the first day of week option
-
+        var time; // For 'week' unit, handle the first day of week option
 
         if (weekday) {
           first = +adapter.startOf(first, 'isoWeek', weekday);
-          last = +adapter.startOf(last, 'isoWeek', weekday);
-        } // Align first/last ticks on unit
+        } // Align first ticks on unit
 
 
-        first = +adapter.startOf(first, weekday ? 'day' : minor);
-        last = +adapter.startOf(last, weekday ? 'day' : minor); // Make sure that the last tick include max
+        first = +adapter.startOf(first, weekday ? 'day' : minor); // Prevent browser from freezing in case user options request millions of milliseconds
 
-        if (last < max) {
-          last = +adapter.add(last, 1, minor);
+        if (adapter.diff(max, min, minor) > 100000 * stepSize) {
+          throw min + ' and ' + max + ' are too far apart with stepSize of ' + stepSize + ' ' + minor;
         }
 
-        time = first;
-
-        if (majorTicksEnabled && major && !weekday && !timeOpts.round) {
-          // Align the first tick on the previous `minor` unit aligned on the `major` unit:
-          // we first aligned time on the previous `major` unit then add the number of full
-          // stepSize there is between first and the previous major time.
-          time = +adapter.startOf(time, major);
-          time = +adapter.add(time, ~~((first - time) / (interval.size * stepSize)) * stepSize, minor);
+        for (time = first; time < max; time = +adapter.add(time, stepSize, minor)) {
+          ticks.push(time);
         }
 
-        for (; time < last; time = +adapter.add(time, stepSize, minor)) {
-          ticks.push(+time);
+        if (time === max || options.bounds === 'ticks') {
+          ticks.push(time);
         }
 
-        ticks.push(+time);
         return ticks;
       }
       /**
@@ -22872,47 +24942,65 @@
         var first, last;
 
         if (options.offset && ticks.length) {
-          if (!options.time.min) {
-            first = interpolate$1(table, 'time', ticks[0], 'pos');
+          first = interpolate$1(table, 'time', ticks[0], 'pos');
 
-            if (ticks.length === 1) {
-              start = 1 - first;
-            } else {
-              start = (interpolate$1(table, 'time', ticks[1], 'pos') - first) / 2;
-            }
+          if (ticks.length === 1) {
+            start = 1 - first;
+          } else {
+            start = (interpolate$1(table, 'time', ticks[1], 'pos') - first) / 2;
           }
 
-          if (!options.time.max) {
-            last = interpolate$1(table, 'time', ticks[ticks.length - 1], 'pos');
+          last = interpolate$1(table, 'time', ticks[ticks.length - 1], 'pos');
 
-            if (ticks.length === 1) {
-              end = last;
-            } else {
-              end = (last - interpolate$1(table, 'time', ticks[ticks.length - 2], 'pos')) / 2;
-            }
+          if (ticks.length === 1) {
+            end = last;
+          } else {
+            end = (last - interpolate$1(table, 'time', ticks[ticks.length - 2], 'pos')) / 2;
           }
         }
 
         return {
           start: start,
-          end: end
+          end: end,
+          factor: 1 / (start + 1 + end)
         };
+      }
+
+      function setMajorTicks(scale, ticks, map, majorUnit) {
+        var adapter = scale._adapter;
+        var first = +adapter.startOf(ticks[0].value, majorUnit);
+        var last = ticks[ticks.length - 1].value;
+        var major, index;
+
+        for (major = first; major <= last; major = +adapter.add(major, 1, majorUnit)) {
+          index = map[major];
+
+          if (index >= 0) {
+            ticks[index].major = true;
+          }
+        }
+
+        return ticks;
       }
 
       function ticksFromTimestamps(scale, values, majorUnit) {
         var ticks = [];
-        var i, ilen, value, major;
+        var map = {};
+        var ilen = values.length;
+        var i, value;
 
-        for (i = 0, ilen = values.length; i < ilen; ++i) {
+        for (i = 0; i < ilen; ++i) {
           value = values[i];
-          major = majorUnit ? value === +scale._adapter.startOf(value, majorUnit) : false;
+          map[value] = i;
           ticks.push({
             value: value,
-            major: major
+            major: false
           });
-        }
+        } // We set the major ticks separately from the above loop because calling startOf for every tick
+        // is expensive when there is a large number of ticks
 
-        return ticks;
+
+        return ilen === 0 || !majorUnit ? ticks : setMajorTicks(scale, ticks, map, majorUnit);
       }
 
       var defaultConfig$4 = {
@@ -22939,8 +25027,6 @@
         time: {
           parser: false,
           // false == a pattern string from https://momentjs.com/docs/#/parsing/string-format/ or a custom callback that converts its argument to a moment
-          format: false,
-          // DEPRECATED false == date objects, moment object, callback or a pattern string from https://momentjs.com/docs/#/parsing/string-format/
           unit: false,
           // false == automatic or override with week, month, year, etc.
           round: false,
@@ -22980,13 +25066,12 @@
           var time = options.time || (options.time = {});
           var adapter = me._adapter = new core_adapters._date(options.adapters.date); // DEPRECATIONS: output a message only one time per update
 
-          if (time.format) {
-            console.warn('options.time.format is deprecated and replaced by options.time.parser.');
-          } // Backward compatibility: before introducing adapter, `displayFormats` was
+          deprecated$1('time scale', time.format, 'time.format', 'time.parser');
+          deprecated$1('time scale', time.min, 'time.min', 'ticks.min');
+          deprecated$1('time scale', time.max, 'time.max', 'ticks.max'); // Backward compatibility: before introducing adapter, `displayFormats` was
           // supposed to contain *all* unit/string pairs but this can't be resolved
           // when loading the scale (adapters are loaded afterward), so let's populate
           // missing formats on update
-
 
           helpers$1.mergeIf(time.displayFormats, adapter.formats());
           return core_scale.prototype.update.apply(me, arguments);
@@ -23006,20 +25091,20 @@
           var me = this;
           var chart = me.chart;
           var adapter = me._adapter;
-          var timeOpts = me.options.time;
-          var unit = timeOpts.unit || 'day';
+          var options = me.options;
+          var unit = options.time.unit || 'day';
           var min = MAX_INTEGER;
           var max = MIN_INTEGER;
           var timestamps = [];
           var datasets = [];
           var labels = [];
-          var i, j, ilen, jlen, data, timestamp;
-          var dataLabels = chart.data.labels || []; // Convert labels to timestamps
+          var i, j, ilen, jlen, data, timestamp, labelsAdded;
+
+          var dataLabels = me._getLabels();
 
           for (i = 0, ilen = dataLabels.length; i < ilen; ++i) {
             labels.push(parse(me, dataLabels[i]));
-          } // Convert data to timestamps
-
+          }
 
           for (i = 0, ilen = (chart.data.datasets || []).length; i < ilen; ++i) {
             if (chart.isDatasetVisible(i)) {
@@ -23034,11 +25119,12 @@
                   datasets[i][j] = timestamp;
                 }
               } else {
-                for (j = 0, jlen = labels.length; j < jlen; ++j) {
-                  timestamps.push(labels[j]);
-                }
-
                 datasets[i] = labels.slice(0);
+
+                if (!labelsAdded) {
+                  timestamps = timestamps.concat(labels);
+                  labelsAdded = true;
+                }
               }
             } else {
               datasets[i] = [];
@@ -23046,20 +25132,18 @@
           }
 
           if (labels.length) {
-            // Sort labels **after** data have been converted
-            labels = arrayUnique(labels).sort(sorter);
             min = Math.min(min, labels[0]);
             max = Math.max(max, labels[labels.length - 1]);
           }
 
           if (timestamps.length) {
-            timestamps = arrayUnique(timestamps).sort(sorter);
+            timestamps = ilen > 1 ? arrayUnique(timestamps).sort(sorter) : timestamps.sort(sorter);
             min = Math.min(min, timestamps[0]);
             max = Math.max(max, timestamps[timestamps.length - 1]);
           }
 
-          min = parse(me, timeOpts.min) || min;
-          max = parse(me, timeOpts.max) || max; // In case there is no valid min/max, set limits based on unit time option
+          min = parse(me, getMin(options)) || min;
+          max = parse(me, getMax(options)) || max; // In case there is no valid min/max, set limits based on unit time option
 
           min = min === MAX_INTEGER ? +adapter.startOf(Date.now(), unit) : min;
           max = max === MIN_INTEGER ? +adapter.endOf(Date.now(), unit) + 1 : max; // Make sure that max is strictly higher than min (required by the lookup table)
@@ -23067,7 +25151,6 @@
           me.min = Math.min(min, max);
           me.max = Math.max(min + 1, max); // PRIVATE
 
-          me._horizontal = me.isHorizontal();
           me._table = [];
           me._timestamps = {
             data: timestamps,
@@ -23080,23 +25163,21 @@
           var min = me.min;
           var max = me.max;
           var options = me.options;
+          var tickOpts = options.ticks;
           var timeOpts = options.time;
-          var timestamps = [];
+          var timestamps = me._timestamps;
           var ticks = [];
+          var capacity = me.getLabelCapacity(min);
+          var source = tickOpts.source;
+          var distribution = options.distribution;
           var i, ilen, timestamp;
 
-          switch (options.ticks.source) {
-            case 'data':
-              timestamps = me._timestamps.data;
-              break;
-
-            case 'labels':
-              timestamps = me._timestamps.labels;
-              break;
-
-            case 'auto':
-            default:
-              timestamps = generate(me, min, max, me.getLabelCapacity(min));
+          if (source === 'data' || source === 'auto' && distribution === 'series') {
+            timestamps = timestamps.data;
+          } else if (source === 'labels') {
+            timestamps = timestamps.labels;
+          } else {
+            timestamps = generate(me, min, max, capacity);
           }
 
           if (options.bounds === 'ticks' && timestamps.length) {
@@ -23105,8 +25186,8 @@
           } // Enforce limits with user min/max options
 
 
-          min = parse(me, timeOpts.min) || min;
-          max = parse(me, timeOpts.max) || max; // Remove ticks outside the min/max range
+          min = parse(me, getMin(options)) || min;
+          max = parse(me, getMax(options)) || max; // Remove ticks outside the min/max range
 
           for (i = 0, ilen = timestamps.length; i < ilen; ++i) {
             timestamp = timestamps[i];
@@ -23118,13 +25199,15 @@
 
           me.min = min;
           me.max = max; // PRIVATE
+          // determineUnitForFormatting relies on the number of ticks so we don't use it when
+          // autoSkip is enabled because we don't yet know what the final number of ticks will be
 
-          me._unit = timeOpts.unit || determineUnitForFormatting(me, ticks, timeOpts.minUnit, me.min, me.max);
-          me._majorUnit = determineMajorUnit(me._unit);
-          me._table = buildLookupTable(me._timestamps.data, min, max, options.distribution);
+          me._unit = timeOpts.unit || (tickOpts.autoSkip ? determineUnitForAutoTicks(timeOpts.minUnit, me.min, me.max, capacity) : determineUnitForFormatting(me, ticks.length, timeOpts.minUnit, me.min, me.max));
+          me._majorUnit = !tickOpts.major.enabled || me._unit === 'year' ? undefined : determineMajorUnit(me._unit);
+          me._table = buildLookupTable(me._timestamps.data, min, max, distribution);
           me._offsets = computeOffsets(me._table, ticks, min, max, options);
 
-          if (options.ticks.reverse) {
+          if (tickOpts.reverse) {
             ticks.reverse();
           }
 
@@ -23165,12 +25248,12 @@
           var minorFormat = formats[me._unit];
           var majorUnit = me._majorUnit;
           var majorFormat = formats[majorUnit];
-          var majorTime = +adapter.startOf(time, majorUnit);
-          var majorTickOpts = options.ticks.major;
-          var major = majorTickOpts.enabled && majorUnit && majorFormat && time === majorTime;
+          var tick = ticks[index];
+          var tickOpts = options.ticks;
+          var major = majorUnit && majorFormat && tick && tick.major;
           var label = adapter.format(time, format ? format : major ? majorFormat : minorFormat);
-          var tickOpts = major ? majorTickOpts : options.ticks.minor;
-          var formatter = valueOrDefault$c(tickOpts.callback, tickOpts.userCallback);
+          var nestedTickOpts = major ? tickOpts.major : tickOpts.minor;
+          var formatter = resolve$5([nestedTickOpts.callback, nestedTickOpts.userCallback, tickOpts.callback, tickOpts.userCallback]);
           return formatter ? formatter(label, index, ticks) : label;
         },
         convertTicksToLabels: function (ticks) {
@@ -23189,12 +25272,9 @@
          */
         getPixelForOffset: function (time) {
           var me = this;
-          var isReverse = me.options.ticks.reverse;
-          var size = me._horizontal ? me.width : me.height;
-          var start = me._horizontal ? isReverse ? me.right : me.left : isReverse ? me.bottom : me.top;
+          var offsets = me._offsets;
           var pos = interpolate$1(me._table, 'time', time, 'pos');
-          var offset = size * (me._offsets.start + pos) / (me._offsets.start + 1 + me._offsets.end);
-          return isReverse ? start - offset : start + offset;
+          return me.getPixelForDecimal((offsets.start + pos) * offsets.factor);
         },
         getPixelForValue: function (value, index, datasetIndex) {
           var me = this;
@@ -23218,12 +25298,28 @@
         },
         getValueForPixel: function (pixel) {
           var me = this;
-          var size = me._horizontal ? me.width : me.height;
-          var start = me._horizontal ? me.left : me.top;
-          var pos = (size ? (pixel - start) / size : 0) * (me._offsets.start + 1 + me._offsets.start) - me._offsets.end;
+          var offsets = me._offsets;
+          var pos = me.getDecimalForPixel(pixel) / offsets.factor - offsets.end;
           var time = interpolate$1(me._table, 'pos', pos, 'time'); // DEPRECATION, we should return time directly
 
           return me._adapter._create(time);
+        },
+
+        /**
+         * @private
+         */
+        _getLabelSize: function (label) {
+          var me = this;
+          var ticksOpts = me.options.ticks;
+          var tickLabelWidth = me.ctx.measureText(label).width;
+          var angle = helpers$1.toRadians(me.isHorizontal() ? ticksOpts.maxRotation : ticksOpts.minRotation);
+          var cosRotation = Math.cos(angle);
+          var sinRotation = Math.sin(angle);
+          var tickFontSize = valueOrDefault$d(ticksOpts.fontSize, core_defaults.global.defaultFontSize);
+          return {
+            w: tickLabelWidth * cosRotation + tickFontSize * sinRotation,
+            h: tickLabelWidth * sinRotation + tickFontSize * cosRotation
+          };
         },
 
         /**
@@ -23231,27 +25327,28 @@
          * @private
          */
         getLabelWidth: function (label) {
-          var me = this;
-          var ticksOpts = me.options.ticks;
-          var tickLabelWidth = me.ctx.measureText(label).width;
-          var angle = helpers$1.toRadians(ticksOpts.maxRotation);
-          var cosRotation = Math.cos(angle);
-          var sinRotation = Math.sin(angle);
-          var tickFontSize = valueOrDefault$c(ticksOpts.fontSize, core_defaults.global.defaultFontSize);
-          return tickLabelWidth * cosRotation + tickFontSize * sinRotation;
+          return this._getLabelSize(label).w;
         },
 
         /**
          * @private
          */
         getLabelCapacity: function (exampleTime) {
-          var me = this; // pick the longest format (milliseconds) for guestimation
+          var me = this;
+          var timeOpts = me.options.time;
+          var displayFormats = timeOpts.displayFormats; // pick the longest format (milliseconds) for guestimation
 
-          var format = me.options.time.displayFormats.millisecond;
-          var exampleLabel = me.tickFormatFunction(exampleTime, 0, [], format);
-          var tickLabelWidth = me.getLabelWidth(exampleLabel);
-          var innerWidth = me.isHorizontal() ? me.width : me.height;
-          var capacity = Math.floor(innerWidth / tickLabelWidth);
+          var format = displayFormats[timeOpts.unit] || displayFormats.millisecond;
+          var exampleLabel = me.tickFormatFunction(exampleTime, 0, ticksFromTimestamps(me, [exampleTime], me._majorUnit), format);
+
+          var size = me._getLabelSize(exampleLabel);
+
+          var capacity = Math.floor(me.isHorizontal() ? me.width / size.w : me.height / size.h);
+
+          if (me.options.offset) {
+            capacity--;
+          }
+
           return capacity > 0 ? capacity : 1;
         }
       }); // INTERNAL: static default options, registered in src/index.js
@@ -23300,7 +25397,7 @@
           return moment(time).add(amount, unit).valueOf();
         },
         diff: function (max, min, unit) {
-          return moment.duration(moment(max).diff(moment(min))).as(unit);
+          return moment(max).diff(moment(min), unit);
         },
         startOf: function (time, unit, weekday) {
           time = moment(time);
@@ -23351,6 +25448,13 @@
           var boundary = source.boundary;
           var x = boundary ? boundary.x : null;
           var y = boundary ? boundary.y : null;
+
+          if (helpers$1.isArray(boundary)) {
+            return function (point, i) {
+              return boundary[i];
+            };
+          }
+
           return function (point) {
             return {
               x: x === null ? point.x : x,
@@ -23414,7 +25518,7 @@
         }
       }
 
-      function computeBoundary(source) {
+      function computeLinearBoundary(source) {
         var model = source.el._model || {};
         var scale = source.el._scale || {};
         var fill = source.fill;
@@ -23434,8 +25538,6 @@
           target = model.scaleTop === undefined ? scale.top : model.scaleTop;
         } else if (model.scaleZero !== undefined) {
           target = model.scaleZero;
-        } else if (scale.getBasePosition) {
-          target = scale.getBasePosition();
         } else if (scale.getBasePixel) {
           target = scale.getBasePixel();
         }
@@ -23455,6 +25557,47 @@
         }
 
         return null;
+      }
+
+      function computeCircularBoundary(source) {
+        var scale = source.el._scale;
+        var options = scale.options;
+        var length = scale.chart.data.labels.length;
+        var fill = source.fill;
+        var target = [];
+        var start, end, center, i, point;
+
+        if (!length) {
+          return null;
+        }
+
+        start = options.ticks.reverse ? scale.max : scale.min;
+        end = options.ticks.reverse ? scale.min : scale.max;
+        center = scale.getPointPositionForValue(0, start);
+
+        for (i = 0; i < length; ++i) {
+          point = fill === 'start' || fill === 'end' ? scale.getPointPositionForValue(i, fill === 'start' ? start : end) : scale.getBasePosition(i);
+
+          if (options.gridLines.circular) {
+            point.cx = center.x;
+            point.cy = center.y;
+            point.angle = scale.getIndexAngle(i) - Math.PI / 2;
+          }
+
+          target.push(point);
+        }
+
+        return target;
+      }
+
+      function computeBoundary(source) {
+        var scale = source.el._scale || {};
+
+        if (scale.getPointPositionForValue) {
+          return computeCircularBoundary(source);
+        }
+
+        return computeLinearBoundary(source);
       }
 
       function resolveTarget(sources, index, propagate) {
@@ -23509,7 +25652,7 @@
       }
 
       function drawArea(ctx, curve0, curve1, len0, len1) {
-        var i;
+        var i, cx, cy, r;
 
         if (!len0 || !len1) {
           return;
@@ -23520,6 +25663,18 @@
 
         for (i = 1; i < len0; ++i) {
           helpers$1.canvas.lineTo(ctx, curve0[i - 1], curve0[i]);
+        }
+
+        if (curve1[0].angle !== undefined) {
+          cx = curve1[0].cx;
+          cy = curve1[0].cy;
+          r = Math.sqrt(Math.pow(curve1[0].x - cx, 2) + Math.pow(curve1[0].y - cy, 2));
+
+          for (i = len1 - 1; i > 0; --i) {
+            ctx.arc(cx, cy, r, curve1[i].angle, curve1[i - 1].angle, true);
+          }
+
+          return;
         } // joining the two area curves
 
 
@@ -23537,15 +25692,20 @@
         var curve1 = [];
         var len0 = 0;
         var len1 = 0;
-        var i, ilen, index, p0, p1, d0, d1;
+        var i, ilen, index, p0, p1, d0, d1, loopOffset;
         ctx.beginPath();
 
-        for (i = 0, ilen = count + !!loop; i < ilen; ++i) {
+        for (i = 0, ilen = count; i < ilen; ++i) {
           index = i % count;
           p0 = points[index]._view;
           p1 = mapper(p0, index, view);
           d0 = isDrawable(p0);
           d1 = isDrawable(p1);
+
+          if (loop && loopOffset === undefined && d0) {
+            loopOffset = i + 1;
+            ilen = count + loopOffset;
+          }
 
           if (d0 && d1) {
             len0 = curve0.push(p0);
@@ -23612,34 +25772,42 @@
             source.mapper = createMapper(source);
           }
         },
-        beforeDatasetDraw: function (chart, args) {
-          var meta = args.meta.$filler;
-
-          if (!meta) {
-            return;
-          }
+        beforeDatasetsDraw: function (chart) {
+          var metasets = chart._getSortedVisibleDatasetMetas();
 
           var ctx = chart.ctx;
-          var el = meta.el;
-          var view = el._view;
-          var points = el._children || [];
-          var mapper = meta.mapper;
-          var color = view.backgroundColor || core_defaults.global.defaultColor;
+          var meta, i, el, view, points, mapper, color;
 
-          if (mapper && color && points.length) {
-            helpers$1.canvas.clipArea(ctx, chart.chartArea);
-            doFill(ctx, points, mapper, view, color, el._loop);
-            helpers$1.canvas.unclipArea(ctx);
+          for (i = metasets.length - 1; i >= 0; --i) {
+            meta = metasets[i].$filler;
+
+            if (!meta || !meta.visible) {
+              continue;
+            }
+
+            el = meta.el;
+            view = el._view;
+            points = el._children || [];
+            mapper = meta.mapper;
+            color = view.backgroundColor || core_defaults.global.defaultColor;
+
+            if (mapper && color && points.length) {
+              helpers$1.canvas.clipArea(ctx, chart.chartArea);
+              doFill(ctx, points, mapper, view, color, el._loop);
+              helpers$1.canvas.unclipArea(ctx);
+            }
           }
         }
       };
+      var getRtlHelper$1 = helpers$1.rtl.getRtlAdapter;
       var noop$1 = helpers$1.noop;
-      var valueOrDefault$d = helpers$1.valueOrDefault;
+      var valueOrDefault$e = helpers$1.valueOrDefault;
 
       core_defaults._set('global', {
         legend: {
           display: true,
           position: 'top',
+          align: 'center',
           fullWidth: true,
           reverse: false,
           weight: 1000,
@@ -23670,42 +25838,47 @@
             // lineJoin :
             // lineWidth :
             generateLabels: function (chart) {
-              var data = chart.data;
-              return helpers$1.isArray(data.datasets) ? data.datasets.map(function (dataset, i) {
+              var datasets = chart.data.datasets;
+              var options = chart.options.legend || {};
+              var usePointStyle = options.labels && options.labels.usePointStyle;
+              return chart._getSortedDatasetMetas().map(function (meta) {
+                var style = meta.controller.getStyle(usePointStyle ? 0 : undefined);
                 return {
-                  text: dataset.label,
-                  fillStyle: !helpers$1.isArray(dataset.backgroundColor) ? dataset.backgroundColor : dataset.backgroundColor[0],
-                  hidden: !chart.isDatasetVisible(i),
-                  lineCap: dataset.borderCapStyle,
-                  lineDash: dataset.borderDash,
-                  lineDashOffset: dataset.borderDashOffset,
-                  lineJoin: dataset.borderJoinStyle,
-                  lineWidth: dataset.borderWidth,
-                  strokeStyle: dataset.borderColor,
-                  pointStyle: dataset.pointStyle,
+                  text: datasets[meta.index].label,
+                  fillStyle: style.backgroundColor,
+                  hidden: !chart.isDatasetVisible(meta.index),
+                  lineCap: style.borderCapStyle,
+                  lineDash: style.borderDash,
+                  lineDashOffset: style.borderDashOffset,
+                  lineJoin: style.borderJoinStyle,
+                  lineWidth: style.borderWidth,
+                  strokeStyle: style.borderColor,
+                  pointStyle: style.pointStyle,
+                  rotation: style.rotation,
                   // Below is extra data used for toggling the datasets
-                  datasetIndex: i
+                  datasetIndex: meta.index
                 };
-              }, this) : [];
+              }, this);
             }
           }
         },
         legendCallback: function (chart) {
-          var text = [];
-          text.push('<ul class="' + chart.id + '-legend">');
+          var list = document.createElement('ul');
+          var datasets = chart.data.datasets;
+          var i, ilen, listItem, listItemSpan;
+          list.setAttribute('class', chart.id + '-legend');
 
-          for (var i = 0; i < chart.data.datasets.length; i++) {
-            text.push('<li><span style="background-color:' + chart.data.datasets[i].backgroundColor + '"></span>');
+          for (i = 0, ilen = datasets.length; i < ilen; i++) {
+            listItem = list.appendChild(document.createElement('li'));
+            listItemSpan = listItem.appendChild(document.createElement('span'));
+            listItemSpan.style.backgroundColor = datasets[i].backgroundColor;
 
-            if (chart.data.datasets[i].label) {
-              text.push(chart.data.datasets[i].label);
+            if (datasets[i].label) {
+              listItem.appendChild(document.createTextNode(datasets[i].label));
             }
-
-            text.push('</li>');
           }
 
-          text.push('</ul>');
-          return text.join('');
+          return list.outerHTML;
         }
       });
       /**
@@ -23726,16 +25899,17 @@
 
       var Legend = core_element.extend({
         initialize: function (config) {
-          helpers$1.extend(this, config); // Contains hit boxes for each dataset (in dataset order)
+          var me = this;
+          helpers$1.extend(me, config); // Contains hit boxes for each dataset (in dataset order)
 
-          this.legendHitBoxes = [];
+          me.legendHitBoxes = [];
           /**
           	 * @private
           	 */
 
-          this._hoveredItem = null; // Are we in doughnut mode which has a different data type
+          me._hoveredItem = null; // Are we in doughnut mode which has a different data type
 
-          this.doughnutMode = false;
+          me.doughnutMode = false;
         },
         // These methods are ordered by lifecycle. Utilities then follow.
         // Any function defined here is inherited by all legend types.
@@ -23842,69 +26016,74 @@
           } // Increase sizes here
 
 
-          if (display) {
-            ctx.font = labelFont.string;
+          if (!display) {
+            me.width = minSize.width = me.height = minSize.height = 0;
+            return;
+          }
 
-            if (isHorizontal) {
-              // Labels
-              // Width of each line of legend boxes. Labels wrap onto multiple lines when there are too many to fit on one
-              var lineWidths = me.lineWidths = [0];
-              var totalHeight = 0;
-              ctx.textAlign = 'left';
-              ctx.textBaseline = 'top';
-              helpers$1.each(me.legendItems, function (legendItem, i) {
-                var boxWidth = getBoxWidth(labelOpts, fontSize);
-                var width = boxWidth + fontSize / 2 + ctx.measureText(legendItem.text).width;
+          ctx.font = labelFont.string;
 
-                if (i === 0 || lineWidths[lineWidths.length - 1] + width + labelOpts.padding > minSize.width) {
-                  totalHeight += fontSize + labelOpts.padding;
-                  lineWidths[lineWidths.length - (i > 0 ? 0 : 1)] = labelOpts.padding;
-                } // Store the hitbox width and height here. Final position will be updated in `draw`
+          if (isHorizontal) {
+            // Labels
+            // Width of each line of legend boxes. Labels wrap onto multiple lines when there are too many to fit on one
+            var lineWidths = me.lineWidths = [0];
+            var totalHeight = 0;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            helpers$1.each(me.legendItems, function (legendItem, i) {
+              var boxWidth = getBoxWidth(labelOpts, fontSize);
+              var width = boxWidth + fontSize / 2 + ctx.measureText(legendItem.text).width;
 
-
-                hitboxes[i] = {
-                  left: 0,
-                  top: 0,
-                  width: width,
-                  height: fontSize
-                };
-                lineWidths[lineWidths.length - 1] += width + labelOpts.padding;
-              });
-              minSize.height += totalHeight;
-            } else {
-              var vPadding = labelOpts.padding;
-              var columnWidths = me.columnWidths = [];
-              var totalWidth = labelOpts.padding;
-              var currentColWidth = 0;
-              var currentColHeight = 0;
-              var itemHeight = fontSize + vPadding;
-              helpers$1.each(me.legendItems, function (legendItem, i) {
-                var boxWidth = getBoxWidth(labelOpts, fontSize);
-                var itemWidth = boxWidth + fontSize / 2 + ctx.measureText(legendItem.text).width; // If too tall, go to new column
-
-                if (i > 0 && currentColHeight + itemHeight > minSize.height - vPadding) {
-                  totalWidth += currentColWidth + labelOpts.padding;
-                  columnWidths.push(currentColWidth); // previous column width
-
-                  currentColWidth = 0;
-                  currentColHeight = 0;
-                } // Get max width
+              if (i === 0 || lineWidths[lineWidths.length - 1] + width + 2 * labelOpts.padding > minSize.width) {
+                totalHeight += fontSize + labelOpts.padding;
+                lineWidths[lineWidths.length - (i > 0 ? 0 : 1)] = 0;
+              } // Store the hitbox width and height here. Final position will be updated in `draw`
 
 
-                currentColWidth = Math.max(currentColWidth, itemWidth);
-                currentColHeight += itemHeight; // Store the hitbox width and height here. Final position will be updated in `draw`
+              hitboxes[i] = {
+                left: 0,
+                top: 0,
+                width: width,
+                height: fontSize
+              };
+              lineWidths[lineWidths.length - 1] += width + labelOpts.padding;
+            });
+            minSize.height += totalHeight;
+          } else {
+            var vPadding = labelOpts.padding;
+            var columnWidths = me.columnWidths = [];
+            var columnHeights = me.columnHeights = [];
+            var totalWidth = labelOpts.padding;
+            var currentColWidth = 0;
+            var currentColHeight = 0;
+            helpers$1.each(me.legendItems, function (legendItem, i) {
+              var boxWidth = getBoxWidth(labelOpts, fontSize);
+              var itemWidth = boxWidth + fontSize / 2 + ctx.measureText(legendItem.text).width; // If too tall, go to new column
 
-                hitboxes[i] = {
-                  left: 0,
-                  top: 0,
-                  width: itemWidth,
-                  height: fontSize
-                };
-              });
-              totalWidth += currentColWidth;
-              columnWidths.push(currentColWidth);
-              minSize.width += totalWidth;
-            }
+              if (i > 0 && currentColHeight + fontSize + 2 * vPadding > minSize.height) {
+                totalWidth += currentColWidth + labelOpts.padding;
+                columnWidths.push(currentColWidth); // previous column width
+
+                columnHeights.push(currentColHeight);
+                currentColWidth = 0;
+                currentColHeight = 0;
+              } // Get max width
+
+
+              currentColWidth = Math.max(currentColWidth, itemWidth);
+              currentColHeight += fontSize + vPadding; // Store the hitbox width and height here. Final position will be updated in `draw`
+
+              hitboxes[i] = {
+                left: 0,
+                top: 0,
+                width: itemWidth,
+                height: fontSize
+              };
+            });
+            totalWidth += currentColWidth;
+            columnWidths.push(currentColWidth);
+            columnHeights.push(currentColHeight);
+            minSize.width += totalWidth;
           }
 
           me.width = minSize.width;
@@ -23923,136 +26102,159 @@
           var globalDefaults = core_defaults.global;
           var defaultColor = globalDefaults.defaultColor;
           var lineDefault = globalDefaults.elements.line;
+          var legendHeight = me.height;
+          var columnHeights = me.columnHeights;
           var legendWidth = me.width;
           var lineWidths = me.lineWidths;
 
-          if (opts.display) {
-            var ctx = me.ctx;
-            var fontColor = valueOrDefault$d(labelOpts.fontColor, globalDefaults.defaultFontColor);
+          if (!opts.display) {
+            return;
+          }
 
-            var labelFont = helpers$1.options._parseFont(labelOpts);
+          var rtlHelper = getRtlHelper$1(opts.rtl, me.left, me.minSize.width);
+          var ctx = me.ctx;
+          var fontColor = valueOrDefault$e(labelOpts.fontColor, globalDefaults.defaultFontColor);
 
-            var fontSize = labelFont.size;
-            var cursor; // Canvas setup
+          var labelFont = helpers$1.options._parseFont(labelOpts);
 
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'middle';
-            ctx.lineWidth = 0.5;
-            ctx.strokeStyle = fontColor; // for strikethrough effect
+          var fontSize = labelFont.size;
+          var cursor; // Canvas setup
 
-            ctx.fillStyle = fontColor; // render in correct colour
+          ctx.textAlign = rtlHelper.textAlign('left');
+          ctx.textBaseline = 'middle';
+          ctx.lineWidth = 0.5;
+          ctx.strokeStyle = fontColor; // for strikethrough effect
 
-            ctx.font = labelFont.string;
-            var boxWidth = getBoxWidth(labelOpts, fontSize);
-            var hitboxes = me.legendHitBoxes; // current position
+          ctx.fillStyle = fontColor; // render in correct colour
 
-            var drawLegendBox = function (x, y, legendItem) {
-              if (isNaN(boxWidth) || boxWidth <= 0) {
-                return;
-              } // Set the ctx for the box
+          ctx.font = labelFont.string;
+          var boxWidth = getBoxWidth(labelOpts, fontSize);
+          var hitboxes = me.legendHitBoxes; // current position
 
-
-              ctx.save();
-              var lineWidth = valueOrDefault$d(legendItem.lineWidth, lineDefault.borderWidth);
-              ctx.fillStyle = valueOrDefault$d(legendItem.fillStyle, defaultColor);
-              ctx.lineCap = valueOrDefault$d(legendItem.lineCap, lineDefault.borderCapStyle);
-              ctx.lineDashOffset = valueOrDefault$d(legendItem.lineDashOffset, lineDefault.borderDashOffset);
-              ctx.lineJoin = valueOrDefault$d(legendItem.lineJoin, lineDefault.borderJoinStyle);
-              ctx.lineWidth = lineWidth;
-              ctx.strokeStyle = valueOrDefault$d(legendItem.strokeStyle, defaultColor);
-
-              if (ctx.setLineDash) {
-                // IE 9 and 10 do not support line dash
-                ctx.setLineDash(valueOrDefault$d(legendItem.lineDash, lineDefault.borderDash));
-              }
-
-              if (opts.labels && opts.labels.usePointStyle) {
-                // Recalculate x and y for drawPoint() because its expecting
-                // x and y to be center of figure (instead of top left)
-                var radius = boxWidth * Math.SQRT2 / 2;
-                var centerX = x + boxWidth / 2;
-                var centerY = y + fontSize / 2; // Draw pointStyle as legend symbol
-
-                helpers$1.canvas.drawPoint(ctx, legendItem.pointStyle, radius, centerX, centerY);
-              } else {
-                // Draw box as legend symbol
-                if (lineWidth !== 0) {
-                  ctx.strokeRect(x, y, boxWidth, fontSize);
-                }
-
-                ctx.fillRect(x, y, boxWidth, fontSize);
-              }
-
-              ctx.restore();
-            };
-
-            var fillText = function (x, y, legendItem, textWidth) {
-              var halfFontSize = fontSize / 2;
-              var xLeft = boxWidth + halfFontSize + x;
-              var yMiddle = y + halfFontSize;
-              ctx.fillText(legendItem.text, xLeft, yMiddle);
-
-              if (legendItem.hidden) {
-                // Strikethrough the text if hidden
-                ctx.beginPath();
-                ctx.lineWidth = 2;
-                ctx.moveTo(xLeft, yMiddle);
-                ctx.lineTo(xLeft + textWidth, yMiddle);
-                ctx.stroke();
-              }
-            }; // Horizontal
+          var drawLegendBox = function (x, y, legendItem) {
+            if (isNaN(boxWidth) || boxWidth <= 0) {
+              return;
+            } // Set the ctx for the box
 
 
-            var isHorizontal = me.isHorizontal();
+            ctx.save();
+            var lineWidth = valueOrDefault$e(legendItem.lineWidth, lineDefault.borderWidth);
+            ctx.fillStyle = valueOrDefault$e(legendItem.fillStyle, defaultColor);
+            ctx.lineCap = valueOrDefault$e(legendItem.lineCap, lineDefault.borderCapStyle);
+            ctx.lineDashOffset = valueOrDefault$e(legendItem.lineDashOffset, lineDefault.borderDashOffset);
+            ctx.lineJoin = valueOrDefault$e(legendItem.lineJoin, lineDefault.borderJoinStyle);
+            ctx.lineWidth = lineWidth;
+            ctx.strokeStyle = valueOrDefault$e(legendItem.strokeStyle, defaultColor);
 
-            if (isHorizontal) {
-              cursor = {
-                x: me.left + (legendWidth - lineWidths[0]) / 2 + labelOpts.padding,
-                y: me.top + labelOpts.padding,
-                line: 0
-              };
-            } else {
-              cursor = {
-                x: me.left + labelOpts.padding,
-                y: me.top + labelOpts.padding,
-                line: 0
-              };
+            if (ctx.setLineDash) {
+              // IE 9 and 10 do not support line dash
+              ctx.setLineDash(valueOrDefault$e(legendItem.lineDash, lineDefault.borderDash));
             }
 
-            var itemHeight = fontSize + labelOpts.padding;
-            helpers$1.each(me.legendItems, function (legendItem, i) {
-              var textWidth = ctx.measureText(legendItem.text).width;
-              var width = boxWidth + fontSize / 2 + textWidth;
-              var x = cursor.x;
-              var y = cursor.y; // Use (me.left + me.minSize.width) and (me.top + me.minSize.height)
-              // instead of me.right and me.bottom because me.width and me.height
-              // may have been changed since me.minSize was calculated
+            if (labelOpts && labelOpts.usePointStyle) {
+              // Recalculate x and y for drawPoint() because its expecting
+              // x and y to be center of figure (instead of top left)
+              var radius = boxWidth * Math.SQRT2 / 2;
+              var centerX = rtlHelper.xPlus(x, boxWidth / 2);
+              var centerY = y + fontSize / 2; // Draw pointStyle as legend symbol
 
-              if (isHorizontal) {
-                if (i > 0 && x + width + labelOpts.padding > me.left + me.minSize.width) {
-                  y = cursor.y += itemHeight;
-                  cursor.line++;
-                  x = cursor.x = me.left + (legendWidth - lineWidths[cursor.line]) / 2 + labelOpts.padding;
-                }
-              } else if (i > 0 && y + itemHeight > me.top + me.minSize.height) {
-                x = cursor.x = x + me.columnWidths[cursor.line] + labelOpts.padding;
-                y = cursor.y = me.top + labelOpts.padding;
-                cursor.line++;
+              helpers$1.canvas.drawPoint(ctx, legendItem.pointStyle, radius, centerX, centerY, legendItem.rotation);
+            } else {
+              // Draw box as legend symbol
+              ctx.fillRect(rtlHelper.leftForLtr(x, boxWidth), y, boxWidth, fontSize);
+
+              if (lineWidth !== 0) {
+                ctx.strokeRect(rtlHelper.leftForLtr(x, boxWidth), y, boxWidth, fontSize);
               }
+            }
 
-              drawLegendBox(x, y, legendItem);
-              hitboxes[i].left = x;
-              hitboxes[i].top = y; // Fill the actual label
+            ctx.restore();
+          };
 
-              fillText(x, y, legendItem, textWidth);
+          var fillText = function (x, y, legendItem, textWidth) {
+            var halfFontSize = fontSize / 2;
+            var xLeft = rtlHelper.xPlus(x, boxWidth + halfFontSize);
+            var yMiddle = y + halfFontSize;
+            ctx.fillText(legendItem.text, xLeft, yMiddle);
 
-              if (isHorizontal) {
-                cursor.x += width + labelOpts.padding;
-              } else {
-                cursor.y += itemHeight;
-              }
-            });
+            if (legendItem.hidden) {
+              // Strikethrough the text if hidden
+              ctx.beginPath();
+              ctx.lineWidth = 2;
+              ctx.moveTo(xLeft, yMiddle);
+              ctx.lineTo(rtlHelper.xPlus(xLeft, textWidth), yMiddle);
+              ctx.stroke();
+            }
+          };
+
+          var alignmentOffset = function (dimension, blockSize) {
+            switch (opts.align) {
+              case 'start':
+                return labelOpts.padding;
+
+              case 'end':
+                return dimension - blockSize;
+
+              default:
+                // center
+                return (dimension - blockSize + labelOpts.padding) / 2;
+            }
+          }; // Horizontal
+
+
+          var isHorizontal = me.isHorizontal();
+
+          if (isHorizontal) {
+            cursor = {
+              x: me.left + alignmentOffset(legendWidth, lineWidths[0]),
+              y: me.top + labelOpts.padding,
+              line: 0
+            };
+          } else {
+            cursor = {
+              x: me.left + labelOpts.padding,
+              y: me.top + alignmentOffset(legendHeight, columnHeights[0]),
+              line: 0
+            };
           }
+
+          helpers$1.rtl.overrideTextDirection(me.ctx, opts.textDirection);
+          var itemHeight = fontSize + labelOpts.padding;
+          helpers$1.each(me.legendItems, function (legendItem, i) {
+            var textWidth = ctx.measureText(legendItem.text).width;
+            var width = boxWidth + fontSize / 2 + textWidth;
+            var x = cursor.x;
+            var y = cursor.y;
+            rtlHelper.setWidth(me.minSize.width); // Use (me.left + me.minSize.width) and (me.top + me.minSize.height)
+            // instead of me.right and me.bottom because me.width and me.height
+            // may have been changed since me.minSize was calculated
+
+            if (isHorizontal) {
+              if (i > 0 && x + width + labelOpts.padding > me.left + me.minSize.width) {
+                y = cursor.y += itemHeight;
+                cursor.line++;
+                x = cursor.x = me.left + alignmentOffset(legendWidth, lineWidths[cursor.line]);
+              }
+            } else if (i > 0 && y + itemHeight > me.top + me.minSize.height) {
+              x = cursor.x = x + me.columnWidths[cursor.line] + labelOpts.padding;
+              cursor.line++;
+              y = cursor.y = me.top + alignmentOffset(legendHeight, columnHeights[cursor.line]);
+            }
+
+            var realX = rtlHelper.x(x);
+            drawLegendBox(realX, y, legendItem);
+            hitboxes[i].left = rtlHelper.leftForLtr(realX, hitboxes[i].width);
+            hitboxes[i].top = y; // Fill the actual label
+
+            fillText(realX, y, legendItem, textWidth);
+
+            if (isHorizontal) {
+              cursor.x += width + labelOpts.padding;
+            } else {
+              cursor.y += itemHeight;
+            }
+          });
+          helpers$1.rtl.restoreTextDirection(me.ctx, opts.textDirection);
         },
 
         /**
@@ -24273,25 +26475,19 @@
         fit: function () {
           var me = this;
           var opts = me.options;
-          var display = opts.display;
-          var minSize = me.minSize;
-          var lineCount = helpers$1.isArray(opts.text) ? opts.text.length : 1;
+          var minSize = me.minSize = {};
+          var isHorizontal = me.isHorizontal();
+          var lineCount, textSize;
 
-          var fontOpts = helpers$1.options._parseFont(opts);
-
-          var textSize = display ? lineCount * fontOpts.lineHeight + opts.padding * 2 : 0;
-
-          if (me.isHorizontal()) {
-            minSize.width = me.maxWidth; // fill all the width
-
-            minSize.height = textSize;
-          } else {
-            minSize.width = textSize;
-            minSize.height = me.maxHeight; // fill all the height
+          if (!opts.display) {
+            me.width = minSize.width = me.height = minSize.height = 0;
+            return;
           }
 
-          me.width = minSize.width;
-          me.height = minSize.height;
+          lineCount = helpers$1.isArray(opts.text) ? opts.text.length : 1;
+          textSize = lineCount * helpers$1.options._parseFont(opts).lineHeight + opts.padding * 2;
+          me.width = minSize.width = isHorizontal ? me.maxWidth : textSize;
+          me.height = minSize.height = isHorizontal ? textSize : me.maxHeight;
         },
         afterFit: noop$2,
         // Shared Methods
@@ -24305,53 +26501,55 @@
           var ctx = me.ctx;
           var opts = me.options;
 
-          if (opts.display) {
-            var fontOpts = helpers$1.options._parseFont(opts);
-
-            var lineHeight = fontOpts.lineHeight;
-            var offset = lineHeight / 2 + opts.padding;
-            var rotation = 0;
-            var top = me.top;
-            var left = me.left;
-            var bottom = me.bottom;
-            var right = me.right;
-            var maxWidth, titleX, titleY;
-            ctx.fillStyle = helpers$1.valueOrDefault(opts.fontColor, core_defaults.global.defaultFontColor); // render in correct colour
-
-            ctx.font = fontOpts.string; // Horizontal
-
-            if (me.isHorizontal()) {
-              titleX = left + (right - left) / 2; // midpoint of the width
-
-              titleY = top + offset;
-              maxWidth = right - left;
-            } else {
-              titleX = opts.position === 'left' ? left + offset : right - offset;
-              titleY = top + (bottom - top) / 2;
-              maxWidth = bottom - top;
-              rotation = Math.PI * (opts.position === 'left' ? -0.5 : 0.5);
-            }
-
-            ctx.save();
-            ctx.translate(titleX, titleY);
-            ctx.rotate(rotation);
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            var text = opts.text;
-
-            if (helpers$1.isArray(text)) {
-              var y = 0;
-
-              for (var i = 0; i < text.length; ++i) {
-                ctx.fillText(text[i], 0, y, maxWidth);
-                y += lineHeight;
-              }
-            } else {
-              ctx.fillText(text, 0, 0, maxWidth);
-            }
-
-            ctx.restore();
+          if (!opts.display) {
+            return;
           }
+
+          var fontOpts = helpers$1.options._parseFont(opts);
+
+          var lineHeight = fontOpts.lineHeight;
+          var offset = lineHeight / 2 + opts.padding;
+          var rotation = 0;
+          var top = me.top;
+          var left = me.left;
+          var bottom = me.bottom;
+          var right = me.right;
+          var maxWidth, titleX, titleY;
+          ctx.fillStyle = helpers$1.valueOrDefault(opts.fontColor, core_defaults.global.defaultFontColor); // render in correct colour
+
+          ctx.font = fontOpts.string; // Horizontal
+
+          if (me.isHorizontal()) {
+            titleX = left + (right - left) / 2; // midpoint of the width
+
+            titleY = top + offset;
+            maxWidth = right - left;
+          } else {
+            titleX = opts.position === 'left' ? left + offset : right - offset;
+            titleY = top + (bottom - top) / 2;
+            maxWidth = bottom - top;
+            rotation = Math.PI * (opts.position === 'left' ? -0.5 : 0.5);
+          }
+
+          ctx.save();
+          ctx.translate(titleX, titleY);
+          ctx.rotate(rotation);
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          var text = opts.text;
+
+          if (helpers$1.isArray(text)) {
+            var y = 0;
+
+            for (var i = 0; i < text.length; ++i) {
+              ctx.fillText(text[i], 0, y, maxWidth);
+              y += lineHeight;
+            }
+          } else {
+            ctx.fillText(text, 0, 0, maxWidth);
+          }
+
+          ctx.restore();
         }
       });
 
@@ -26210,7 +28408,8 @@
     var i;
     var channels;
 
-    if (typeof obj === 'undefined') {
+    if (obj == null) {
+      // eslint-disable-line no-eq-null,eqeqeq
       this.model = 'rgb';
       this.color = [0, 0, 0];
       this.valpha = 1;
@@ -28845,7 +31044,7 @@
 
   var constant_1 = constant;
 
-  var defineProperty$8 = function () {
+  var defineProperty$c = function () {
     try {
       var func = _getNative(Object, 'defineProperty');
       func({}, '', {});
@@ -28853,7 +31052,7 @@
     } catch (e) {}
   }();
 
-  var _defineProperty$1 = defineProperty$8;
+  var _defineProperty$1 = defineProperty$c;
 
   /**
    * The base implementation of `setToString` without support for hot loop shorting.
@@ -29496,11 +31695,11 @@
    * // => ['0', '1']
    */
 
-  function keys$3(object) {
+  function keys$4(object) {
     return isArrayLike_1(object) ? _arrayLikeKeys(object) : _baseKeys(object);
   }
 
-  var keys_1 = keys$3;
+  var keys_1 = keys$4;
 
   /**
    * The base implementation of `_.forOwn` without support for iteratee shorthands.
@@ -30831,12 +33030,12 @@
    * // => 'default'
    */
 
-  function get$2(object, path, defaultValue) {
+  function get$3(object, path, defaultValue) {
     var result = object == null ? undefined : _baseGet(object, path);
     return result === undefined ? defaultValue : result;
   }
 
-  var get_1 = get$2;
+  var get_1 = get$3;
 
   /**
    * The base implementation of `_.hasIn` without support for deep paths.
@@ -32031,7 +34230,7 @@
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
 
-  harlan.addPlugin(function (controller) {
+  harlan$1.addPlugin(function (controller) {
     controller.registerCall('followdocument::modal', function () {
       var skip = 0;
       var loadResults = null;
@@ -32103,7 +34302,7 @@
         list.empty();
         var database = controller.call('followdocuments::database');
 
-        var filterBy = _objectSpread({}, mapValues_1({
+        var filterBy = _objectSpread2({}, mapValues_1({
           protesto: protesto,
           ccf: ccf,
           rfb: rfb
@@ -32173,6 +34372,90 @@
     });
   });
 
+  // eslint-disable-next-line no-undef
+  var deleteDocument = function deleteDocument(document) {
+    return harlan.serverCommunication.call('DELETE FROM \'FOLLOWDOCUMENT\'.\'DOCUMENT\'', {
+      data: {
+        documento: document
+      },
+      dataType: 'json'
+    });
+  }; // eslint-disable-next-line no-undef
+
+
+  var insertDocument = function insertDocument(document) {
+    return harlan.serverCommunication.call('INSERT INTO \'FOLLOWDOCUMENT\'.\'DOCUMENT\'', {
+      data: {
+        documento: document
+      },
+      dataType: 'json'
+    });
+  }; // eslint-disable-next-line no-undef
+
+
+  var listDocuments = function listDocuments() {
+    return harlan.serverCommunication.call('SELECT FROM \'FOLLOWDOCUMENT\'.\'LIST\'', {
+      dataType: 'json'
+    });
+  };
+
+  var generateCSVData = function generateCSVData(data) {
+    var csvData = data.map(function (documento) {
+      return [documento.document, documento.state.protestos, documento.state.ccf];
+    });
+    csvData.unshift(['Documento', 'Protestos', 'Cheques sem Fundos']);
+    console.log('CSVData', data[0]);
+    return csvData;
+  };
+
+  var csvGenerator = function csvGenerator(data) {
+    var csvData = generateCSVData(data);
+    var csvContent = "data:text/csv;charset=utf-8,".concat(csvData.map(function (e) {
+      return e.join(',');
+    }).join('\n'));
+    console.log('CSV Content', csvContent);
+    return csvContent;
+  };
+
+  /* eslint-disable no-undef */
+  var createLine = function createLine(relatorio, timeline) {
+    var downloadAction = [['fa-download', 'Baixar relatório', function () {
+      var link = document.createElement('a');
+      console.log('Without Encode URI', relatorio.link);
+      link.setAttribute('href', encodeURI(relatorio.link));
+      link.setAttribute('download', 'my_data.csv');
+      document.body.appendChild(link);
+      link.click();
+    }]];
+    timeline.add(moment(relatorio.expireDate).subtract(1, 'day').unix(), relatorio.name, 'O relatório só fica disponível por um dia após a solicitação.', downloadAction);
+  };
+
+  var timelineGenerator = function timelineGenerator(timeline) {
+    var relatorios = JSON.parse(localStorage.relatorios);
+    relatorios = relatorios.filter(function (relatorio) {
+      return moment() < moment(relatorio.expireDate);
+    });
+    localStorage.relatorios = JSON.stringify(relatorios);
+    relatorios.map(function (relatorio) {
+      return createLine(relatorio, timeline);
+    });
+  };
+
+  var hasCredits = function hasCredits(c, b) {
+    return harlan.server.call("SELECT FROM 'ICHEQUES'.'IPAYTHEBILL'", harlan.call('loader::ajax', {
+      dataType: 'json',
+      success: function success(data) {
+        if (data) {
+          harlan.call('credits::has', c, function () {
+            b();
+          });
+        } else {
+          b();
+        }
+      }
+    }));
+  };
+
   var harmonizer = new Harmonizer_1();
   var colorMix = 'neutral';
   var followedDocuments = {};
@@ -32197,7 +34480,7 @@
   var chartCanvas = null;
   var chartReport = null;
   var graphicDataset = null;
-  harlan.addPlugin(function (controller) {
+  harlan$1.addPlugin(function (controller) {
     function removeDocument(doc, after) {
       controller.server.call("DELETE FROM 'FOLLOWDOCUMENT'.'DOCUMENT'", controller.call('error::ajax', {
         dataType: 'json',
@@ -32218,7 +34501,7 @@
 
     controller.registerCall('followdocuments::remove', removeDocument);
     controller.registerCall('followdocuments::database', function () {
-      return _objectSpread({}, followedDocuments);
+      return _objectSpread2({}, followedDocuments);
     });
 
     function modalFilter() {
@@ -32275,7 +34558,7 @@
             value: filterConfiguration.state,
             labelText: 'Agragador',
             placeholder: 'Agragador',
-            list: _objectSpread({
+            list: _objectSpread2({
               '': 'Escolha um filtro'
             }, reference.state)
           }, {
@@ -32306,7 +34589,7 @@
       if (chartReport) return;
       chartReport = controller.call('report', 'Relatório de Monitoramento', 'Veja a situação dos CPFs e CNPJs acompanhados por você.', 'Com o recurso de relatório você consegue identificar os comportamentos de risco dos cedentes e sacados, ' + 'reconhecendo os mais propícios a inadimplência. As informações são atualizadas diáriamente, ' + 'junto aos órgãos de crédito responsáveis.', false);
       chartReport.action('fa-print', function () {
-        harlan.call('monitoramentoPDF::index');
+        harlan$1.call('monitoramentoPDF::index');
       });
       chartReport.button('Filtros', function () {
         return modalFilter();
@@ -32523,7 +34806,7 @@
               var element = _ref7.element;
 
               if (element.val()) {
-                return moment(element.val(), 'DD/MM/YYYY').isValid();
+                return moment$1(element.val(), 'DD/MM/YYYY').isValid();
               }
 
               return true;
@@ -32546,6 +34829,13 @@
         return modalFollow();
       });
       report.gamification('brilliantIdea');
+
+      if (!$.isEmptyObject(localStorage.relatorios)) {
+        var timeline = controller.call('timeline');
+        timelineGenerator(timeline);
+        timeline.element().insertBefore($('.open:contains(Monitorar Documento)', report.element()));
+      }
+
       var reportElement = report.element();
       $('.app-content').prepend(reportElement);
       renderedReport = reportElement;
@@ -32558,7 +34848,7 @@
       updateChart();
     }
 
-    function deleteDocument(args, callback) {
+    function deleteDocument$1(args, callback) {
       callback();
       var document = args.document;
       delete followedDocuments[document];
@@ -32593,7 +34883,7 @@
 
     controller.registerTrigger('serverCommunication::websocket::followDocument::insert', 'icheques::ban::register', changeDocument);
     controller.registerTrigger('serverCommunication::websocket::followDocument::update', 'icheques::ban::register', changeDocument);
-    controller.registerTrigger('serverCommunication::websocket::followDocument::delete', 'icheques::ban::register', deleteDocument);
+    controller.registerTrigger('serverCommunication::websocket::followDocument::delete', 'icheques::ban::register', deleteDocument$1);
     controller.registerTrigger('ccbusca::parser', 'followDocument', function (_ref8, callback) {
       var result = _ref8.result,
           doc = _ref8.doc;
@@ -32623,21 +34913,21 @@
       reader.onload =
       /*#__PURE__*/
       function () {
-        var _ref10 = _asyncToGenerator(
+        var _ref9 = _asyncToGenerator(
         /*#__PURE__*/
-        regeneratorRuntime.mark(function _callee2(_ref9) {
-          var result, documents, modal, progress, sended;
-          return regeneratorRuntime.wrap(function _callee2$(_context2) {
+        regeneratorRuntime.mark(function _callee6(_ref10) {
+          var result, documents, modalConfirmation, formConfirmation;
+          return regeneratorRuntime.wrap(function _callee6$(_context6) {
             while (1) {
-              switch (_context2.prev = _context2.next) {
+              switch (_context6.prev = _context6.next) {
                 case 0:
-                  result = _ref9.target.result;
+                  result = _ref10.target.result;
                   documents = result.match(/(\d{2}(.)?\d{3}(.)?\d{3}(\/)?\d{4}(.)?\d{2}|\d{3}(.)?\d{3}(.)?\d{3}(-)?\d{2})/g).filter(function (cpfCnpj) {
                     return cpf_cnpj_1.isValid(cpfCnpj) || cpf_cnpj_2.isValid(cpfCnpj);
                   });
 
                   if (documents.length) {
-                    _context2.next = 5;
+                    _context6.next = 5;
                     break;
                   }
 
@@ -32646,107 +34936,263 @@
                     subtitle: 'Verifique se o seu Excel possui CPFs e CNPJs para serem monitorados.',
                     paragraph: 'É possível que o seu arquivo CSV esteja corrompido.'
                   });
-                  return _context2.abrupt("return");
+                  return _context6.abrupt("return");
 
                 case 5:
-                  modal = controller.call('modal');
-                  modal.title('Progresso de Envio de Monitoramento');
-                  modal.subtitle('O monitoramento está sendo enviado, por favor aguarde.');
-                  modal.paragraph('Experimente tomar um café enquanto nossos servidores recebem seus CPFs e CNPJs.');
-                  progress = modal.addProgress();
-                  sended = 0;
-                  _context2.prev = 11;
-                  _context2.next = 14;
-                  return documents.reduce(
-                  /*#__PURE__*/
-                  function () {
-                    var _ref11 = _asyncToGenerator(
+                  modalConfirmation = controller.call('modal');
+                  modalConfirmation.title('Envio de Monitoramento');
+                  modalConfirmation.subtitle('Você deseja fazer um bate-rápido(Relatório com protestos e cheques sem fundos, somente 1 vez) ' + 'ou monitorar todos os documentos?');
+                  formConfirmation = modalConfirmation.createForm();
+                  formConfirmation.addSubmit('bate-rapido', 'Bate-rápido').addClass('credithub-button');
+                  formConfirmation.addSubmit('monitorar', 'Monitorar').addClass('credithub-button');
+                  modalConfirmation.createActions().cancel();
+                  $('input[name=bate-rapido]').on('click', function (ev) {
+                    ev.preventDefault();
+                    console.log(documents);
+                    hasCredits(500 * documents.length,
                     /*#__PURE__*/
-                    regeneratorRuntime.mark(function _callee(promise, documento) {
-                      return regeneratorRuntime.wrap(function _callee$(_context) {
+                    _asyncToGenerator(
+                    /*#__PURE__*/
+                    regeneratorRuntime.mark(function _callee3() {
+                      var loader, delay, listarDocumentos, documentsData, uri, relatorios, date, relatorio, timeline, $timeline;
+                      return regeneratorRuntime.wrap(function _callee3$(_context3) {
                         while (1) {
-                          switch (_context.prev = _context.next) {
+                          switch (_context3.prev = _context3.next) {
                             case 0:
-                              _context.next = 2;
-                              return promise;
+                              modalConfirmation.close();
+                              loader = harlan$1.call('ccbusca::loader');
+                              loader.setTitle('Bate-Rápido');
+                              loader.setActiveStatus('Enviando Documentos');
+                              $('.card-progress').remove(); // const insertDocumentPromises = await documents.map(insertDocument);
+                              // await listDocuments().then((documentsData) => {});
 
-                            case 2:
-                              _context.next = 4;
-                              return new Promise(function (resolve, reject) {
-                                return controller.server.call("INSERT INTO 'FOLLOWDOCUMENT'.'DOCUMENT'", controller.call('error::ajax', {
-                                  dataType: 'json',
-                                  data: {
-                                    documento: documento
-                                  },
-                                  success: function success() {
-                                    sended += 1;
-                                    progress(sended / documents.length);
-                                    resolve();
-                                  },
-                                  error: function error(_1, _2, errorThrown) {
-                                    return reject(new Error(errorThrown));
-                                  }
+                              delay =
+                              /*#__PURE__*/
+                              function () {
+                                var _ref12 = _asyncToGenerator(
+                                /*#__PURE__*/
+                                regeneratorRuntime.mark(function _callee(ms) {
+                                  return regeneratorRuntime.wrap(function _callee$(_context) {
+                                    while (1) {
+                                      switch (_context.prev = _context.next) {
+                                        case 0:
+                                          return _context.abrupt("return", new Promise(function (resolve) {
+                                            return setTimeout(resolve, ms);
+                                          }));
+
+                                        case 1:
+                                        case "end":
+                                          return _context.stop();
+                                      }
+                                    }
+                                  }, _callee);
                                 }));
+
+                                return function delay(_x2) {
+                                  return _ref12.apply(this, arguments);
+                                };
+                              }();
+
+                              listarDocumentos =
+                              /*#__PURE__*/
+                              function () {
+                                var _ref13 = _asyncToGenerator(
+                                /*#__PURE__*/
+                                regeneratorRuntime.mark(function _callee2() {
+                                  var resultado;
+                                  return regeneratorRuntime.wrap(function _callee2$(_context2) {
+                                    while (1) {
+                                      switch (_context2.prev = _context2.next) {
+                                        case 0:
+                                          _context2.next = 2;
+                                          return delay(5000);
+
+                                        case 2:
+                                          _context2.next = 4;
+                                          return listDocuments();
+
+                                        case 4:
+                                          resultado = _context2.sent;
+                                          return _context2.abrupt("return", resultado);
+
+                                        case 6:
+                                        case "end":
+                                          return _context2.stop();
+                                      }
+                                    }
+                                  }, _callee2);
+                                }));
+
+                                return function listarDocumentos() {
+                                  return _ref13.apply(this, arguments);
+                                };
+                              }();
+
+                              _context3.next = 9;
+                              return Promise.all(documents.map(insertDocument)).then(function () {
+                                return listarDocumentos();
                               });
 
-                            case 4:
+                            case 9:
+                              documentsData = _context3.sent;
+                              documents.forEach(deleteDocument);
+                              uri = csvGenerator(documentsData);
+                              relatorios = localStorage.relatorios ? JSON.parse(localStorage.relatorios) : [];
+                              date = moment$1();
+                              relatorio = {
+                                name: "Relat\xF3rio de ".concat(date.format('LLL')),
+                                link: uri,
+                                expireDate: date.add(1, 'day')
+                              };
+                              console.log('Relatorio', relatorio);
+                              relatorios.push(relatorio);
+                              timeline = controller.call('timeline');
+                              createLine(relatorio, timeline);
+                              $timeline = $('.timeline', $('.content:contains(Que tal monitorar um CPF ou CNPJ?)'));
+                              if ($.isEmptyObject(localStorage.relatorios)) timeline.element().insertBefore($('.open:contains(Monitorar Documento)'));
+                              if (!$.isEmptyObject(localStorage.relatorios)) $timeline.append(timeline.element().find('li')[0]);
+                              localStorage.relatorios = JSON.stringify(relatorios);
+                              loader.searchCompleted();
+                              controller.alert({
+                                icon: 'pass',
+                                title: "Parab\xE9ns! Os documentos (".concat(documents.length, ") foram recebidos com sucesso!"),
+                                subtitle: 'Foi gerado um relatório bate-rápido de seus cedentes e sacados.',
+                                paragraph: 'Você já pode conferir os protestos e cheques sem fundos dos documentos enviados.'
+                              });
+                              $(window).scrollTop($(".report:contains('Que tal monitorar um CPF ou CNPJ?'):last").offset().top); // Promise.all(insertDocumentPromises).then();
+
+                            case 26:
                             case "end":
-                              return _context.stop();
+                              return _context3.stop();
                           }
                         }
-                      }, _callee);
+                      }, _callee3);
+                    })));
+                  });
+                  $('input[name=monitorar]').on('click',
+                  /*#__PURE__*/
+                  function () {
+                    var _ref14 = _asyncToGenerator(
+                    /*#__PURE__*/
+                    regeneratorRuntime.mark(function _callee5(ev) {
+                      var modal, progress, sended;
+                      return regeneratorRuntime.wrap(function _callee5$(_context5) {
+                        while (1) {
+                          switch (_context5.prev = _context5.next) {
+                            case 0:
+                              ev.preventDefault();
+                              modal = controller.call('modal');
+                              modal.title('Progresso de Envio de Monitoramento');
+                              modal.subtitle('O monitoramento está sendo enviado, por favor aguarde.');
+                              modal.paragraph('Experimente tomar um café enquanto nossos servidores recebem seus CPFs e CNPJs.');
+                              progress = modal.addProgress();
+                              sended = 0;
+                              _context5.prev = 7;
+                              _context5.next = 10;
+                              return documents.reduce(
+                              /*#__PURE__*/
+                              function () {
+                                var _ref15 = _asyncToGenerator(
+                                /*#__PURE__*/
+                                regeneratorRuntime.mark(function _callee4(promise, documento) {
+                                  return regeneratorRuntime.wrap(function _callee4$(_context4) {
+                                    while (1) {
+                                      switch (_context4.prev = _context4.next) {
+                                        case 0:
+                                          _context4.next = 2;
+                                          return promise;
+
+                                        case 2:
+                                          _context4.next = 4;
+                                          return new Promise(function (resolve, reject) {
+                                            return controller.server.call("INSERT INTO 'FOLLOWDOCUMENT'.'DOCUMENT'", controller.call('error::ajax', {
+                                              dataType: 'json',
+                                              data: {
+                                                documento: documento
+                                              },
+                                              success: function success() {
+                                                sended += 1;
+                                                progress(sended / documents.length);
+                                                resolve();
+                                              },
+                                              error: function error(_1, _2, errorThrown) {
+                                                return reject(new Error(errorThrown));
+                                              }
+                                            }));
+                                          });
+
+                                        case 4:
+                                        case "end":
+                                          return _context4.stop();
+                                      }
+                                    }
+                                  }, _callee4);
+                                }));
+
+                                return function (_x4, _x5) {
+                                  return _ref15.apply(this, arguments);
+                                };
+                              }(), Promise.resolve());
+
+                            case 10:
+                              _context5.next = 16;
+                              break;
+
+                            case 12:
+                              _context5.prev = 12;
+                              _context5.t0 = _context5["catch"](7);
+                              controller.alert({
+                                title: 'Uoh! Não foi possível enviar todos os documentos para monitoramento.',
+                                subtitle: 'Sua conexão com a internet pode estar com problemas, impedindo o envio de documentos.',
+                                paragraph: "Tente enviar menos documentos para que possamos realizar esta opera\xE7\xE3o (".concat(_context5.t0.toString(), ").")
+                              });
+                              return _context5.abrupt("return");
+
+                            case 16:
+                              _context5.prev = 16;
+                              modal.close();
+                              return _context5.finish(16);
+
+                            case 19:
+                              controller.alert({
+                                icon: 'pass',
+                                title: "Parab\xE9ns! Os documentos (".concat(documents.length, ") foram enviados para monitoramento."),
+                                subtitle: 'Dentro de instantes será possível extrair um relatório de seus cedentes e sacados com este documento incluso.',
+                                paragraph: 'Caso haja qualquer alteração no documento junto as instituições de crédito você será avisado.'
+                              });
+                              modalConfirmation.close();
+
+                            case 21:
+                            case "end":
+                              return _context5.stop();
+                          }
+                        }
+                      }, _callee5, null, [[7, 12, 16, 19]]);
                     }));
 
-                    return function (_x2, _x3) {
-                      return _ref11.apply(this, arguments);
+                    return function (_x3) {
+                      return _ref14.apply(this, arguments);
                     };
-                  }(), Promise.resolve());
+                  }());
 
                 case 14:
-                  _context2.next = 20;
-                  break;
-
-                case 16:
-                  _context2.prev = 16;
-                  _context2.t0 = _context2["catch"](11);
-                  controller.alert({
-                    title: 'Uoh! Não foi possível enviar todos os documentos para monitoramento.',
-                    subtitle: 'Sua conexão com a internet pode estar com problemas, impedindo o envio de documentos.',
-                    paragraph: "Tente enviar menos documentos para que possamos realizar esta opera\xE7\xE3o (".concat(_context2.t0.toString(), ").")
-                  });
-                  return _context2.abrupt("return");
-
-                case 20:
-                  _context2.prev = 20;
-                  modal.close();
-                  return _context2.finish(20);
-
-                case 23:
-                  controller.alert({
-                    icon: 'pass',
-                    title: "Parab\xE9ns! Os documentos (".concat(documents.length, ") foram enviados para monitoramento."),
-                    subtitle: 'Dentro de instantes será possível extrair um relatório de seus cedentes e sacados com este documento incluso.',
-                    paragraph: 'Caso haja qualquer alteração no documento junto as instituições de crédito você será avisado.'
-                  });
-
-                case 24:
                 case "end":
-                  return _context2.stop();
+                  return _context6.stop();
               }
             }
-          }, _callee2, null, [[11, 16, 20, 23]]);
+          }, _callee6);
         }));
 
         return function (_x) {
-          return _ref10.apply(this, arguments);
+          return _ref9.apply(this, arguments);
         };
       }();
 
       reader.readAsText(file);
     }
 
-    controller.registerTrigger('dragdrop', 'followDocument', function (_ref12, callback) {
-      var files = _ref12.files;
+    controller.registerTrigger('dragdrop', 'followDocument', function (_ref16, callback) {
+      var files = _ref16.files;
       callback();
       if (!files.length) return;
       files.map(function (file) {
