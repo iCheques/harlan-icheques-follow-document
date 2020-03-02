@@ -21,7 +21,9 @@ import pickBy from 'lodash/pickBy';
 
 import './list';
 // import modalChooseFile from './modules/modal-choose-file';
-import { insertDocument, deleteDocument as monitoreDeleteDocument, listDocuments } from './modules/monitore-crud';
+import {
+  insertDocument, deleteDocument as monitoreDeleteDocument, listDocuments, insertRelatorio, listRelatorios,
+} from './modules/monitore-crud';
 import csvGenerator from './modules/csv-generator';
 import { timelineGenerator, createLine } from './modules/timeline-generator';
 import hasCredits from './modules/has-credits';
@@ -297,6 +299,25 @@ harlan.addPlugin((controller) => {
     }
   }
 
+  function modalChooseCSV() {
+    const modal = controller.call('modal');
+    modal.title('Envie seu Arquivo CSV para Monitoramento/Bate-rápido');
+    modal.paragraph('Basta selecionar o arquivo para começar.');
+    const form = modal.createForm();
+    form.addInput('files', 'file', 'Selecione o arquivo CSV').attr('accept', '.csv');
+    form.addSubmit('continuar', 'Continuar').addClass('credithub-button');
+    modal.createActions().cancel();
+    $('input[name=continuar]').on('click', (ev) => {
+      ev.preventDefault();
+      const { files } = $('input[name=files]')[0];
+      if (files.length) {
+        modal.close();
+        return submitFile(files[0]);
+      }
+      toastr.error('É necessário que você envie um arquivo para continuar.', 'Nenhum arquivo selecionado');
+    });
+  }
+
   function modalFollow() {
     controller.call('form', (data) => {
       controller.server.call("INSERT INTO 'FOLLOWDOCUMENT'.'DOCUMENT'", controller.call('error::ajax', {
@@ -364,7 +385,7 @@ harlan.addPlugin((controller) => {
     });
   }
 
-  function drawReport() {
+  async function drawReport() {
     if (renderedReport) renderedReport.remove();
     const report = controller.call('report',
       'Que tal monitorar um CPF ou CNPJ?',
@@ -373,10 +394,13 @@ harlan.addPlugin((controller) => {
       false);
 
     report.button('Monitorar Documento', () => modalFollow());
+    report.button('Enviar Arquivo CSV', () => modalChooseCSV()).addClass('credithub-button');
     report.gamification('brilliantIdea');
-    if (!$.isEmptyObject(localStorage.relatorios)) {
+    const data = await listRelatorios();
+    if (JSON.parse(data).data.length) {
+      localStorage.relatorios = true;
       const timeline = controller.call('timeline');
-      timelineGenerator(timeline);
+      timelineGenerator(timeline, data);
       timeline.element().insertBefore($('.open:contains(Monitorar Documento)', report.element()));
     }
 
@@ -449,6 +473,7 @@ harlan.addPlugin((controller) => {
   });
 
   function submitFile(file) {
+    console.log('SubmitFIle', file);
     const reader = new FileReader();
     reader.onload = async ({ target: { result } }) => {
       const documents = result
@@ -473,9 +498,9 @@ harlan.addPlugin((controller) => {
       formConfirmation.addSubmit('monitorar', 'Monitorar').addClass('credithub-button');
       modalConfirmation.createActions().cancel();
 
-      $('input[name=bate-rapido]').on('click', (ev) => {
+      $('input[name=bate-rapido]').on('click', async (ev) => {
         ev.preventDefault();
-        console.log(documents);
+        let documentosMonitorados = await listDocuments();
         hasCredits(500 * documents.length, async () => {
           modalConfirmation.close();
           const loader = harlan.call('ccbusca::loader');
@@ -487,8 +512,18 @@ harlan.addPlugin((controller) => {
           const delay = async ms => new Promise(resolve => setTimeout(resolve, ms));
 
           const listarDocumentos = async () => {
+            console.log('Documentos Monitorados', documentosMonitorados);
+            if (documentosMonitorados.length) documentosMonitorados = documentosMonitorados.map(document => document.document);
+
             await delay(5000);
-            const resultado = await listDocuments();
+            const data = await listDocuments();
+            const resultado = data.filter(document => documents.includes(document.document));
+            if (documentosMonitorados.length) {
+              const documentosParaDeletar = resultado.filter(document => !documentosMonitorados.includes(document.document)).map(document => document.document);
+              documentosParaDeletar.forEach(monitoreDeleteDocument);
+            } else {
+              resultado.forEach(monitoreDeleteDocument);
+            }
 
             return resultado;
           };
@@ -497,29 +532,28 @@ harlan.addPlugin((controller) => {
             documents.map(insertDocument),
           ).then(() => listarDocumentos());
 
-          documents.forEach(monitoreDeleteDocument);
           const uri = csvGenerator(documentsData);
 
-          const relatorios = localStorage.relatorios ? JSON.parse(localStorage.relatorios) : [];
+          // const relatorios = localStorage.relatorios ? JSON.parse(localStorage.relatorios) : [];
 
           const date = moment();
+          console.log('Length data', documentsData.length);
+          const expireDate = moment().add(7, 'day').toISOString();
           const relatorio = {
             name: `Relatório de ${date.format('LLL')}`,
-            link: uri,
-            expireDate: date.add(1, 'day'),
+            relatorio: uri,
+            total: documentsData.length,
+            expireDate,
           };
 
-          console.log('Relatorio', relatorio);
-
-          relatorios.push(relatorio);
+          // relatorios.push(relatorio);
+          await insertRelatorio(relatorio);
 
           const timeline = controller.call('timeline');
-          createLine(relatorio, timeline);
+          createLine(relatorio, timeline, false);
           const $timeline = $('.timeline', $('.content:contains(Que tal monitorar um CPF ou CNPJ?)'));
-          if ($.isEmptyObject(localStorage.relatorios)) timeline.element().insertBefore($('.open:contains(Monitorar Documento)'));
-          if (!$.isEmptyObject(localStorage.relatorios)) $timeline.append(timeline.element().find('li')[0]);
-
-          localStorage.relatorios = JSON.stringify(relatorios);
+          if (!$timeline.length) timeline.element().insertBefore($('.open:contains(Monitorar Documento)'));
+          if ($timeline.length) $timeline.append(timeline.element().find('li')[0]);
 
           loader.searchCompleted();
 
@@ -532,6 +566,7 @@ harlan.addPlugin((controller) => {
           $(window).scrollTop($(".report:contains('Que tal monitorar um CPF ou CNPJ?'):last").offset().top);
           // Promise.all(insertDocumentPromises).then();
         });
+        
       });
 
       $('input[name=monitorar]').on('click', async (ev) => {
