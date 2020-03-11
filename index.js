@@ -34862,52 +34862,18 @@
     }
 
     function drawReport() {
-      return _drawReport.apply(this, arguments);
-    }
-
-    function _drawReport() {
-      _drawReport = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee8() {
-        var report, data, timeline, reportElement;
-        return regeneratorRuntime.wrap(function _callee8$(_context8) {
-          while (1) {
-            switch (_context8.prev = _context8.next) {
-              case 0:
-                if (renderedReport) renderedReport.remove();
-                report = controller.call('report', 'Que tal monitorar um CPF ou CNPJ?', 'No dia em que seus cedentes e sacados apresentarem ocorrência você será notificado.', 'O monitoramento auxilia na manutenção regular de seus clientes e fornecedores. Diariamente, nosso sistema verifica por alterações relevantes nas informações de cheques sem fundo, protestos e Receita Federal. Caso haja uma alteração, nós lhe enviaremos um e-mail para que fique por dentro de tudo.', false);
-                report.button('Monitorar Documento', function () {
-                  return modalFollow();
-                });
-                report.button('Enviar Arquivo CSV', function () {
-                  return modalChooseCSV();
-                }).addClass('credithub-button');
-                report.gamification('brilliantIdea');
-                _context8.next = 7;
-                return listRelatorios();
-
-              case 7:
-                data = _context8.sent;
-
-                if (JSON.parse(data).data.length) {
-                  localStorage.relatorios = true;
-                  timeline = controller.call('timeline');
-                  timelineGenerator(timeline, data);
-                  timeline.element().insertBefore($('.open:contains(Monitorar Documento)', report.element()));
-                }
-
-                reportElement = report.element();
-                $('.app-content').prepend(reportElement);
-                renderedReport = reportElement;
-
-              case 12:
-              case "end":
-                return _context8.stop();
-            }
-          }
-        }, _callee8);
-      }));
-      return _drawReport.apply(this, arguments);
+      if (renderedReport) renderedReport.remove();
+      var report = controller.call('report', 'Que tal monitorar um CPF ou CNPJ?', 'No dia em que seus cedentes e sacados apresentarem ocorrência você será notificado.', 'O monitoramento auxilia na manutenção regular de seus clientes e fornecedores. Diariamente, nosso sistema verifica por alterações relevantes nas informações de cheques sem fundo, protestos e Receita Federal. Caso haja uma alteração, nós lhe enviaremos um e-mail para que fique por dentro de tudo.', false);
+      report.button('Monitorar Documento', function () {
+        return modalFollow();
+      });
+      report.button('Enviar Arquivo CSV', function () {
+        return modalChooseCSV();
+      }).addClass('credithub-button');
+      report.gamification('brilliantIdea');
+      var reportElement = report.element();
+      $('.app-content').prepend(reportElement);
+      renderedReport = reportElement;
     }
 
     function changeDocument(args, callback) {
@@ -34986,7 +34952,7 @@
         var _ref9 = _asyncToGenerator(
         /*#__PURE__*/
         regeneratorRuntime.mark(function _callee7(_ref10) {
-          var result, documents, modalConfirmation, formConfirmation;
+          var result, documents, modalConfirmation, formConfirmation, label, label2;
           return regeneratorRuntime.wrap(function _callee7$(_context7) {
             while (1) {
               switch (_context7.prev = _context7.next) {
@@ -35011,10 +34977,14 @@
                 case 5:
                   modalConfirmation = controller.call('modal');
                   modalConfirmation.title('Envio de Monitoramento');
-                  modalConfirmation.subtitle('Você deseja fazer um bate-rápido(Relatório com protestos e cheques sem fundos, somente 1 vez) ' + 'ou monitorar todos os documentos?');
+                  modalConfirmation.subtitle('Você deseja fazer um bate-rápido ou monitorar todos os documentos?');
                   formConfirmation = modalConfirmation.createForm();
-                  formConfirmation.addSubmit('bate-rapido', 'Bate-rápido').addClass('credithub-button');
-                  formConfirmation.addSubmit('monitorar', 'Monitorar').addClass('credithub-button');
+                  label = $('<label />').addClass('input-label').html('R$0,50/documento (Consulta rápida de CPF/CNPJ)');
+                  label2 = $('<label />').addClass('input-label').html('R$1/documento (Monitoramento de CPF/CNPJ)');
+                  formConfirmation.addSubmit('bate-rapido', 'Bate-rápido', '', '', label).addClass('credithub-button');
+                  formConfirmation.element().append(label);
+                  formConfirmation.addSubmit('monitorar', 'Monitorar', '', '', label2).addClass('credithub-button');
+                  formConfirmation.element().append(label2);
                   modalConfirmation.createActions().cancel();
                   $('input[name=bate-rapido]').on('click',
                   /*#__PURE__*/
@@ -35294,7 +35264,7 @@
                     };
                   }());
 
-                case 14:
+                case 18:
                 case "end":
                   return _context7.stop();
               }
@@ -35318,7 +35288,24 @@
         return submitFile(file);
       });
     });
+
+    function drawTimeline() {
+      try {
+        listRelatorios().then(function (data) {
+          if (JSON.parse(data).data.length) {
+            localStorage.relatorios = true;
+            var timeline = controller.call('timeline');
+            timelineGenerator(timeline, data);
+            timeline.element().insertBefore($('.open:contains(Monitorar Documento)', report.element()));
+          }
+        });
+      } catch (e) {
+        console.log(e);
+      }
+    }
+
     drawReport();
+    drawTimeline();
   });
 
 }($, harlan, moment));

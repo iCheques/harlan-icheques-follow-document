@@ -385,7 +385,7 @@ harlan.addPlugin((controller) => {
     });
   }
 
-  async function drawReport() {
+  function drawReport() {
     if (renderedReport) renderedReport.remove();
     const report = controller.call('report',
       'Que tal monitorar um CPF ou CNPJ?',
@@ -396,13 +396,6 @@ harlan.addPlugin((controller) => {
     report.button('Monitorar Documento', () => modalFollow());
     report.button('Enviar Arquivo CSV', () => modalChooseCSV()).addClass('credithub-button');
     report.gamification('brilliantIdea');
-    const data = await listRelatorios();
-    if (JSON.parse(data).data.length) {
-      localStorage.relatorios = true;
-      const timeline = controller.call('timeline');
-      timelineGenerator(timeline, data);
-      timeline.element().insertBefore($('.open:contains(Monitorar Documento)', report.element()));
-    }
 
     const reportElement = report.element();
     $('.app-content').prepend(reportElement);
@@ -490,12 +483,19 @@ harlan.addPlugin((controller) => {
       }
 
       const modalConfirmation = controller.call('modal');
+
       modalConfirmation.title('Envio de Monitoramento');
-      modalConfirmation.subtitle('Você deseja fazer um bate-rápido(Relatório com protestos e cheques sem fundos, somente 1 vez) '
-      + 'ou monitorar todos os documentos?');
+      modalConfirmation.subtitle('Você deseja fazer um bate-rápido ou monitorar todos os documentos?');
+
       const formConfirmation = modalConfirmation.createForm();
-      formConfirmation.addSubmit('bate-rapido', 'Bate-rápido').addClass('credithub-button');
-      formConfirmation.addSubmit('monitorar', 'Monitorar').addClass('credithub-button');
+      const label = $('<label />').addClass('input-label').html('R$0,50/documento (Consulta rápida de CPF/CNPJ)');
+      const label2 = $('<label />').addClass('input-label').html('R$1/documento (Monitoramento de CPF/CNPJ)');
+
+      formConfirmation.addSubmit('bate-rapido', 'Bate-rápido', '', '', label).addClass('credithub-button');
+      formConfirmation.element().append(label);
+      formConfirmation.addSubmit('monitorar', 'Monitorar', '', '', label2).addClass('credithub-button');
+      formConfirmation.element().append(label2);
+
       modalConfirmation.createActions().cancel();
 
       $('input[name=bate-rapido]').on('click', async (ev) => {
@@ -566,7 +566,6 @@ harlan.addPlugin((controller) => {
           $(window).scrollTop($(".report:contains('Que tal monitorar um CPF ou CNPJ?'):last").offset().top);
           // Promise.all(insertDocumentPromises).then();
         });
-        
       });
 
       $('input[name=monitorar]').on('click', async (ev) => {
@@ -621,5 +620,21 @@ harlan.addPlugin((controller) => {
     files.map(file => submitFile(file));
   });
 
+  function drawTimeline() {
+    try {
+      listRelatorios().then((data) => {
+        if (JSON.parse(data).data.length) {
+          localStorage.relatorios = true;
+          const timeline = controller.call('timeline');
+          timelineGenerator(timeline, data);
+          timeline.element().insertBefore($('.open:contains(Monitorar Documento)', report.element()));
+        }
+      });
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
   drawReport();
+  drawTimeline();
 });
