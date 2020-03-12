@@ -488,8 +488,8 @@ harlan.addPlugin((controller) => {
       modalConfirmation.subtitle('Você deseja fazer um bate-rápido ou monitorar todos os documentos?');
 
       const formConfirmation = modalConfirmation.createForm();
-      const label = $('<label />').addClass('input-label').html('R$0,50/documento (Consulta rápida de CPF/CNPJ)');
-      const label2 = $('<label />').addClass('input-label').html('R$1/documento (Monitoramento de CPF/CNPJ)');
+      const label = $('<label />').addClass('input-label').html('R$ 0,50/documento (Consulta rápida de CPF/CNPJ)');
+      const label2 = $('<label />').addClass('input-label').html('R$ 1,00/documento (Monitoramento de CPF/CNPJ)');
 
       formConfirmation.addSubmit('bate-rapido', 'Bate-rápido', '', '', label).addClass('credithub-button');
       formConfirmation.element().append(label);
@@ -515,7 +515,7 @@ harlan.addPlugin((controller) => {
             console.log('Documentos Monitorados', documentosMonitorados);
             if (documentosMonitorados.length) documentosMonitorados = documentosMonitorados.map(document => document.document);
 
-            await delay(5000);
+            await delay(10000);
             const data = await listDocuments();
             const resultado = data.filter(document => documents.includes(document.document));
             if (documentosMonitorados.length) {
@@ -539,7 +539,7 @@ harlan.addPlugin((controller) => {
           const date = moment();
           console.log('Length data', documentsData.length);
           const expireDate = moment().add(7, 'day').toISOString();
-          const relatorio = {
+          let relatorio = {
             name: `Relatório de ${date.format('LLL')}`,
             relatorio: uri,
             total: documentsData.length,
@@ -547,7 +547,9 @@ harlan.addPlugin((controller) => {
           };
 
           // relatorios.push(relatorio);
-          await insertRelatorio(relatorio);
+          const retornoDaInsercao = await insertRelatorio(relatorio);
+          relatorio = JSON.parse(retornoDaInsercao).data;
+          console.log('retorno inserção', relatorio);
 
           const timeline = controller.call('timeline');
           createLine(relatorio, timeline, false);

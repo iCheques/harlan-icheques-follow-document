@@ -1,7 +1,7 @@
-(function ($, harlan$1, moment$1) {
+(function ($$1, harlan$1, moment$1) {
   'use strict';
 
-  $ = $ && $.hasOwnProperty('default') ? $['default'] : $;
+  $$1 = $$1 && $$1.hasOwnProperty('default') ? $$1['default'] : $$1;
   harlan$1 = harlan$1 && harlan$1.hasOwnProperty('default') ? harlan$1['default'] : harlan$1;
   moment$1 = moment$1 && moment$1.hasOwnProperty('default') ? moment$1['default'] : moment$1;
 
@@ -13708,10 +13708,7 @@
             p = 0.3;
           }
 
-          if (a < 1) {
-            a = 1;
-            s = p / 4;
-          } else {
+          {
             s = p / (2 * Math.PI) * Math.asin(1 / a);
           }
 
@@ -13734,10 +13731,7 @@
             p = 0.3;
           }
 
-          if (a < 1) {
-            a = 1;
-            s = p / 4;
-          } else {
+          {
             s = p / (2 * Math.PI) * Math.asin(1 / a);
           }
 
@@ -13760,10 +13754,7 @@
             p = 0.45;
           }
 
-          if (a < 1) {
-            a = 1;
-            s = p / 4;
-          } else {
+          {
             s = p / (2 * Math.PI) * Math.asin(1 / a);
           }
 
@@ -34349,15 +34340,15 @@
           'fa-window-close'], [identificator].concat([capitalize(beatifulJoin([item.state.ccf === 0 ? '' : typeof item.state.ccf === 'undefined' ? 'processando cheques sem fundo' : item.state.ccf === 1 ? 'Um cheque sem fundo' : "".concat(item.state.ccf, " cheques sem fundo"), item.state.protestos === 0 ? '' : typeof item.state.protestos === 'undefined' ? 'processando protestos' : item.state.protestos === 1 ? '1 protesto' : "".concat(item.state.protestos, " protestos"), item.markers.indexOf('rfb-invalid') === -1 ? '' : 'restrição na Receita Federal'].filter(function (x) {
             return !!x;
           }))) || 'Sem cheque sem fundo ou protesto.']));
-          $('.fa-envelope-open', listItem).click(function (e) {
+          $$1('.fa-envelope-open', listItem).click(function (e) {
             e.preventDefault();
             controller.call('ccbusca', item.document, function (sectionDocumentGroup) {
               modal.close();
-              $('.app-content').prepend(sectionDocumentGroup);
-              $('html, body').scrollTop(sectionDocumentGroup.offset().top);
+              $$1('.app-content').prepend(sectionDocumentGroup);
+              $$1('html, body').scrollTop(sectionDocumentGroup.offset().top);
             });
           });
-          $('.fa-window-close', listItem).click(function (e) {
+          $$1('.fa-window-close', listItem).click(function (e) {
             e.preventDefault();
             controller.confirm({}, function () {
               return controller.call('followdocuments::remove', item.document, function () {
@@ -34442,6 +34433,29 @@
       link.setAttribute('download', "".concat(relatorio.name, ".csv"));
       document.body.appendChild(link);
       link.click();
+    }], ['fa-trash', 'Remover Relatório', function () {
+      var modal = harlan.call('modal');
+      modal.title('Remover relatório');
+      modal.paragraph('Você tem certeza que deseja remover esse relatório?');
+      var form = modal.createForm();
+      form.element().submit(function (e) {
+        e.preventDefault();
+        modal.close();
+        var query = 'DELETE FROM \'HARLANBATERAPIDO\'.\'RELATORIO\'';
+        console.log('relatorio', relatorio);
+        harlan.serverCommunication.call(query, harlan.call('error::ajax', harlan.call('loader::ajax', {
+          data: {
+            id: relatorio["_id"]['$id']
+          },
+          dataType: 'json',
+          success: function success(ret) {
+            $("li:contains(".concat(relatorio.name, ")")).remove();
+            toastr.success('Relatório removido com sucesso!');
+          }
+        })));
+      });
+      form.addSubmit('deletar-relatorio', 'Remover Relatório');
+      modal.createActions().cancel();
     }]];
     var expireDate = fromServer ? relatorio.expireDate.sec : relatorio.expireDate;
     timeline.add(moment(moment.unix(expireDate)).subtract(7, 'day').unix(), relatorio.name, 'O relatório só fica disponível por 7 dias após a solicitação.', downloadAction);
@@ -34616,7 +34630,7 @@
       chartReport.newContent();
 
       if (!renderedReport) {
-        $('.app-content').prepend(chartReport.element());
+        $$1('.app-content').prepend(chartReport.element());
       } else {
         chartReport.element().insertAfter(renderedReport);
       }
@@ -34743,9 +34757,9 @@
                   cb(elements.slice());
                   if (!elements.length) return;
                   elements.map(function (element) {
-                    return $('.fa.fa-minus-square-o', element).click();
+                    return $$1('.fa.fa-minus-square-o', element).click();
                   });
-                  $('html, body').animate({
+                  $$1('html, body').animate({
                     scrollTop: elements[0].offset().top
                   }, 2000);
                 });
@@ -34773,9 +34787,9 @@
       form.addInput('files', 'file', 'Selecione o arquivo CSV').attr('accept', '.csv');
       form.addSubmit('continuar', 'Continuar').addClass('credithub-button');
       modal.createActions().cancel();
-      $('input[name=continuar]').on('click', function (ev) {
+      $$1('input[name=continuar]').on('click', function (ev) {
         ev.preventDefault();
-        var files = $('input[name=files]')[0].files;
+        var files = $$1('input[name=files]')[0].files;
 
         if (files.length) {
           modal.close();
@@ -34872,7 +34886,7 @@
       }).addClass('credithub-button');
       report.gamification('brilliantIdea');
       var reportElement = report.element();
-      $('.app-content').prepend(reportElement);
+      $$1('.app-content').prepend(reportElement);
       renderedReport = reportElement;
     }
 
@@ -34930,7 +34944,7 @@
       }
 
       var monitoramento = null;
-      monitoramento = $('<button />').text('Deixar de Acompanhar').addClass('button').append($('<small />').text('Interromper Acompanhamento').css({
+      monitoramento = $$1('<button />').text('Deixar de Acompanhar').addClass('button').append($$1('<small />').text('Interromper Acompanhamento').css({
         display: 'block',
         'font-size': '9px'
       }));
@@ -34979,14 +34993,14 @@
                   modalConfirmation.title('Envio de Monitoramento');
                   modalConfirmation.subtitle('Você deseja fazer um bate-rápido ou monitorar todos os documentos?');
                   formConfirmation = modalConfirmation.createForm();
-                  label = $('<label />').addClass('input-label').html('R$0,50/documento (Consulta rápida de CPF/CNPJ)');
-                  label2 = $('<label />').addClass('input-label').html('R$1/documento (Monitoramento de CPF/CNPJ)');
+                  label = $$1('<label />').addClass('input-label').html('R$ 0,50/documento (Consulta rápida de CPF/CNPJ)');
+                  label2 = $$1('<label />').addClass('input-label').html('R$ 1,00/documento (Monitoramento de CPF/CNPJ)');
                   formConfirmation.addSubmit('bate-rapido', 'Bate-rápido', '', '', label).addClass('credithub-button');
                   formConfirmation.element().append(label);
                   formConfirmation.addSubmit('monitorar', 'Monitorar', '', '', label2).addClass('credithub-button');
                   formConfirmation.element().append(label2);
                   modalConfirmation.createActions().cancel();
-                  $('input[name=bate-rapido]').on('click',
+                  $$1('input[name=bate-rapido]').on('click',
                   /*#__PURE__*/
                   function () {
                     var _ref11 = _asyncToGenerator(
@@ -35008,7 +35022,7 @@
                               _asyncToGenerator(
                               /*#__PURE__*/
                               regeneratorRuntime.mark(function _callee3() {
-                                var loader, delay, listarDocumentos, documentsData, uri, date, expireDate, relatorio, timeline, $timeline;
+                                var loader, delay, listarDocumentos, documentsData, uri, date, expireDate, relatorio, retornoDaInsercao, timeline, $timeline;
                                 return regeneratorRuntime.wrap(function _callee3$(_context3) {
                                   while (1) {
                                     switch (_context3.prev = _context3.next) {
@@ -35017,7 +35031,7 @@
                                         loader = harlan$1.call('ccbusca::loader');
                                         loader.setTitle('Bate-Rápido');
                                         loader.setActiveStatus('Enviando Documentos');
-                                        $('.card-progress').remove(); // const insertDocumentPromises = await documents.map(insertDocument);
+                                        $$1('.card-progress').remove(); // const insertDocumentPromises = await documents.map(insertDocument);
                                         // await listDocuments().then((documentsData) => {});
 
                                         delay =
@@ -35063,7 +35077,7 @@
                                                       return document.document;
                                                     });
                                                     _context2.next = 4;
-                                                    return delay(5000);
+                                                    return delay(10000);
 
                                                   case 4:
                                                     _context2.next = 6;
@@ -35124,10 +35138,13 @@
                                         return insertRelatorio(relatorio);
 
                                       case 17:
+                                        retornoDaInsercao = _context3.sent;
+                                        relatorio = JSON.parse(retornoDaInsercao).data;
+                                        console.log('retorno inserção', relatorio);
                                         timeline = controller.call('timeline');
                                         createLine(relatorio, timeline, false);
-                                        $timeline = $('.timeline', $('.content:contains(Que tal monitorar um CPF ou CNPJ?)'));
-                                        if (!$timeline.length) timeline.element().insertBefore($('.open:contains(Monitorar Documento)'));
+                                        $timeline = $$1('.timeline', $$1('.content:contains(Que tal monitorar um CPF ou CNPJ?)'));
+                                        if (!$timeline.length) timeline.element().insertBefore($$1('.open:contains(Monitorar Documento)'));
                                         if ($timeline.length) $timeline.append(timeline.element().find('li')[0]);
                                         loader.searchCompleted();
                                         controller.alert({
@@ -35136,9 +35153,9 @@
                                           subtitle: 'Foi gerado um relatório bate-rápido de seus cedentes e sacados.',
                                           paragraph: 'Você já pode conferir os protestos e cheques sem fundos dos documentos enviados.'
                                         });
-                                        $(window).scrollTop($(".report:contains('Que tal monitorar um CPF ou CNPJ?'):last").offset().top); // Promise.all(insertDocumentPromises).then();
+                                        $$1(window).scrollTop($$1(".report:contains('Que tal monitorar um CPF ou CNPJ?'):last").offset().top); // Promise.all(insertDocumentPromises).then();
 
-                                      case 25:
+                                      case 28:
                                       case "end":
                                         return _context3.stop();
                                     }
@@ -35158,7 +35175,7 @@
                       return _ref11.apply(this, arguments);
                     };
                   }());
-                  $('input[name=monitorar]').on('click',
+                  $$1('input[name=monitorar]').on('click',
                   /*#__PURE__*/
                   function () {
                     var _ref15 = _asyncToGenerator(
@@ -35296,7 +35313,7 @@
             localStorage.relatorios = true;
             var timeline = controller.call('timeline');
             timelineGenerator(timeline, data);
-            timeline.element().insertBefore($('.open:contains(Monitorar Documento)', report.element()));
+            timeline.element().insertBefore($$1('.open:contains(Monitorar Documento)', report.element()));
           }
         });
       } catch (e) {
