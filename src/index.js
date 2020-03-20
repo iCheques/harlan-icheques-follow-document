@@ -22,7 +22,7 @@ import pickBy from 'lodash/pickBy';
 import './list';
 // import modalChooseFile from './modules/modal-choose-file';
 import {
-  insertDocument, deleteDocument as monitoreDeleteDocument, listDocuments, insertRelatorio, listRelatorios,
+  insertDocument, deleteDocument as monitoreDeleteDocument, listDocuments, insertRelatorio, listRelatorios, getDocuments
 } from './modules/monitore-crud';
 import csvGenerator from './modules/csv-generator';
 import { timelineGenerator, createLine } from './modules/timeline-generator';
@@ -500,7 +500,7 @@ harlan.addPlugin((controller) => {
 
       $('input[name=bate-rapido]').on('click', async (ev) => {
         ev.preventDefault();
-        let documentosMonitorados = await listDocuments();
+        
         hasCredits(500 * documents.length, async () => {
           modalConfirmation.close();
           const loader = harlan.call('ccbusca::loader');
@@ -509,28 +509,7 @@ harlan.addPlugin((controller) => {
           $('.card-progress').remove();
           // const insertDocumentPromises = await documents.map(insertDocument);
           // await listDocuments().then((documentsData) => {});
-          const delay = async ms => new Promise(resolve => setTimeout(resolve, ms));
-
-          const listarDocumentos = async () => {
-            console.log('Documentos Monitorados', documentosMonitorados);
-            if (documentosMonitorados.length) documentosMonitorados = documentosMonitorados.map(document => document.document);
-
-            await delay(10000);
-            const data = await listDocuments();
-            const resultado = data.filter(document => documents.includes(document.document));
-            if (documentosMonitorados.length) {
-              const documentosParaDeletar = resultado.filter(document => !documentosMonitorados.includes(document.document)).map(document => document.document);
-              documentosParaDeletar.forEach(monitoreDeleteDocument);
-            } else {
-              resultado.forEach(monitoreDeleteDocument);
-            }
-
-            return resultado;
-          };
-
-          const documentsData = await Promise.all(
-            documents.map(insertDocument),
-          ).then(() => listarDocumentos());
+          let documentsData = await getDocuments(documents);
 
           const uri = csvGenerator(documentsData);
 
