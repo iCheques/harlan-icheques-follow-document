@@ -34797,6 +34797,8 @@
       }
 
       createChartReport();
+      console.log('Follow: ', followedDocuments);
+      console.log('Data: ', data);
 
       if (!chart) {
         chart = new Chart(chartCanvas.getContext('2d'), {
@@ -34814,11 +34816,12 @@
               var idx = chartItem._index;
               var maxResults = 5;
               var results = graphicDataset[idx].slice();
+              console.log(results);
               controller.call('moreResults', maxResults).callback(function (cb) {
                 return Promise.all(results.splice(0, maxResults).map(function (_ref5) {
                   var document = _ref5.document;
                   return new Promise(function (resolve) {
-                    return controller.call('ccbusca', document, function (element) {
+                    return controller.call('ccbusca::monitore', document, function (element) {
                       return resolve(element);
                     });
                   }, false, true);
@@ -34847,6 +34850,26 @@
         chart.update();
       }
     }
+
+    harlan$1.registerCall('ccbusca::monitore', function (val, callback) {
+      for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+        args[_key - 2] = arguments[_key];
+      }
+
+      var ccbuscaQuery = {
+        'q[0]': 'SELECT FROM \'FINDER\'.\'BILLING\'',
+        'q[1]': 'SELECT FROM \'SEEKLOC\'.\'CCF\'',
+        'q[2]': 'SELECT FROM \'IEPTB\'.\'WS\'',
+        documento: val
+      };
+      if (cpf_cnpj_2.isValid(val)) ccbuscaQuery['q[3]'] = 'SELECT FROM \'RFB\'.\'CERTIDAO\' WHERE \'CACHE\' = \'+1 year\'';
+      controller.serverCommunication.call('USING \'CCBUSCA\' SELECT FROM \'FINDER\'.\'BILLING\'', controller.call('error::ajax', controller.call('loader::ajax', {
+        data: ccbuscaQuery,
+        success: function success(ret) {
+          controller.call.apply(controller, ['ccbusca::parse', ret, val, callback].concat(args));
+        }
+      })));
+    });
 
     function modalChooseCSV() {
       var modal = controller.call('modal');
@@ -35292,8 +35315,9 @@
           if (JSON.parse(data).data.length) {
             localStorage.relatorios = true;
             var timeline = controller.call('timeline');
-            timelineGenerator(timeline, data);
-            timeline.element().insertBefore($$1('.open:contains(Monitorar Documento)', report.element()));
+            timelineGenerator(timeline, data); //timeline.element().insertBefore($('.open:contains(Monitorar Documento)', report.element()));
+
+            timeline.element().insertBefore($$1('.open:contains(Monitorar Documento)', renderedReport));
           }
         });
       } catch (e) {
