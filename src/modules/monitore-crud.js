@@ -14,37 +14,37 @@ const insertRelatorio = relatorio => harlan.serverCommunication.call('INSERT INT
 
 const getDocuments = async (documents) => {
   const serverCalls = {
-    ccf: (documento) => harlan.serverCommunication.call(`SELECT FROM 'IEPTB'.'WS'`, {
+    ccf: documento => harlan.serverCommunication.call('SELECT FROM \'IEPTB\'.\'WS\'', {
       data: {
-        documento
+        documento,
       },
       cache: 'DISABLED',
     }).then(result => parseInt(result.getElementsByTagName('registros')[0].textContent), error => 0),
-    
-    rfb: (documento) => harlan.serverCommunication.call(`SELECT FROM 'SEEKLOC'.'CCF'`, {
+
+    rfb: documento => harlan.serverCommunication.call('SELECT FROM \'SEEKLOC\'.\'CCF\'', {
       data: {
-        documento
+        documento,
       },
       cache: 'DISABLED',
-    }).then(result => parseInt(result.getElementsByTagName('sumQteOcorrencias')[0].textContent), error => 0)
-  }
+    }).then(result => parseInt(result.getElementsByTagName('sumQteOcorrencias')[0].textContent), error => 0),
+  };
 
-  let promises = documents.map(async document => await Promise.all([serverCalls.ccf(document), serverCalls.rfb(document)]).then(
-    states => {
-      let obj = {
-        document,
-        state: {
-          protestos: states[0],
-          ccf: states[1]
-        }
-      };
-      return obj;
-  }));
+  const makeCalls = async document => Promise.all([serverCalls.ccf(document), serverCalls.rfb(document)]).then(
+    states => ({
+      document,
+      state: {
+        protestos: states[0],
+        ccf: states[1],
+      },
+    }),
+  );
+
+  const promises = documents.map(makeCalls);
 
   const data = await Promise.all(promises);
 
   return data;
-}
+};
 
 export {
   insertRelatorio,
