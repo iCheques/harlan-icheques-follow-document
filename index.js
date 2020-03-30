@@ -13708,7 +13708,10 @@
             p = 0.3;
           }
 
-          {
+          if (a < 1) {
+            a = 1;
+            s = p / 4;
+          } else {
             s = p / (2 * Math.PI) * Math.asin(1 / a);
           }
 
@@ -13731,7 +13734,10 @@
             p = 0.3;
           }
 
-          {
+          if (a < 1) {
+            a = 1;
+            s = p / 4;
+          } else {
             s = p / (2 * Math.PI) * Math.asin(1 / a);
           }
 
@@ -13754,7 +13760,10 @@
             p = 0.45;
           }
 
-          {
+          if (a < 1) {
+            a = 1;
+            s = p / 4;
+          } else {
             s = p / (2 * Math.PI) * Math.asin(1 / a);
           }
 
@@ -34363,31 +34372,6 @@
     });
   });
 
-  /* eslint-disable no-undef */
-  var deleteDocument = function deleteDocument(document) {
-    return harlan.serverCommunication.call('DELETE FROM \'FOLLOWDOCUMENT\'.\'DOCUMENT\'', {
-      data: {
-        documento: document
-      },
-      dataType: 'json'
-    });
-  };
-
-  var insertDocument = function insertDocument(document) {
-    return harlan.serverCommunication.call('INSERT INTO \'FOLLOWDOCUMENT\'.\'DOCUMENT\'', {
-      data: {
-        documento: document
-      },
-      dataType: 'json'
-    });
-  };
-
-  var listDocuments = function listDocuments() {
-    return harlan.serverCommunication.call('SELECT FROM \'FOLLOWDOCUMENT\'.\'LIST\'', {
-      dataType: 'json'
-    });
-  };
-
   var listRelatorios = function listRelatorios() {
     return harlan.serverCommunication.call('SELECT FROM \'HarlanBateRapido\'.\'Relatorios\'', {
       dataType: 'json'
@@ -34405,6 +34389,98 @@
       dataType: 'json'
     });
   };
+
+  var getDocuments =
+  /*#__PURE__*/
+  function () {
+    var _ref = _asyncToGenerator(
+    /*#__PURE__*/
+    regeneratorRuntime.mark(function _callee2(documents) {
+      var serverCalls, makeCalls, promises, data;
+      return regeneratorRuntime.wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              serverCalls = {
+                ccf: function ccf(documento) {
+                  return harlan.serverCommunication.call('SELECT FROM \'IEPTB\'.\'WS\'', {
+                    data: {
+                      documento: documento
+                    },
+                    cache: 'DISABLED'
+                  }).then(function (result) {
+                    return parseInt(result.getElementsByTagName('registros')[0].textContent);
+                  }, function (error) {
+                    return 0;
+                  });
+                },
+                rfb: function rfb(documento) {
+                  return harlan.serverCommunication.call('SELECT FROM \'SEEKLOC\'.\'CCF\'', {
+                    data: {
+                      documento: documento
+                    },
+                    cache: 'DISABLED'
+                  }).then(function (result) {
+                    return parseInt(result.getElementsByTagName('sumQteOcorrencias')[0].textContent);
+                  }, function (error) {
+                    return 0;
+                  });
+                }
+              };
+
+              makeCalls =
+              /*#__PURE__*/
+              function () {
+                var _ref2 = _asyncToGenerator(
+                /*#__PURE__*/
+                regeneratorRuntime.mark(function _callee(document) {
+                  return regeneratorRuntime.wrap(function _callee$(_context) {
+                    while (1) {
+                      switch (_context.prev = _context.next) {
+                        case 0:
+                          return _context.abrupt("return", Promise.all([serverCalls.ccf(document), serverCalls.rfb(document)]).then(function (states) {
+                            return {
+                              document: document,
+                              state: {
+                                protestos: states[0],
+                                ccf: states[1]
+                              }
+                            };
+                          }));
+
+                        case 1:
+                        case "end":
+                          return _context.stop();
+                      }
+                    }
+                  }, _callee);
+                }));
+
+                return function makeCalls(_x2) {
+                  return _ref2.apply(this, arguments);
+                };
+              }();
+
+              promises = documents.map(makeCalls);
+              _context2.next = 5;
+              return Promise.all(promises);
+
+            case 5:
+              data = _context2.sent;
+              return _context2.abrupt("return", data);
+
+            case 7:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, _callee2);
+    }));
+
+    return function getDocuments(_x) {
+      return _ref.apply(this, arguments);
+    };
+  }();
 
   var generateCSVData = function generateCSVData(data) {
     var csvData = data.map(function (documento) {
@@ -34749,7 +34825,7 @@
                 return Promise.all(results.splice(0, maxResults).map(function (_ref5) {
                   var document = _ref5.document;
                   return new Promise(function (resolve) {
-                    return controller.call('ccbusca', document, function (element) {
+                    return controller.call('monitore::section', document, function (element) {
                       return resolve(element);
                     });
                   }, false, true);
@@ -34779,6 +34855,77 @@
       }
     }
 
+    controller.registerCall('monitore::section', function (document, callback) {
+      var followedDocument = followedDocuments[document].state;
+
+      var _controller$call = controller.call('section', 'Busca Consolidada', "Informa\xE7\xF5es agregadas documento ".concat(document), 'Registro encontrado'),
+          _controller$call2 = _slicedToArray(_controller$call, 3),
+          $section = _controller$call2[0],
+          $results = _controller$call2[1],
+          $actions = _controller$call2[2];
+
+      var protestos = followedDocument.protestos > 1 ? followedDocument.protestos : 'sem';
+      var ccf = followedDocument.ccf > 0 ? followedDocument.protestos : 'sem';
+      $section.find('.results-display').text("Registro encontrado, ".concat(protestos, " protesto(s), ").concat(ccf, " cheque(s) sem fundo(s)"));
+      $actions.find('.action-resize i').on('click', function () {
+        if ($actions.find('.action-resize i').hasClass('fa-plus-square-o')) {
+          hasCredits(1500,
+          /*#__PURE__*/
+          _asyncToGenerator(
+          /*#__PURE__*/
+          regeneratorRuntime.mark(function _callee() {
+            var $resultado;
+            return regeneratorRuntime.wrap(function _callee$(_context) {
+              while (1) {
+                switch (_context.prev = _context.next) {
+                  case 0:
+                    _context.next = 2;
+                    return new Promise(function (resolve) {
+                      return controller.call('ccbusca::monitore', document, function (element) {
+                        return resolve(element);
+                      });
+                    }, false, true);
+
+                  case 2:
+                    $resultado = _context.sent;
+                    $resultado.find('h3').text("INFORMA\xC7\xD5ES AGREGADAS DOCUMENTO ".concat(document));
+                    $resultado.insertBefore($section);
+                    $$1('html, body').animate({
+                      scrollTop: $resultado.offset().top
+                    }, 2000);
+                    $section.remove();
+
+                  case 7:
+                  case "end":
+                    return _context.stop();
+                }
+              }
+            }, _callee);
+          })));
+        }
+      });
+      return callback($section);
+    });
+    controller.registerCall('ccbusca::monitore', function (val, callback) {
+      for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+        args[_key - 2] = arguments[_key];
+      }
+
+      var ccbuscaQuery = {
+        'q[0]': 'SELECT FROM \'FINDER\'.\'BILLING\'',
+        'q[1]': 'SELECT FROM \'SEEKLOC\'.\'CCF\'',
+        'q[2]': 'SELECT FROM \'IEPTB\'.\'WS\'',
+        documento: val
+      };
+      if (cpf_cnpj_2.isValid(val)) ccbuscaQuery['q[3]'] = 'SELECT FROM \'RFB\'.\'CERTIDAO\' WHERE \'CACHE\' = \'+1 year\'';
+      controller.serverCommunication.call('USING \'CCBUSCA\' SELECT FROM \'FINDER\'.\'BILLING\'', controller.call('error::ajax', controller.call('loader::ajax', {
+        data: ccbuscaQuery,
+        success: function success(ret) {
+          controller.call.apply(controller, ['ccbusca::parse', ret, val, callback].concat(args));
+        }
+      })));
+    });
+
     function modalChooseCSV() {
       var modal = controller.call('modal');
       modal.title('Envie seu Arquivo CSV para Monitoramento/Bate-rápido');
@@ -34793,7 +34940,8 @@
 
         if (files.length) {
           modal.close();
-          return submitFile(files[0]);
+          if (files[0].type === 'text/csv') return submitFile(files[0]);
+          return toastr.error('É necessário que você envie um arquivo CSV.', 'Formato de arquivo inválido!');
         }
 
         toastr.error('É necessário que você envie um arquivo para continuar.', 'Nenhum arquivo selecionado');
@@ -34837,8 +34985,8 @@
               },
               reverse: false
             },
-            validate: function validate(_ref6) {
-              var element = _ref6.element;
+            validate: function validate(_ref7) {
+              var element = _ref7.element;
               var val = element.val();
 
               if (val) {
@@ -34855,8 +35003,8 @@
             placeholder: 'Nascimento (Opcional)',
             mask: '00/00/0000',
             pikaday: true,
-            validate: function validate(_ref7) {
-              var element = _ref7.element;
+            validate: function validate(_ref8) {
+              var element = _ref8.element;
 
               if (element.val()) {
                 return moment$1(element.val(), 'DD/MM/YYYY').isValid();
@@ -34897,7 +35045,7 @@
       updateChart();
     }
 
-    function deleteDocument$1(args, callback) {
+    function deleteDocument(args, callback) {
       callback();
       var document = args.document;
       delete followedDocuments[document];
@@ -34932,10 +35080,10 @@
 
     controller.registerTrigger('serverCommunication::websocket::followDocument::insert', 'icheques::ban::register', changeDocument);
     controller.registerTrigger('serverCommunication::websocket::followDocument::update', 'icheques::ban::register', changeDocument);
-    controller.registerTrigger('serverCommunication::websocket::followDocument::delete', 'icheques::ban::register', deleteDocument$1);
-    controller.registerTrigger('ccbusca::parser', 'followDocument', function (_ref8, callback) {
-      var result = _ref8.result,
-          doc = _ref8.doc;
+    controller.registerTrigger('serverCommunication::websocket::followDocument::delete', 'icheques::ban::register', deleteDocument);
+    controller.registerTrigger('ccbusca::parser', 'followDocument', function (_ref9, callback) {
+      var result = _ref9.result,
+          doc = _ref9.doc;
       callback();
       var document = doc.replace(/[^0-9]/g, '');
 
@@ -34957,27 +35105,26 @@
     });
 
     function submitFile(file) {
-      console.log('SubmitFIle', file);
       var reader = new FileReader();
 
       reader.onload =
       /*#__PURE__*/
       function () {
-        var _ref9 = _asyncToGenerator(
+        var _ref10 = _asyncToGenerator(
         /*#__PURE__*/
-        regeneratorRuntime.mark(function _callee7(_ref10) {
+        regeneratorRuntime.mark(function _callee6(_ref11) {
           var result, documents, modalConfirmation, formConfirmation, label, label2;
-          return regeneratorRuntime.wrap(function _callee7$(_context7) {
+          return regeneratorRuntime.wrap(function _callee6$(_context6) {
             while (1) {
-              switch (_context7.prev = _context7.next) {
+              switch (_context6.prev = _context6.next) {
                 case 0:
-                  result = _ref10.target.result;
+                  result = _ref11.target.result;
                   documents = result.match(/(\d{2}(.)?\d{3}(.)?\d{3}(\/)?\d{4}(.)?\d{2}|\d{3}(.)?\d{3}(.)?\d{3}(-)?\d{2})/g).filter(function (cpfCnpj) {
                     return cpf_cnpj_1.isValid(cpfCnpj) || cpf_cnpj_2.isValid(cpfCnpj);
                   });
 
                   if (documents.length) {
-                    _context7.next = 5;
+                    _context6.next = 5;
                     break;
                   }
 
@@ -34986,7 +35133,7 @@
                     subtitle: 'Verifique se o seu Excel possui CPFs e CNPJs para serem monitorados.',
                     paragraph: 'É possível que o seu arquivo CSV esteja corrompido.'
                   });
-                  return _context7.abrupt("return");
+                  return _context6.abrupt("return");
 
                 case 5:
                   modalConfirmation = controller.call('modal');
@@ -35003,29 +35150,23 @@
                   $$1('input[name=bate-rapido]').on('click',
                   /*#__PURE__*/
                   function () {
-                    var _ref11 = _asyncToGenerator(
+                    var _ref12 = _asyncToGenerator(
                     /*#__PURE__*/
-                    regeneratorRuntime.mark(function _callee4(ev) {
-                      var documentosMonitorados;
-                      return regeneratorRuntime.wrap(function _callee4$(_context4) {
+                    regeneratorRuntime.mark(function _callee3(ev) {
+                      return regeneratorRuntime.wrap(function _callee3$(_context3) {
                         while (1) {
-                          switch (_context4.prev = _context4.next) {
+                          switch (_context3.prev = _context3.next) {
                             case 0:
                               ev.preventDefault();
-                              _context4.next = 3;
-                              return listDocuments();
-
-                            case 3:
-                              documentosMonitorados = _context4.sent;
                               hasCredits(500 * documents.length,
                               /*#__PURE__*/
                               _asyncToGenerator(
                               /*#__PURE__*/
-                              regeneratorRuntime.mark(function _callee3() {
-                                var loader, delay, listarDocumentos, documentsData, uri, date, expireDate, relatorio, retornoDaInsercao, timeline, $timeline;
-                                return regeneratorRuntime.wrap(function _callee3$(_context3) {
+                              regeneratorRuntime.mark(function _callee2() {
+                                var loader, documentsData, uri, date, expireDate, relatorio, retornoDaInsercao, timeline, $timeline;
+                                return regeneratorRuntime.wrap(function _callee2$(_context2) {
                                   while (1) {
-                                    switch (_context3.prev = _context3.next) {
+                                    switch (_context2.prev = _context2.next) {
                                       case 0:
                                         modalConfirmation.close();
                                         loader = harlan$1.call('ccbusca::loader');
@@ -35034,98 +35175,14 @@
                                         $$1('.card-progress').remove(); // const insertDocumentPromises = await documents.map(insertDocument);
                                         // await listDocuments().then((documentsData) => {});
 
-                                        delay =
-                                        /*#__PURE__*/
-                                        function () {
-                                          var _ref13 = _asyncToGenerator(
-                                          /*#__PURE__*/
-                                          regeneratorRuntime.mark(function _callee(ms) {
-                                            return regeneratorRuntime.wrap(function _callee$(_context) {
-                                              while (1) {
-                                                switch (_context.prev = _context.next) {
-                                                  case 0:
-                                                    return _context.abrupt("return", new Promise(function (resolve) {
-                                                      return setTimeout(resolve, ms);
-                                                    }));
+                                        _context2.next = 7;
+                                        return getDocuments(documents);
 
-                                                  case 1:
-                                                  case "end":
-                                                    return _context.stop();
-                                                }
-                                              }
-                                            }, _callee);
-                                          }));
-
-                                          return function delay(_x3) {
-                                            return _ref13.apply(this, arguments);
-                                          };
-                                        }();
-
-                                        listarDocumentos =
-                                        /*#__PURE__*/
-                                        function () {
-                                          var _ref14 = _asyncToGenerator(
-                                          /*#__PURE__*/
-                                          regeneratorRuntime.mark(function _callee2() {
-                                            var data, resultado, documentosParaDeletar;
-                                            return regeneratorRuntime.wrap(function _callee2$(_context2) {
-                                              while (1) {
-                                                switch (_context2.prev = _context2.next) {
-                                                  case 0:
-                                                    console.log('Documentos Monitorados', documentosMonitorados);
-                                                    if (documentosMonitorados.length) documentosMonitorados = documentosMonitorados.map(function (document) {
-                                                      return document.document;
-                                                    });
-                                                    _context2.next = 4;
-                                                    return delay(10000);
-
-                                                  case 4:
-                                                    _context2.next = 6;
-                                                    return listDocuments();
-
-                                                  case 6:
-                                                    data = _context2.sent;
-                                                    resultado = data.filter(function (document) {
-                                                      return documents.includes(document.document);
-                                                    });
-
-                                                    if (documentosMonitorados.length) {
-                                                      documentosParaDeletar = resultado.filter(function (document) {
-                                                        return !documentosMonitorados.includes(document.document);
-                                                      }).map(function (document) {
-                                                        return document.document;
-                                                      });
-                                                      documentosParaDeletar.forEach(deleteDocument);
-                                                    } else {
-                                                      resultado.forEach(deleteDocument);
-                                                    }
-
-                                                    return _context2.abrupt("return", resultado);
-
-                                                  case 10:
-                                                  case "end":
-                                                    return _context2.stop();
-                                                }
-                                              }
-                                            }, _callee2);
-                                          }));
-
-                                          return function listarDocumentos() {
-                                            return _ref14.apply(this, arguments);
-                                          };
-                                        }();
-
-                                        _context3.next = 9;
-                                        return Promise.all(documents.map(insertDocument)).then(function () {
-                                          return listarDocumentos();
-                                        });
-
-                                      case 9:
-                                        documentsData = _context3.sent;
+                                      case 7:
+                                        documentsData = _context2.sent;
                                         uri = csvGenerator(documentsData); // const relatorios = localStorage.relatorios ? JSON.parse(localStorage.relatorios) : [];
 
                                         date = moment$1();
-                                        console.log('Length data', documentsData.length);
                                         expireDate = moment$1().add(7, 'day').toISOString();
                                         relatorio = {
                                           name: "Relat\xF3rio de ".concat(date.format('LLL')),
@@ -35134,13 +35191,12 @@
                                           expireDate: expireDate
                                         }; // relatorios.push(relatorio);
 
-                                        _context3.next = 17;
+                                        _context2.next = 14;
                                         return insertRelatorio(relatorio);
 
-                                      case 17:
-                                        retornoDaInsercao = _context3.sent;
+                                      case 14:
+                                        retornoDaInsercao = _context2.sent;
                                         relatorio = JSON.parse(retornoDaInsercao).data;
-                                        console.log('retorno inserção', relatorio);
                                         timeline = controller.call('timeline');
                                         createLine(relatorio, timeline, false);
                                         $timeline = $$1('.timeline', $$1('.content:contains(Que tal monitorar um CPF ou CNPJ?)'));
@@ -35155,36 +35211,36 @@
                                         });
                                         $$1(window).scrollTop($$1(".report:contains('Que tal monitorar um CPF ou CNPJ?'):last").offset().top); // Promise.all(insertDocumentPromises).then();
 
-                                      case 28:
+                                      case 24:
                                       case "end":
-                                        return _context3.stop();
+                                        return _context2.stop();
                                     }
                                   }
-                                }, _callee3);
+                                }, _callee2);
                               })));
 
-                            case 5:
+                            case 2:
                             case "end":
-                              return _context4.stop();
+                              return _context3.stop();
                           }
                         }
-                      }, _callee4);
+                      }, _callee3);
                     }));
 
                     return function (_x2) {
-                      return _ref11.apply(this, arguments);
+                      return _ref12.apply(this, arguments);
                     };
                   }());
                   $$1('input[name=monitorar]').on('click',
                   /*#__PURE__*/
                   function () {
-                    var _ref15 = _asyncToGenerator(
+                    var _ref14 = _asyncToGenerator(
                     /*#__PURE__*/
-                    regeneratorRuntime.mark(function _callee6(ev) {
+                    regeneratorRuntime.mark(function _callee5(ev) {
                       var modal, progress, sended;
-                      return regeneratorRuntime.wrap(function _callee6$(_context6) {
+                      return regeneratorRuntime.wrap(function _callee5$(_context5) {
                         while (1) {
-                          switch (_context6.prev = _context6.next) {
+                          switch (_context5.prev = _context5.next) {
                             case 0:
                               ev.preventDefault();
                               modal = controller.call('modal');
@@ -35193,23 +35249,23 @@
                               modal.paragraph('Experimente tomar um café enquanto nossos servidores recebem seus CPFs e CNPJs.');
                               progress = modal.addProgress();
                               sended = 0;
-                              _context6.prev = 7;
-                              _context6.next = 10;
+                              _context5.prev = 7;
+                              _context5.next = 10;
                               return documents.reduce(
                               /*#__PURE__*/
                               function () {
-                                var _ref16 = _asyncToGenerator(
+                                var _ref15 = _asyncToGenerator(
                                 /*#__PURE__*/
-                                regeneratorRuntime.mark(function _callee5(promise, documento) {
-                                  return regeneratorRuntime.wrap(function _callee5$(_context5) {
+                                regeneratorRuntime.mark(function _callee4(promise, documento) {
+                                  return regeneratorRuntime.wrap(function _callee4$(_context4) {
                                     while (1) {
-                                      switch (_context5.prev = _context5.next) {
+                                      switch (_context4.prev = _context4.next) {
                                         case 0:
-                                          _context5.next = 2;
+                                          _context4.next = 2;
                                           return promise;
 
                                         case 2:
-                                          _context5.next = 4;
+                                          _context4.next = 4;
                                           return new Promise(function (resolve, reject) {
                                             return controller.server.call("INSERT INTO 'FOLLOWDOCUMENT'.'DOCUMENT'", controller.call('error::ajax', {
                                               dataType: 'json',
@@ -35229,35 +35285,35 @@
 
                                         case 4:
                                         case "end":
-                                          return _context5.stop();
+                                          return _context4.stop();
                                       }
                                     }
-                                  }, _callee5);
+                                  }, _callee4);
                                 }));
 
-                                return function (_x5, _x6) {
-                                  return _ref16.apply(this, arguments);
+                                return function (_x4, _x5) {
+                                  return _ref15.apply(this, arguments);
                                 };
                               }(), Promise.resolve());
 
                             case 10:
-                              _context6.next = 16;
+                              _context5.next = 16;
                               break;
 
                             case 12:
-                              _context6.prev = 12;
-                              _context6.t0 = _context6["catch"](7);
+                              _context5.prev = 12;
+                              _context5.t0 = _context5["catch"](7);
                               controller.alert({
                                 title: 'Uoh! Não foi possível enviar todos os documentos para monitoramento.',
                                 subtitle: 'Sua conexão com a internet pode estar com problemas, impedindo o envio de documentos.',
-                                paragraph: "Tente enviar menos documentos para que possamos realizar esta opera\xE7\xE3o (".concat(_context6.t0.toString(), ").")
+                                paragraph: "Tente enviar menos documentos para que possamos realizar esta opera\xE7\xE3o (".concat(_context5.t0.toString(), ").")
                               });
-                              return _context6.abrupt("return");
+                              return _context5.abrupt("return");
 
                             case 16:
-                              _context6.prev = 16;
+                              _context5.prev = 16;
                               modal.close();
-                              return _context6.finish(16);
+                              return _context5.finish(16);
 
                             case 19:
                               controller.alert({
@@ -35270,35 +35326,35 @@
 
                             case 21:
                             case "end":
-                              return _context6.stop();
+                              return _context5.stop();
                           }
                         }
-                      }, _callee6, null, [[7, 12, 16, 19]]);
+                      }, _callee5, null, [[7, 12, 16, 19]]);
                     }));
 
-                    return function (_x4) {
-                      return _ref15.apply(this, arguments);
+                    return function (_x3) {
+                      return _ref14.apply(this, arguments);
                     };
                   }());
 
                 case 18:
                 case "end":
-                  return _context7.stop();
+                  return _context6.stop();
               }
             }
-          }, _callee7);
+          }, _callee6);
         }));
 
         return function (_x) {
-          return _ref9.apply(this, arguments);
+          return _ref10.apply(this, arguments);
         };
       }();
 
       reader.readAsText(file);
     }
 
-    controller.registerTrigger('dragdrop', 'followDocument', function (_ref17, callback) {
-      var files = _ref17.files;
+    controller.registerTrigger('dragdrop', 'followDocument', function (_ref16, callback) {
+      var files = _ref16.files;
       callback();
       if (!files.length) return;
       files.map(function (file) {
@@ -35312,8 +35368,9 @@
           if (JSON.parse(data).data.length) {
             localStorage.relatorios = true;
             var timeline = controller.call('timeline');
-            timelineGenerator(timeline, data);
-            timeline.element().insertBefore($$1('.open:contains(Monitorar Documento)', report.element()));
+            timelineGenerator(timeline, data); // timeline.element().insertBefore($('.open:contains(Monitorar Documento)', report.element()));
+
+            timeline.element().insertBefore($$1('.open:contains(Monitorar Documento)', renderedReport));
           }
         });
       } catch (e) {

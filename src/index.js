@@ -22,7 +22,7 @@ import pickBy from 'lodash/pickBy';
 import './list';
 // import modalChooseFile from './modules/modal-choose-file';
 import {
-  insertDocument, deleteDocument as monitoreDeleteDocument, listDocuments, insertRelatorio, listRelatorios,
+  insertRelatorio, listRelatorios, getDocuments,
 } from './modules/monitore-crud';
 import csvGenerator from './modules/csv-generator';
 import { timelineGenerator, createLine } from './modules/timeline-generator';
@@ -275,7 +275,7 @@ harlan.addPlugin((controller) => {
 
             controller.call('moreResults', maxResults)
               .callback(cb => Promise.all(results.splice(0, maxResults)
-                .map(({ document }) => new Promise(resolve => controller.call('ccbusca', document, element => resolve(element)), false, true)))
+                .map(({ document }) => new Promise(resolve => controller.call('monitore::section', document, element => resolve(element)), false, true)))
                 .then((elements) => {
                   cb(elements.slice());
                   if (!elements.length) return;
@@ -299,6 +299,54 @@ harlan.addPlugin((controller) => {
     }
   }
 
+  controller.registerCall('monitore::section', (document, callback, ...args) => {
+    const followedDocument = followedDocuments[document].state;
+    const [$section, $results, $actions] = controller.call(
+      'section',
+      'Busca Consolidada',
+      `Informações agregadas documento ${document}`,
+      'Registro encontrado',
+    );
+
+    const protestos = followedDocument.protestos > 1 ? followedDocument.protestos : 'sem';
+    const ccf = followedDocument.ccf > 0 ? followedDocument.protestos : 'sem';
+    $section.find('.results-display').text(`Registro encontrado, ${protestos} protesto(s), ${ccf} cheque(s) sem fundo(s)`);
+    $actions.find('.action-resize i').on('click', () => {
+      if ($actions.find('.action-resize i').hasClass('fa-plus-square-o')) {
+        hasCredits(1500, async () => {
+          const $resultado = await new Promise(resolve => controller.call('ccbusca::monitore', document, element => resolve(element)), false, true);
+          $resultado.find('h3').text(`INFORMAÇÕES AGREGADAS DOCUMENTO ${document}`);
+          $resultado.insertBefore($section);
+          $('html, body').animate({
+            scrollTop: $resultado.offset().top,
+          }, 2000);
+          $section.remove();
+        });
+      }
+    });
+
+    return callback($section);
+  });
+
+  controller.registerCall('ccbusca::monitore', (val, callback, ...args) => {
+    const ccbuscaQuery = {
+      'q[0]': 'SELECT FROM \'FINDER\'.\'BILLING\'',
+      'q[1]': 'SELECT FROM \'SEEKLOC\'.\'CCF\'',
+      'q[2]': 'SELECT FROM \'IEPTB\'.\'WS\'',
+      documento: val,
+    };
+
+    if (CNPJ.isValid(val)) ccbuscaQuery['q[3]'] = 'SELECT FROM \'RFB\'.\'CERTIDAO\' WHERE \'CACHE\' = \'+1 year\'';
+
+    controller.serverCommunication.call('USING \'CCBUSCA\' SELECT FROM \'FINDER\'.\'BILLING\'',
+      controller.call('error::ajax', controller.call('loader::ajax', {
+        data: ccbuscaQuery,
+        success(ret) {
+          controller.call('ccbusca::parse', ret, val, callback, ...args);
+        },
+      })));
+  });
+
   function modalChooseCSV() {
     const modal = controller.call('modal');
     modal.title('Envie seu Arquivo CSV para Monitoramento/Bate-rápido');
@@ -312,7 +360,8 @@ harlan.addPlugin((controller) => {
       const { files } = $('input[name=files]')[0];
       if (files.length) {
         modal.close();
-        return submitFile(files[0]);
+        if (files[0].type === 'text/csv') return submitFile(files[0]);
+        return toastr.error('É necessário que você envie um arquivo CSV.', 'Formato de arquivo inválido!');;
       }
       toastr.error('É necessário que você envie um arquivo para continuar.', 'Nenhum arquivo selecionado');
     });
@@ -466,7 +515,6 @@ harlan.addPlugin((controller) => {
   });
 
   function submitFile(file) {
-    console.log('SubmitFIle', file);
     const reader = new FileReader();
     reader.onload = async ({ target: { result } }) => {
       const documents = result
@@ -500,7 +548,7 @@ harlan.addPlugin((controller) => {
 
       $('input[name=bate-rapido]').on('click', async (ev) => {
         ev.preventDefault();
-        let documentosMonitorados = await listDocuments();
+
         hasCredits(500 * documents.length, async () => {
           modalConfirmation.close();
           const loader = harlan.call('ccbusca::loader');
@@ -509,35 +557,13 @@ harlan.addPlugin((controller) => {
           $('.card-progress').remove();
           // const insertDocumentPromises = await documents.map(insertDocument);
           // await listDocuments().then((documentsData) => {});
-          const delay = async ms => new Promise(resolve => setTimeout(resolve, ms));
-
-          const listarDocumentos = async () => {
-            console.log('Documentos Monitorados', documentosMonitorados);
-            if (documentosMonitorados.length) documentosMonitorados = documentosMonitorados.map(document => document.document);
-
-            await delay(10000);
-            const data = await listDocuments();
-            const resultado = data.filter(document => documents.includes(document.document));
-            if (documentosMonitorados.length) {
-              const documentosParaDeletar = resultado.filter(document => !documentosMonitorados.includes(document.document)).map(document => document.document);
-              documentosParaDeletar.forEach(monitoreDeleteDocument);
-            } else {
-              resultado.forEach(monitoreDeleteDocument);
-            }
-
-            return resultado;
-          };
-
-          const documentsData = await Promise.all(
-            documents.map(insertDocument),
-          ).then(() => listarDocumentos());
+          const documentsData = await getDocuments(documents);
 
           const uri = csvGenerator(documentsData);
 
           // const relatorios = localStorage.relatorios ? JSON.parse(localStorage.relatorios) : [];
 
           const date = moment();
-          console.log('Length data', documentsData.length);
           const expireDate = moment().add(7, 'day').toISOString();
           let relatorio = {
             name: `Relatório de ${date.format('LLL')}`,
@@ -549,7 +575,6 @@ harlan.addPlugin((controller) => {
           // relatorios.push(relatorio);
           const retornoDaInsercao = await insertRelatorio(relatorio);
           relatorio = JSON.parse(retornoDaInsercao).data;
-          console.log('retorno inserção', relatorio);
 
           const timeline = controller.call('timeline');
           createLine(relatorio, timeline, false);
@@ -629,7 +654,8 @@ harlan.addPlugin((controller) => {
           localStorage.relatorios = true;
           const timeline = controller.call('timeline');
           timelineGenerator(timeline, data);
-          timeline.element().insertBefore($('.open:contains(Monitorar Documento)', report.element()));
+          // timeline.element().insertBefore($('.open:contains(Monitorar Documento)', report.element()));
+          timeline.element().insertBefore($('.open:contains(Monitorar Documento)', renderedReport));
         }
       });
     } catch (e) {

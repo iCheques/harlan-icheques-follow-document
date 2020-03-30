@@ -1,25 +1,3 @@
-/* eslint-disable no-undef */
-
-const deleteDocument = document => harlan.serverCommunication.call('DELETE FROM \'FOLLOWDOCUMENT\'.\'DOCUMENT\'', {
-  data: {
-    documento: document,
-  },
-  dataType: 'json',
-});
-
-
-const insertDocument = document => harlan.serverCommunication.call('INSERT INTO \'FOLLOWDOCUMENT\'.\'DOCUMENT\'', {
-  data: {
-    documento: document,
-  },
-  dataType: 'json',
-});
-
-
-const listDocuments = () => harlan.serverCommunication.call('SELECT FROM \'FOLLOWDOCUMENT\'.\'LIST\'', {
-  dataType: 'json',
-});
-
 const listRelatorios = () => harlan.serverCommunication.call('SELECT FROM \'HarlanBateRapido\'.\'Relatorios\'', {
   dataType: 'json',
 });
@@ -34,6 +12,42 @@ const insertRelatorio = relatorio => harlan.serverCommunication.call('INSERT INT
   dataType: 'json',
 });
 
+const getDocuments = async (documents) => {
+  const serverCalls = {
+    ccf: documento => harlan.serverCommunication.call('SELECT FROM \'IEPTB\'.\'WS\'', {
+      data: {
+        documento,
+      },
+      cache: 'DISABLED',
+    }).then(result => parseInt(result.getElementsByTagName('registros')[0].textContent), error => 0),
+
+    rfb: documento => harlan.serverCommunication.call('SELECT FROM \'SEEKLOC\'.\'CCF\'', {
+      data: {
+        documento,
+      },
+      cache: 'DISABLED',
+    }).then(result => parseInt(result.getElementsByTagName('sumQteOcorrencias')[0].textContent), error => 0),
+  };
+
+  const makeCalls = async document => Promise.all([serverCalls.ccf(document), serverCalls.rfb(document)]).then(
+    states => ({
+      document,
+      state: {
+        protestos: states[0],
+        ccf: states[1],
+      },
+    }),
+  );
+
+  const promises = documents.map(makeCalls);
+
+  const data = await Promise.all(promises);
+
+  return data;
+};
+
 export {
-  insertDocument, listDocuments, deleteDocument, insertRelatorio, listRelatorios,
+  insertRelatorio,
+  listRelatorios,
+  getDocuments,
 };
