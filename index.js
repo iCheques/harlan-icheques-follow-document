@@ -1,9 +1,9 @@
 (function ($$1, harlan$1, moment$1) {
   'use strict';
 
-  $$1 = $$1 && $$1.hasOwnProperty('default') ? $$1['default'] : $$1;
-  harlan$1 = harlan$1 && harlan$1.hasOwnProperty('default') ? harlan$1['default'] : harlan$1;
-  moment$1 = moment$1 && moment$1.hasOwnProperty('default') ? moment$1['default'] : moment$1;
+  $$1 = $$1 && Object.prototype.hasOwnProperty.call($$1, 'default') ? $$1['default'] : $$1;
+  harlan$1 = harlan$1 && Object.prototype.hasOwnProperty.call(harlan$1, 'default') ? harlan$1['default'] : harlan$1;
+  moment$1 = moment$1 && Object.prototype.hasOwnProperty.call(moment$1, 'default') ? moment$1['default'] : moment$1;
 
   function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
     try {
@@ -13708,10 +13708,7 @@
             p = 0.3;
           }
 
-          if (a < 1) {
-            a = 1;
-            s = p / 4;
-          } else {
+          {
             s = p / (2 * Math.PI) * Math.asin(1 / a);
           }
 
@@ -13734,10 +13731,7 @@
             p = 0.3;
           }
 
-          if (a < 1) {
-            a = 1;
-            s = p / 4;
-          } else {
+          {
             s = p / (2 * Math.PI) * Math.asin(1 / a);
           }
 
@@ -13760,10 +13754,7 @@
             p = 0.45;
           }
 
-          if (a < 1) {
-            a = 1;
-            s = p / 4;
-          } else {
+          {
             s = p / (2 * Math.PI) * Math.asin(1 / a);
           }
 
