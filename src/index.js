@@ -18,6 +18,7 @@ import values from 'lodash/values';
 import uniq from 'lodash/uniq';
 import meanBy from 'lodash/meanBy';
 import pickBy from 'lodash/pickBy';
+import { createPopper } from '@popperjs/core';
 
 import './list';
 // import modalChooseFile from './modules/modal-choose-file';
@@ -27,6 +28,7 @@ import {
 import csvGenerator from './modules/csv-generator';
 import { timelineGenerator, createLine } from './modules/timeline-generator';
 import hasCredits from './modules/has-credits';
+import imgVirus from './modules/img';
 
 const harmonizer = new Harmonizer();
 const colorMix = 'neutral';
@@ -444,6 +446,30 @@ harlan.addPlugin((controller) => {
 
     report.button('Monitorar Documento', () => modalFollow());
     report.button('Enviar Arquivo CSV', () => modalChooseCSV()).addClass('credithub-button');
+    
+    const covid = report.button('Auxilio Covid19').html(`${imgVirus()} Auxílio Covid19 ${imgVirus()}`).css({
+      backgroundColor: '#c32c14',
+      cursor: 'default'
+    }).attr({id:'auxilio-covid19-monitore', title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.'});
+    covid.mouseover(() => covid.css('background-color', '#a92b17')).mouseleave(() => covid.css('background-color', '#c32c14'));
+    $('svg', covid).each((i, el) => $(el).attr({width: '32px', height: '20px'}))
+    
+    const auxtopbar = $('<div>').css({
+      backgroundColor: '#c32c14',
+      padding: '0',
+      color: '#fff',
+      fontWeight: 'bold',
+      paddingTop: '0.5rem',
+      paddingBottom: '0.5rem'
+    }).addClass('content').attr({title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.', id: '#auxilio-topbar'}).html(`${imgVirus()} Auxílio Covid19 ${imgVirus()}`);
+    auxtopbar.mouseover(() => auxtopbar.css('background-color', '#a92b17')).mouseleave(() => auxtopbar.css('background-color', '#c32c14'));
+    $('svg', auxtopbar).each((i, el) => $(el).attr({width: '32px', height: '20px'}))
+
+    $('.actions .container').prepend(auxtopbar);
+
+    
+
+    
     report.gamification('brilliantIdea');
 
     const reportElement = report.element();
