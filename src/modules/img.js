@@ -1,4 +1,117 @@
-const imgVirus = () => `<svg
+export const imgVirusBlack = () => `<svg
+xmlns:dc="http://purl.org/dc/elements/1.1/"
+xmlns:cc="http://creativecommons.org/ns#"
+xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+xmlns:svg="http://www.w3.org/2000/svg"
+xmlns="http://www.w3.org/2000/svg"
+xmlns:xlink="http://www.w3.org/1999/xlink"
+xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+viewBox="0 0 334.8916 333.98901"
+version="1.1"
+id="svg956"
+sodipodi:docname="Virus_malware_hazard_icon.svg"
+inkscape:version="0.92.3 (2405546, 2018-03-11)">
+<metadata
+  id="metadata962">
+ <rdf:RDF>
+   <cc:Work
+      rdf:about="">
+     <dc:format>image/svg+xml</dc:format>
+     <dc:type
+        rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+   </cc:Work>
+ </rdf:RDF>
+</metadata>
+<defs
+  id="defs960" />
+<sodipodi:namedview
+  pagecolor="#ffffff"
+  bordercolor="#666666"
+  borderopacity="1"
+  objecttolerance="10"
+  gridtolerance="10"
+  guidetolerance="10"
+  inkscape:pageopacity="0"
+  inkscape:pageshadow="2"
+  inkscape:window-width="3840"
+  inkscape:window-height="2092"
+  id="namedview958"
+  showgrid="false"
+  inkscape:zoom="0.70661007"
+  inkscape:cx="-192.72456"
+  inkscape:cy="166.99451"
+  inkscape:window-x="0"
+  inkscape:window-y="32"
+  inkscape:window-maximized="1"
+  inkscape:current-layer="svg956" />
+<g
+  transform="translate(-169.84 -290.15)"
+  id="g954"
+  style="fill:#333333">
+ <g
+    id="a"
+    style="fill:#333333">
+   <path
+      id="d"
+      d="m284.16 408.85 23.844 10.136 29.159-17.7v-22.987l-53.003 30.55z"
+      style="fill:#333333" />
+   <use
+      transform="matrix(-1 0 0 1 674.33 -.073306)"
+      width="351.66501"
+      height="990"
+      xlink:href="#d"
+      id="use939"
+      style="fill:#333333" />
+ </g>
+ <g
+    id="b"
+    transform="translate(0,-1.4877)"
+    style="fill:#333333">
+   <path
+      id="c"
+      d="m306.46 497.35 14.019-8.0939 16.69 28.909v67.782l-75.808 39.674-76.254-44.025 70.207 18.32 58.461-43.397-7.3156-59.168z"
+      style="fill:#333333" />
+   <use
+      transform="matrix(-1 0 0 1 674.33 .0057556)"
+      width="334.58145"
+      height="332.21567"
+      xlink:href="#c"
+      id="use943"
+      style="fill:#333333" />
+ </g>
+ <use
+    transform="matrix(-.5 -.86603 .86603 -.5 94.899 1003.9)"
+    width="334.58145"
+    height="332.21567"
+    xlink:href="#b"
+    id="use946"
+    style="fill:#333333" />
+ <use
+    transform="matrix(-.5 .86603 -.86603 -.5 916.85 420.05)"
+    width="334.58145"
+    height="332.21567"
+    xlink:href="#b"
+    id="use948"
+    style="fill:#333333" />
+ <use
+    transform="matrix(-.5 .86603 -.86603 -.5 915.34 419.18)"
+    width="334.58145"
+    height="332.21567"
+    xlink:href="#a"
+    id="use950"
+    style="fill:#333333" />
+ <use
+    transform="matrix(-.5 -.86603 .86603 -.5 95.986 1003.3)"
+    width="334.58145"
+    height="332.21567"
+    xlink:href="#a"
+    id="use952"
+    style="fill:#333333" />
+</g>
+</svg>`;
+
+export const imgVirus = () => `<svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -172,5 +285,3 @@ const imgVirus = () => `<svg
        transform="translate(169.84,290.15)" />
   </g>
 </svg>`;
-
-export default imgVirus;

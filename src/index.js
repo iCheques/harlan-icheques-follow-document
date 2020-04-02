@@ -18,7 +18,6 @@ import values from 'lodash/values';
 import uniq from 'lodash/uniq';
 import meanBy from 'lodash/meanBy';
 import pickBy from 'lodash/pickBy';
-import { createPopper } from '@popperjs/core';
 
 import './list';
 // import modalChooseFile from './modules/modal-choose-file';
@@ -28,7 +27,7 @@ import {
 import csvGenerator from './modules/csv-generator';
 import { timelineGenerator, createLine } from './modules/timeline-generator';
 import hasCredits from './modules/has-credits';
-import imgVirus from './modules/img';
+import { imgVirus, imgVirusBlack } from './modules/img';
 
 const harmonizer = new Harmonizer();
 const colorMix = 'neutral';
@@ -449,10 +448,18 @@ harlan.addPlugin((controller) => {
     
     const covid = report.button('Auxilio Covid19').html(`${imgVirus()} Auxílio Covid19 ${imgVirus()}`).css({
       backgroundColor: '#c32c14',
-      cursor: 'default'
+      cursor: 'pointer'
     }).attr({id:'auxilio-covid19-monitore', title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.'});
     covid.mouseover(() => covid.css('background-color', '#a92b17')).mouseleave(() => covid.css('background-color', '#c32c14'));
     $('svg', covid).each((i, el) => $(el).attr({width: '32px', height: '20px'}))
+    covid[0].onclick = () => {
+      const modal = controller.call('modal');
+      modal.title('Auxílio Covid19');
+      modal.paragraph('Disponível a partir do dia 06/abril ou entre em contato conosco!');
+      modal.createActions().cancel();
+      const img = $($.parseHTML(imgVirusBlack())).css({float: 'left', width: '166px', marginRight: '30px'});
+      img.insertBefore($('h2:contains(Auxílio Covid19)'));
+    };
     
     const auxtopbar = $('<div>').css({
       backgroundColor: '#c32c14',
@@ -460,11 +467,19 @@ harlan.addPlugin((controller) => {
       color: '#fff',
       fontWeight: 'bold',
       paddingTop: '0.5rem',
-      paddingBottom: '0.5rem'
+      paddingBottom: '0.5rem',
+      cursor: 'pointer'
     }).addClass('content').attr({title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.', id: '#auxilio-topbar'}).html(`${imgVirus()} Auxílio Covid19 ${imgVirus()}`);
     auxtopbar.mouseover(() => auxtopbar.css('background-color', '#a92b17')).mouseleave(() => auxtopbar.css('background-color', '#c32c14'));
     $('svg', auxtopbar).each((i, el) => $(el).attr({width: '32px', height: '20px'}))
-
+    auxtopbar[0].onclick = () => {
+      const modal = controller.call('modal');
+      modal.title('Auxílio Covid19');
+      modal.paragraph('Disponível a partir do dia 06/abril ou entre em contato conosco!');
+      modal.createActions().cancel();
+      const img = $($.parseHTML(imgVirusBlack())).css({float: 'left', width: '166px', marginRight: '30px'});
+      img.insertBefore($('h2:contains(Auxílio Covid19)'));
+    };
     $('.actions .container').prepend(auxtopbar);
 
     
