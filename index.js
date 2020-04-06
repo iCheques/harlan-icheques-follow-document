@@ -34562,8 +34562,9 @@
     modal.title('AUXÍLIO COVID-19');
     modal.subtitle('AUXÍLIO ATIVADO COM SUCESSO!');
     var p = modal.paragraph('Parabéns! O Auxílio COVID-19 foi ativado com sucesso e você poderá utilizar até o dia 31/maio!');
+    var d = $('<div>').css('text-align', 'center').insertAfter(p);
     var button1 = $($.parseHTML("<button style=\"\n    display: inline-block;\n    width: auto;\n    box-shadow: none;\n    text-align: center;\n    border: none;\n    background-color: #fdad30;\n    color: #fff;\n    font-weight: 700;\n    cursor: pointer;\n    transition: background-color .2s ease-in;\n    margin: 10px 10px 0;\n\">Monitorar Documento</button>"));
-    button1.insertAfter(p);
+    button1.appendTo(d);
 
     button1[0].onclick = function () {
       modal.close();
@@ -34571,7 +34572,7 @@
     };
 
     var button2 = $($.parseHTML("<button style=\"\n    display: inline-block;\n    width: auto;\n    box-shadow: none;\n    text-align: center;\n    border: none;\n    background-color: #0186ef;\n    color: #fff;\n    font-weight: 700;\n    cursor: pointer;\n    transition: background-color .2s ease-in;\n    margin: 10px 10px 0;\n\">Enviar Arquivo CSV</button>"));
-    button2.insertAfter(button1);
+    button2.appendTo(d);
 
     button2[0].onclick = function () {
       modal.close();
@@ -35093,7 +35094,7 @@
         return modalChooseCSV();
       }).addClass('credithub-button').attr('id', 'send-csv');
 
-      if (!harlan$1.confs.user.tags.includes('consulta-ilimitada-monitore')) {
+      if (harlan$1.confs.user.tags === undefined || !harlan$1.confs.user.tags.includes('consulta-ilimitada-monitore')) {
         var covid = report.button('Auxilio Covid19').html("".concat(imgVirus(), " Aux\xEDlio Covid19 ").concat(imgVirus())).css({
           backgroundColor: '#c32c14',
           cursor: 'pointer'

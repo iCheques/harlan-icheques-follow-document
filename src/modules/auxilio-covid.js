@@ -8,6 +8,7 @@ const auxilioCovidAtivado = () => {
     modal.title('AUXÍLIO COVID-19');
     modal.subtitle('AUXÍLIO ATIVADO COM SUCESSO!');
     const p = modal.paragraph('Parabéns! O Auxílio COVID-19 foi ativado com sucesso e você poderá utilizar até o dia 31/maio!');
+    const d = $('<div>').css('text-align', 'center').insertAfter(p);
     const button1 = $($.parseHTML(`<button style="
     display: inline-block;
     width: auto;
@@ -21,7 +22,7 @@ const auxilioCovidAtivado = () => {
     transition: background-color .2s ease-in;
     margin: 10px 10px 0;
 ">Monitorar Documento</button>`));
-    button1.insertAfter(p);
+    button1.appendTo(d);
     button1[0].onclick = () => {
         modal.close();
         $('#monitorar-documento').click()
@@ -40,7 +41,7 @@ const auxilioCovidAtivado = () => {
     transition: background-color .2s ease-in;
     margin: 10px 10px 0;
 ">Enviar Arquivo CSV</button>`));
-    button2.insertAfter(button1);
+    button2.appendTo(d);
     button2[0].onclick = () => {
         modal.close();
         $('#send-csv').click()
