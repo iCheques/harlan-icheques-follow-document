@@ -28,6 +28,7 @@ import csvGenerator from './modules/csv-generator';
 import { timelineGenerator, createLine } from './modules/timeline-generator';
 import hasCredits from './modules/has-credits';
 import { imgVirus, imgVirusBlack } from './modules/img';
+import { auxilioCovid } from './modules/auxilio-covid';
 
 const harmonizer = new Harmonizer();
 const colorMix = 'neutral';
@@ -61,18 +62,11 @@ let graphicDataset = null;
 
 harlan.addPlugin((controller) => {
   function removeDocument(doc, after) {
+    if (after) after();
     controller.server.call("DELETE FROM 'FOLLOWDOCUMENT'.'DOCUMENT'", controller.call('error::ajax', {
       dataType: 'json',
       data: { documento: doc },
-      success: () => {
-        controller.alert({
-          icon: 'star',
-          title: 'Que pena! O documento não é mais monitorado.',
-          subtitle: 'Dentro de instantes não será mais possível extrair um relatório de seus cedentes e sacados com este documento incluso.',
-          paragraph: 'Caso haja qualquer alteração no documento junto as instituições de crédito você não será mais avisado.',
-        });
-        if (after) after();
-      },
+      success: () => console.log('Removido'),
     }));
   }
 
@@ -443,48 +437,44 @@ harlan.addPlugin((controller) => {
       'O monitoramento auxilia na manutenção regular de seus clientes e fornecedores. Diariamente, nosso sistema verifica por alterações relevantes nas informações de cheques sem fundo, protestos e Receita Federal. Caso haja uma alteração, nós lhe enviaremos um e-mail para que fique por dentro de tudo.',
       false);
 
-    report.button('Monitorar Documento', () => modalFollow());
-    report.button('Enviar Arquivo CSV', () => modalChooseCSV()).addClass('credithub-button');
+    report.button('Monitorar Documento', () => modalFollow()).attr('id', 'monitorar-documento');
+    report.button('Enviar Arquivo CSV', () => modalChooseCSV()).addClass('credithub-button').attr('id', 'send-csv');
     
-    const covid = report.button('Auxilio Covid19').html(`${imgVirus()} Auxílio Covid19 ${imgVirus()}`).css({
-      backgroundColor: '#c32c14',
-      cursor: 'pointer'
-    }).attr({id:'auxilio-covid19-monitore', title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.'});
-    covid.mouseover(() => covid.css('background-color', '#a92b17')).mouseleave(() => covid.css('background-color', '#c32c14'));
-    $('svg', covid).each((i, el) => $(el).attr({width: '32px', height: '20px'}))
-    covid[0].onclick = () => {
-      const modal = controller.call('modal');
-      modal.title('Auxílio Covid19');
-      modal.paragraph('Disponível a partir do dia 06/abril ou entre em contato conosco!');
-      modal.createActions().cancel();
-      const img = $($.parseHTML(imgVirusBlack())).css({float: 'left', width: '166px', marginRight: '30px'});
-      img.insertBefore($('h2:contains(Auxílio Covid19)'));
-    };
-    
-    const auxtopbar = $('<div>').css({
-      backgroundColor: '#c32c14',
-      padding: '0',
-      color: '#fff',
-      fontWeight: 'bold',
-      paddingTop: '0.5rem',
-      paddingBottom: '0.5rem',
-      cursor: 'pointer'
-    }).addClass('content').attr({title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.', id: '#auxilio-topbar'}).html(`${imgVirus()} Auxílio Covid19 ${imgVirus()}`);
-    auxtopbar.mouseover(() => auxtopbar.css('background-color', '#a92b17')).mouseleave(() => auxtopbar.css('background-color', '#c32c14'));
-    $('svg', auxtopbar).each((i, el) => $(el).attr({width: '32px', height: '20px'}))
-    auxtopbar[0].onclick = () => {
-      const modal = controller.call('modal');
-      modal.title('Auxílio Covid19');
-      modal.paragraph('Disponível a partir do dia 06/abril ou entre em contato conosco!');
-      modal.createActions().cancel();
-      const img = $($.parseHTML(imgVirusBlack())).css({float: 'left', width: '166px', marginRight: '30px'});
-      img.insertBefore($('h2:contains(Auxílio Covid19)'));
-    };
-    $('.actions .container').prepend(auxtopbar);
+    if(!harlan.confs.user.tags.includes('consulta-ilimitada-monitore')) {
+      const covid = report.button('Auxilio Covid19').html(`${imgVirus()} Auxílio Covid19 ${imgVirus()}`).css({
+        backgroundColor: '#c32c14',
+        cursor: 'pointer'
+      }).attr({id:'auxilio-covid19-monitore', title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.'});
+      covid.mouseover(() => covid.css('background-color', '#a92b17')).mouseleave(() => covid.css('background-color', '#c32c14'));
+      $('svg', covid).each((i, el) => $(el).attr({width: '32px', height: '20px'}))
 
-    
 
-    
+      covid[0].onclick = () => auxilioCovid();
+
+      /*covid[0].onclick = () => {
+        const modal = controller.call('modal');
+        modal.title('Auxílio Covid19');
+        modal.paragraph('Disponível a partir do dia 06/abril ou entre em contato conosco!');
+        modal.createActions().cancel();
+        const img = $($.parseHTML(imgVirusBlack())).css({float: 'left', width: '166px', marginRight: '30px'});
+        img.insertBefore($('h2:contains(Auxílio Covid19)'));
+      };*/
+      
+      const auxtopbar = $('<div>').css({
+        backgroundColor: '#c32c14',
+        padding: '0',
+        color: '#fff',
+        fontWeight: 'bold',
+        paddingTop: '0.5rem',
+        paddingBottom: '0.5rem',
+        cursor: 'pointer'
+      }).addClass('content').attr({title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.', id: 'auxilio-topbar'}).html(`${imgVirus()} Auxílio Covid19 ${imgVirus()}`);
+      auxtopbar.mouseover(() => auxtopbar.css('background-color', '#a92b17')).mouseleave(() => auxtopbar.css('background-color', '#c32c14'));
+      $('svg', auxtopbar).each((i, el) => $(el).attr({width: '32px', height: '20px'}))
+      auxtopbar[0].onclick = () => auxilioCovid();
+      $('.actions .container').prepend(auxtopbar);
+    }
+        
     report.gamification('brilliantIdea');
 
     const reportElement = report.element();

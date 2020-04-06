@@ -167,9 +167,9 @@ harlan.addPlugin((controller) => {
 
         $('.fa-window-close', listItem).click((e) => {
           e.preventDefault();
-          controller.confirm({}, () => controller.call('followdocuments::remove', item.document, () => {
-            list.remove();
-          }));
+          controller.call('followdocuments::remove', item.document, () => {
+            listItem.remove();
+          })
         });
       });
     };

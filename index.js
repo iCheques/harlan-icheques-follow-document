@@ -34350,10 +34350,8 @@
           });
           $$1('.fa-window-close', listItem).click(function (e) {
             e.preventDefault();
-            controller.confirm({}, function () {
-              return controller.call('followdocuments::remove', item.document, function () {
-                list.remove();
-              });
+            controller.call('followdocuments::remove', item.document, function () {
+              listItem.remove();
             });
           });
         });
@@ -34555,11 +34553,80 @@
     }));
   };
 
-  var imgVirusBlack = function imgVirusBlack() {
-    return "<svg\nxmlns:dc=\"http://purl.org/dc/elements/1.1/\"\nxmlns:cc=\"http://creativecommons.org/ns#\"\nxmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\nxmlns:svg=\"http://www.w3.org/2000/svg\"\nxmlns=\"http://www.w3.org/2000/svg\"\nxmlns:xlink=\"http://www.w3.org/1999/xlink\"\nxmlns:sodipodi=\"http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd\"\nxmlns:inkscape=\"http://www.inkscape.org/namespaces/inkscape\"\nviewBox=\"0 0 334.8916 333.98901\"\nversion=\"1.1\"\nid=\"svg956\"\nsodipodi:docname=\"Virus_malware_hazard_icon.svg\"\ninkscape:version=\"0.92.3 (2405546, 2018-03-11)\">\n<metadata\n  id=\"metadata962\">\n <rdf:RDF>\n   <cc:Work\n      rdf:about=\"\">\n     <dc:format>image/svg+xml</dc:format>\n     <dc:type\n        rdf:resource=\"http://purl.org/dc/dcmitype/StillImage\" />\n   </cc:Work>\n </rdf:RDF>\n</metadata>\n<defs\n  id=\"defs960\" />\n<sodipodi:namedview\n  pagecolor=\"#ffffff\"\n  bordercolor=\"#666666\"\n  borderopacity=\"1\"\n  objecttolerance=\"10\"\n  gridtolerance=\"10\"\n  guidetolerance=\"10\"\n  inkscape:pageopacity=\"0\"\n  inkscape:pageshadow=\"2\"\n  inkscape:window-width=\"3840\"\n  inkscape:window-height=\"2092\"\n  id=\"namedview958\"\n  showgrid=\"false\"\n  inkscape:zoom=\"0.70661007\"\n  inkscape:cx=\"-192.72456\"\n  inkscape:cy=\"166.99451\"\n  inkscape:window-x=\"0\"\n  inkscape:window-y=\"32\"\n  inkscape:window-maximized=\"1\"\n  inkscape:current-layer=\"svg956\" />\n<g\n  transform=\"translate(-169.84 -290.15)\"\n  id=\"g954\"\n  style=\"fill:#333333\">\n <g\n    id=\"a\"\n    style=\"fill:#333333\">\n   <path\n      id=\"d\"\n      d=\"m284.16 408.85 23.844 10.136 29.159-17.7v-22.987l-53.003 30.55z\"\n      style=\"fill:#333333\" />\n   <use\n      transform=\"matrix(-1 0 0 1 674.33 -.073306)\"\n      width=\"351.66501\"\n      height=\"990\"\n      xlink:href=\"#d\"\n      id=\"use939\"\n      style=\"fill:#333333\" />\n </g>\n <g\n    id=\"b\"\n    transform=\"translate(0,-1.4877)\"\n    style=\"fill:#333333\">\n   <path\n      id=\"c\"\n      d=\"m306.46 497.35 14.019-8.0939 16.69 28.909v67.782l-75.808 39.674-76.254-44.025 70.207 18.32 58.461-43.397-7.3156-59.168z\"\n      style=\"fill:#333333\" />\n   <use\n      transform=\"matrix(-1 0 0 1 674.33 .0057556)\"\n      width=\"334.58145\"\n      height=\"332.21567\"\n      xlink:href=\"#c\"\n      id=\"use943\"\n      style=\"fill:#333333\" />\n </g>\n <use\n    transform=\"matrix(-.5 -.86603 .86603 -.5 94.899 1003.9)\"\n    width=\"334.58145\"\n    height=\"332.21567\"\n    xlink:href=\"#b\"\n    id=\"use946\"\n    style=\"fill:#333333\" />\n <use\n    transform=\"matrix(-.5 .86603 -.86603 -.5 916.85 420.05)\"\n    width=\"334.58145\"\n    height=\"332.21567\"\n    xlink:href=\"#b\"\n    id=\"use948\"\n    style=\"fill:#333333\" />\n <use\n    transform=\"matrix(-.5 .86603 -.86603 -.5 915.34 419.18)\"\n    width=\"334.58145\"\n    height=\"332.21567\"\n    xlink:href=\"#a\"\n    id=\"use950\"\n    style=\"fill:#333333\" />\n <use\n    transform=\"matrix(-.5 -.86603 .86603 -.5 95.986 1003.3)\"\n    width=\"334.58145\"\n    height=\"332.21567\"\n    xlink:href=\"#a\"\n    id=\"use952\"\n    style=\"fill:#333333\" />\n</g>\n</svg>";
-  };
   var imgVirus = function imgVirus() {
     return "<svg\n   xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n   xmlns:cc=\"http://creativecommons.org/ns#\"\n   xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n   xmlns:svg=\"http://www.w3.org/2000/svg\"\n   xmlns=\"http://www.w3.org/2000/svg\"\n   xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n   xmlns:sodipodi=\"http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd\"\n   xmlns:inkscape=\"http://www.inkscape.org/namespaces/inkscape\"\n   viewBox=\"0 0 334.8916 333.98901\"\n   version=\"1.1\"\n   id=\"svg3795\"\n   sodipodi:docname=\"teste.svg\"\n   inkscape:version=\"0.92.3 (2405546, 2018-03-11)\">\n  <metadata\n     id=\"metadata3801\">\n    <rdf:RDF>\n      <cc:Work\n         rdf:about=\"\">\n        <dc:format>image/svg+xml</dc:format>\n        <dc:type\n           rdf:resource=\"http://purl.org/dc/dcmitype/StillImage\" />\n        <dc:title></dc:title>\n      </cc:Work>\n    </rdf:RDF>\n  </metadata>\n  <defs\n     id=\"defs3799\" />\n  <sodipodi:namedview\n     pagecolor=\"#ffffff\"\n     bordercolor=\"#666666\"\n     borderopacity=\"1\"\n     objecttolerance=\"10\"\n     gridtolerance=\"10\"\n     guidetolerance=\"10\"\n     inkscape:pageopacity=\"0\"\n     inkscape:pageshadow=\"2\"\n     inkscape:window-width=\"3840\"\n     inkscape:window-height=\"2092\"\n     id=\"namedview3797\"\n     showgrid=\"false\"\n     inkscape:zoom=\"5.5660513\"\n     inkscape:cx=\"167.4458\"\n     inkscape:cy=\"166.99451\"\n     inkscape:window-x=\"0\"\n     inkscape:window-y=\"32\"\n     inkscape:window-maximized=\"1\"\n     inkscape:current-layer=\"g3793\" />\n  <g\n     transform=\"translate(-169.84 -290.15)\"\n     id=\"g3793\">\n    <g\n       id=\"a\">\n      <path\n         id=\"d\"\n         d=\"m284.16 408.85 23.844 10.136 29.159-17.7v-22.987l-53.003 30.55z\" />\n      <use\n         transform=\"matrix(-1 0 0 1 674.33 -.073306)\"\n         width=\"351.66501\"\n         height=\"990\"\n         xlink:href=\"#d\"\n         id=\"use3778\" />\n    </g>\n    <g\n       id=\"b\"\n       transform=\"translate(0,-1.4877)\">\n      <path\n         id=\"c\"\n         d=\"m306.46 497.35 14.019-8.0939 16.69 28.909v67.782l-75.808 39.674-76.254-44.025 70.207 18.32 58.461-43.397-7.3156-59.168z\" />\n      <use\n         transform=\"matrix(-1 0 0 1 674.33 .0057556)\"\n         width=\"334.58145\"\n         height=\"332.21567\"\n         xlink:href=\"#c\"\n         id=\"use3782\" />\n    </g>\n    <use\n       transform=\"matrix(-.5 -.86603 .86603 -.5 94.899 1003.9)\"\n       width=\"334.58145\"\n       height=\"332.21567\"\n       xlink:href=\"#b\"\n       id=\"use3785\" />\n    <use\n       transform=\"matrix(-.5 .86603 -.86603 -.5 916.85 420.05)\"\n       width=\"334.58145\"\n       height=\"332.21567\"\n       xlink:href=\"#b\"\n       id=\"use3787\" />\n    <use\n       transform=\"matrix(-.5 .86603 -.86603 -.5 915.34 419.18)\"\n       width=\"334.58145\"\n       height=\"332.21567\"\n       xlink:href=\"#a\"\n       id=\"use3789\" />\n    <use\n       transform=\"matrix(-.5 -.86603 .86603 -.5 95.986 1003.3)\"\n       width=\"334.58145\"\n       height=\"332.21567\"\n       xlink:href=\"#a\"\n       id=\"use3791\" />\n    <path\n       style=\"fill:#ffffff;stroke-width:0.17966057\"\n       d=\"m 0.10364453,219.15734 0.0242604,-43.65016 36.07346707,-22.87235 36.073465,-22.87235 29.143323,16.81888 c 16.02883,9.25038 29.2749,16.95251 29.43571,17.11584 0.16082,0.16334 3.83386,6.44137 8.16231,13.95118 4.32846,7.50981 8.01844,13.90601 8.19997,14.21377 l 0.33004,0.55956 -6.91436,3.99115 c -4.32605,2.49712 -7.00066,3.94018 -7.1449,3.85498 -0.25917,-0.1531 -7.4027,-5.53368 -30.9525,-23.31374 -8.893194,-6.71436 -16.290719,-12.23625 -16.438939,-12.27089 -0.14822,-0.0346 -15.266657,6.43491 -33.596528,14.37676 L 19.171926,193.4997 9.7080521,227.88411 C 4.5029213,246.79553 0.20709936,262.38978 0.16178106,262.538 0.11646277,262.68622 0.09030134,243.16492 0.10364453,219.15734 Z\"\n       id=\"path3803\"\n       inkscape:connector-curvature=\"0\"\n       transform=\"translate(169.84,290.15)\" />\n    <path\n       style=\"fill:#ffffff;stroke-width:0.17966057\"\n       d=\"M 101.77363,146.60899 72.446792,129.679 l -0.0059,-0.98813 c -0.01323,-2.21739 3.451282,-84.359887 3.562739,-84.471459 0.189007,-0.189203 75.177669,-43.45899284 75.223119,-43.40507593 0.0223,0.0264196 -6.51821,6.68597733 -14.53441,14.79901693 -8.0162,8.113039 -19.32487,19.563108 -25.13037,25.444597 l -10.55546,10.693613 4.15842,36.089153 c 2.33666,20.278805 4.2455,36.179805 4.35717,36.296085 0.13866,0.14437 51.68769,22.07682 54.50116,23.18848 0.175,0.0692 0.22457,1.86893 0.22457,8.15424 v 8.0655 l -16.57369,-0.003 -16.57368,-0.003 -29.32684,-16.92999 z\"\n       id=\"path3805\"\n       inkscape:connector-curvature=\"0\"\n       transform=\"translate(169.84,290.15)\" />\n    <path\n       style=\"fill:#ffffff;stroke-width:0.17966057\"\n       d=\"m 126.28842,123.70438 c -9.10161,-3.87832 -11.58884,-5.00563 -11.40844,-5.17073 0.12688,-0.11613 11.79185,-6.86644 25.92216,-15.00069 14.1303,-8.134259 25.87337,-14.905992 26.0957,-15.048301 l 0.40423,-0.258743 v 11.411814 11.41181 l -14.53676,8.82067 c -7.99522,4.85136 -14.60448,8.81461 -14.68725,8.80721 -0.0828,-0.007 -5.38811,-2.24526 -11.78964,-4.97304 z\"\n       id=\"path3807\"\n       inkscape:connector-curvature=\"0\"\n       transform=\"translate(169.84,290.15)\" />\n    <path\n       style=\"fill:#ffffff;stroke-width:0.17966057\"\n       d=\"m 181.98113,119.84983 -14.4994,-8.8023 V 99.646781 c 0,-9.075098 0.0458,-11.372336 0.22458,-11.26148 0.12352,0.0766 11.907,6.873192 26.18553,15.103549 14.27852,8.23035 25.97971,15.02426 26.00264,15.09757 0.0303,0.097 -20.80745,9.06805 -23.11253,9.95033 -0.20589,0.0788 -4.89711,-2.67457 -14.80082,-8.68692 z\"\n       id=\"path3809\"\n       inkscape:connector-curvature=\"0\"\n       transform=\"translate(169.84,290.15)\" />\n    <path\n       style=\"fill:#ffffff;stroke-width:0.17966057\"\n       d=\"m 170.71562,155.3123 v -8.05307 l 27.32055,-11.56674 c 15.0263,-6.3617 27.36705,-11.64197 27.42388,-11.73392 0.0568,-0.0919 1.94663,-16.14378 4.19956,-35.670736 2.25294,-19.526956 4.13525,-35.76027 4.18292,-36.074033 0.0835,-0.549644 -0.82775,-1.497215 -24.9569,-25.951589 C 195.11167,12.302598 183.86931,0.85385112 183.90261,0.82055168 c 0.0333,-0.0332994 16.94806,9.68985332 37.58836,21.60700632 l 37.52783,21.667553 1.76849,42.670343 c 0.97267,23.468686 1.74072,42.696666 1.70678,42.728836 -0.0551,0.0522 -51.43249,29.72108 -56.58377,32.67537 l -2.08489,1.1957 h -16.55489 -16.5549 z\"\n       id=\"path3811\"\n       inkscape:connector-curvature=\"0\"\n       transform=\"translate(169.84,290.15)\" />\n    <path\n       style=\"fill:#ffffff;stroke-width:0.17966057\"\n       d=\"m 325.24104,227.90843 c -5.17604,-18.84864 -9.5005,-34.36487 -9.6099,-34.48051 -0.10941,-0.11564 -15.18117,-6.69509 -33.49281,-14.621 l -33.2939,-14.41075 -0.70094,0.51764 c -0.38552,0.28471 -11.01954,8.30883 -23.63116,17.83139 -12.61162,9.52256 -23.0638,17.34294 -23.22706,17.37861 -0.44125,0.0964 -13.78502,-7.71618 -13.71329,-8.02895 0.0319,-0.13931 3.74576,-6.64023 8.25289,-14.44648 l 8.1948,-14.19319 29.2635,-16.88809 c 16.09493,-9.28845 29.31863,-16.87727 29.386,-16.86403 0.0674,0.0132 16.30966,10.28084 36.09396,22.81689 l 35.97147,22.79283 0.006,43.43295 c 0.003,23.88812 -0.0155,43.43294 -0.0413,43.43294 -0.0258,0 -4.28179,-15.42161 -9.45784,-34.27025 z\"\n       id=\"path3813\"\n       inkscape:connector-curvature=\"0\"\n       transform=\"translate(169.84,290.15)\" />\n    <path\n       style=\"fill:#ffffff;stroke-width:0.17966057\"\n       d=\"m 239.60354,226.18728 c -5.14485,-2.9812 -9.52918,-5.54163 -9.74296,-5.68985 l -0.38869,-0.26949 -0.37641,-16.9495 c -0.20702,-9.32223 -0.35013,-16.96964 -0.31803,-16.99426 0.0321,-0.0246 4.64645,-3.49713 10.25411,-7.7167 l 10.19574,-7.67194 v 30.37042 c 0,16.70373 -0.0606,30.36395 -0.13475,30.35605 -0.0741,-0.008 -4.34416,-2.45353 -9.48901,-5.43473 z\"\n       id=\"path3815\"\n       inkscape:connector-curvature=\"0\"\n       transform=\"translate(169.84,290.15)\" />\n    <path\n       style=\"fill:#ffffff;stroke-width:0.17966057\"\n       d=\"m 196.59094,261.95085 c 0.0105,-1.00542 3.03918,-24.98426 3.17092,-25.10503 0.0817,-0.0749 6.79549,-3.7782 14.91946,-8.22948 l 14.77086,-8.09324 9.8688,5.69139 c 5.42785,3.13026 9.85704,5.70121 9.84265,5.71321 -0.0144,0.012 -11.18309,6.47019 -24.81932,14.35151 -13.63624,7.88131 -25.46015,14.72183 -26.27536,15.20114 -1.39065,0.81765 -1.48194,0.84671 -1.47801,0.4705 z\"\n       id=\"path3817\"\n       inkscape:connector-curvature=\"0\"\n       transform=\"translate(169.84,290.15)\" />\n    <path\n       style=\"fill:#ffffff;stroke-width:0.17966057\"\n       d=\"m 205.30028,314.09827 -37.72872,-19.7525 -0.0454,-33.95474 -0.0454,-33.95474 8.10943,-14.06347 c 4.46018,-7.73491 8.21283,-14.17489 8.3392,-14.31107 0.1924,-0.20732 1.34179,0.39172 7.06668,3.68304 6.07799,3.49433 6.83754,3.9801 6.84259,4.37622 0.003,0.24507 -1.6182,13.57391 -3.60292,29.61964 -1.98472,16.04572 -3.54103,29.23376 -3.45847,29.30673 0.11494,0.10159 55.257,41.02211 57.83671,42.9202 l 0.55452,0.408 34.53817,-9.01108 c 18.99599,-4.95609 34.56218,-8.98367 34.59154,-8.95018 0.0525,0.0599 -75.0648,43.45486 -75.19994,43.44269 -0.0381,-0.003 -17.04723,-8.89486 -37.79803,-19.75874 z\"\n       id=\"path3819\"\n       inkscape:connector-curvature=\"0\"\n       transform=\"translate(169.84,290.15)\" />\n    <path\n       style=\"fill:#ffffff;stroke-width:0.17966057\"\n       d=\"M 53.892633,312.17023 C 33.26607,300.25301 16.419341,290.47301 16.455459,290.43689 c 0.03612,-0.0361 15.587888,3.98494 34.55949,8.93568 l 34.493819,9.00135 29.083972,-21.58104 c 15.99618,-11.86957 29.1571,-21.68599 29.24648,-21.81426 0.10213,-0.14658 -1.18882,-11.16413 -3.47482,-29.65561 -3.0264,-24.48055 -3.59686,-29.45959 -3.3964,-29.64387 0.31813,-0.29246 13.38463,-7.81934 13.57116,-7.81759 0.0794,7.5e-4 3.88349,6.47936 8.45361,14.39692 l 8.3093,14.39556 -0.004,33.79703 -0.004,33.79703 -37.8689,19.80758 c -20.8279,10.89417 -37.905012,19.80188 -37.949139,19.7949 -0.04413,-0.007 -16.956513,-9.76313 -37.583078,-21.68034 z\"\n       id=\"path3821\"\n       inkscape:connector-curvature=\"0\"\n       transform=\"translate(169.84,290.15)\" />\n    <path\n       style=\"fill:#ffffff;stroke-width:0.17966057\"\n       d=\"m 111.69712,247.25166 c -14.327927,-8.29495 -26.071806,-15.14359 -26.097505,-15.21919 -0.0257,-0.0756 4.218783,-2.59578 9.432181,-5.6004 5.213394,-3.00462 9.609884,-5.54154 9.769974,-5.63761 0.22574,-0.13546 3.5925,1.63248 15.00166,7.8776 8.09082,4.42874 14.80644,8.14039 14.9236,8.24811 0.12817,0.11785 0.79128,4.95429 1.66492,12.14329 0.79855,6.57108 1.49806,12.2506 1.55447,12.62115 0.0564,0.37055 0.0348,0.66812 -0.048,0.66126 -0.0828,-0.007 -11.87339,-6.79925 -26.20132,-15.09421 z\"\n       id=\"path3823\"\n       inkscape:connector-curvature=\"0\"\n       transform=\"translate(169.84,290.15)\" />\n    <path\n       style=\"fill:#ffffff;stroke-width:0.17966057\"\n       d=\"m 85.197188,201.44322 c 0,-29.10182 0.0134,-30.363 0.320141,-30.13806 0.176077,0.12912 4.718665,3.5495 10.09464,7.60084 5.375971,4.05135 9.844691,7.41405 9.930481,7.47268 0.18065,0.12346 -0.54137,33.96769 -0.7285,34.14798 -0.14469,0.13941 -19.454669,11.28938 -19.551401,11.28938 -0.03595,0 -0.06536,-13.66777 -0.06536,-30.37282 z\"\n       id=\"path3825\"\n       inkscape:connector-curvature=\"0\"\n       transform=\"translate(169.84,290.15)\" />\n  </g>\n</svg>";
+  };
+
+  var auxilioCovidAtivado = function auxilioCovidAtivado() {
+    var modal = harlan.call('modal');
+    modal.title('AUXÍLIO COVID-19');
+    modal.subtitle('AUXÍLIO ATIVADO COM SUCESSO!');
+    var p = modal.paragraph('Parabéns! O Auxílio COVID-19 foi ativado com sucesso e você poderá utilizar até o dia 31/maio!');
+    var button1 = $($.parseHTML("<button style=\"\n    display: inline-block;\n    width: auto;\n    box-shadow: none;\n    text-align: center;\n    border: none;\n    background-color: #fdad30;\n    color: #fff;\n    font-weight: 700;\n    cursor: pointer;\n    transition: background-color .2s ease-in;\n    margin: 10px 10px 0;\n\">Monitorar Documento</button>"));
+    button1.insertAfter(p);
+
+    button1[0].onclick = function () {
+      modal.close();
+      $('#monitorar-documento').click();
+    };
+
+    var button2 = $($.parseHTML("<button style=\"\n    display: inline-block;\n    width: auto;\n    box-shadow: none;\n    text-align: center;\n    border: none;\n    background-color: #0186ef;\n    color: #fff;\n    font-weight: 700;\n    cursor: pointer;\n    transition: background-color .2s ease-in;\n    margin: 10px 10px 0;\n\">Enviar Arquivo CSV</button>"));
+    button2.insertAfter(button1);
+
+    button2[0].onclick = function () {
+      modal.close();
+      $('#send-csv').click();
+    };
+
+    modal.createActions().cancel();
+  };
+  /**
+   * Exibe o modal do auxilílio monitore
+   */
+
+
+  var auxilioCovid = function auxilioCovid() {
+    var modal = harlan.call('modal');
+    modal.title('AUXÍLIO COVID-19');
+    modal.subtitle('AUXILIO FACTORING GRÁTIS');
+    var paragraph = modal.paragraph('Devido ao cenário pandêmico do CORONAVIRUS, milhares de boletos estão sendo prorrogados ou vencendo. Fazer a cobrança na hora errada pode causar transtornos, gastar tempo além de trazer prejuízos inestimáveis. Com o Monitore fica fácil saber quando o sacado inadimplente recebe capital e está pagando suas dívidas para então cobrá-lo das suas. Não seja o ultimo na fila de recebimento! Receba alertas por e-mail quando o sacado que te deve começar a pagar dívidas. Grátis até o 31 de maio, favor consultar os termos antes de começar.');
+    var form = modal.createForm();
+    var inputAgree = form.addCheckbox('agree', 'Eu li e aceito os <a href="https://drive.google.com/file/d/1fKSNgqgaSgh1D32a5MlEEkdZiGmxm2tO/view" target="_blank">TERMOS DO AUXILIO COVID.', false);
+    form.addSubmit('login', 'Ativar');
+    form.element().submit(function (ev) {
+      ev.preventDefault();
+      if (!inputAgree[1].is(':checked')) return toastr.warning('É preciso aceitar os termos para prosseguir!');
+      harlan.serverCommunication.call('SELECT FROM \'HARLAN\'.\'ActiveMonitorePromo\'', harlan.call('error::ajax', harlan.call('loader::ajax', {
+        dataType: 'json',
+        success: function success() {
+          modal.close();
+          $('#auxilio-covid19-monitore').remove();
+          $('#auxilio-topbar').remove();
+          auxilioCovidAtivado();
+        },
+        error: function error() {
+          $('#auxilio-covid19-monitore').remove();
+          $('#auxilio-topbar').remove();
+          auxilioCovidAtivado();
+        }
+      })));
+    });
+    modal.createActions().cancel();
+    var $img = $($.parseHTML(imgVirus())).css({
+      float: 'left',
+      width: '166px',
+      marginLeft: '19px',
+      marginTop: '10px'
+    });
+    var $virus = $('<div>').css({
+      backgroundColor: '#a91d09',
+      borderRadius: '100px',
+      height: '12rem',
+      width: '200px',
+      float: 'left',
+      marginRight: '30px'
+    }).append($img);
+    $virus.insertBefore($('h2:contains(COVID-19)'));
   };
 
   var harmonizer = new Harmonizer_1();
@@ -34588,19 +34655,14 @@
   var graphicDataset = null;
   harlan$1.addPlugin(function (controller) {
     function removeDocument(doc, after) {
+      if (after) after();
       controller.server.call("DELETE FROM 'FOLLOWDOCUMENT'.'DOCUMENT'", controller.call('error::ajax', {
         dataType: 'json',
         data: {
           documento: doc
         },
         success: function success() {
-          controller.alert({
-            icon: 'star',
-            title: 'Que pena! O documento não é mais monitorado.',
-            subtitle: 'Dentro de instantes não será mais possível extrair um relatório de seus cedentes e sacados com este documento incluso.',
-            paragraph: 'Caso haja qualquer alteração no documento junto as instituições de crédito você não será mais avisado.'
-          });
-          if (after) after();
+          return console.log('Removido');
         }
       }));
     }
@@ -35026,80 +35088,75 @@
       var report = controller.call('report', 'Que tal monitorar um CPF ou CNPJ?', 'No dia em que seus cedentes e sacados apresentarem ocorrência você será notificado.', 'O monitoramento auxilia na manutenção regular de seus clientes e fornecedores. Diariamente, nosso sistema verifica por alterações relevantes nas informações de cheques sem fundo, protestos e Receita Federal. Caso haja uma alteração, nós lhe enviaremos um e-mail para que fique por dentro de tudo.', false);
       report.button('Monitorar Documento', function () {
         return modalFollow();
-      });
+      }).attr('id', 'monitorar-documento');
       report.button('Enviar Arquivo CSV', function () {
         return modalChooseCSV();
-      }).addClass('credithub-button');
-      var covid = report.button('Auxilio Covid19').html("".concat(imgVirus(), " Aux\xEDlio Covid19 ").concat(imgVirus())).css({
-        backgroundColor: '#c32c14',
-        cursor: 'pointer'
-      }).attr({
-        id: 'auxilio-covid19-monitore',
-        title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.'
-      });
-      covid.mouseover(function () {
-        return covid.css('background-color', '#a92b17');
-      }).mouseleave(function () {
-        return covid.css('background-color', '#c32c14');
-      });
-      $$1('svg', covid).each(function (i, el) {
-        return $$1(el).attr({
-          width: '32px',
-          height: '20px'
-        });
-      });
+      }).addClass('credithub-button').attr('id', 'send-csv');
 
-      covid[0].onclick = function () {
-        var modal = controller.call('modal');
-        modal.title('Auxílio Covid19');
-        modal.paragraph('Disponível a partir do dia 06/abril ou entre em contato conosco!');
-        modal.createActions().cancel();
-        var img = $$1($$1.parseHTML(imgVirusBlack())).css({
-          float: 'left',
-          width: '166px',
-          marginRight: '30px'
+      if (!harlan$1.confs.user.tags.includes('consulta-ilimitada-monitore')) {
+        var covid = report.button('Auxilio Covid19').html("".concat(imgVirus(), " Aux\xEDlio Covid19 ").concat(imgVirus())).css({
+          backgroundColor: '#c32c14',
+          cursor: 'pointer'
+        }).attr({
+          id: 'auxilio-covid19-monitore',
+          title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.'
         });
-        img.insertBefore($$1('h2:contains(Auxílio Covid19)'));
-      };
-
-      var auxtopbar = $$1('<div>').css({
-        backgroundColor: '#c32c14',
-        padding: '0',
-        color: '#fff',
-        fontWeight: 'bold',
-        paddingTop: '0.5rem',
-        paddingBottom: '0.5rem',
-        cursor: 'pointer'
-      }).addClass('content').attr({
-        title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.',
-        id: '#auxilio-topbar'
-      }).html("".concat(imgVirus(), " Aux\xEDlio Covid19 ").concat(imgVirus()));
-      auxtopbar.mouseover(function () {
-        return auxtopbar.css('background-color', '#a92b17');
-      }).mouseleave(function () {
-        return auxtopbar.css('background-color', '#c32c14');
-      });
-      $$1('svg', auxtopbar).each(function (i, el) {
-        return $$1(el).attr({
-          width: '32px',
-          height: '20px'
+        covid.mouseover(function () {
+          return covid.css('background-color', '#a92b17');
+        }).mouseleave(function () {
+          return covid.css('background-color', '#c32c14');
         });
-      });
-
-      auxtopbar[0].onclick = function () {
-        var modal = controller.call('modal');
-        modal.title('Auxílio Covid19');
-        modal.paragraph('Disponível a partir do dia 06/abril ou entre em contato conosco!');
-        modal.createActions().cancel();
-        var img = $$1($$1.parseHTML(imgVirusBlack())).css({
-          float: 'left',
-          width: '166px',
-          marginRight: '30px'
+        $$1('svg', covid).each(function (i, el) {
+          return $$1(el).attr({
+            width: '32px',
+            height: '20px'
+          });
         });
-        img.insertBefore($$1('h2:contains(Auxílio Covid19)'));
-      };
 
-      $$1('.actions .container').prepend(auxtopbar);
+        covid[0].onclick = function () {
+          return auxilioCovid();
+        };
+        /*covid[0].onclick = () => {
+          const modal = controller.call('modal');
+          modal.title('Auxílio Covid19');
+          modal.paragraph('Disponível a partir do dia 06/abril ou entre em contato conosco!');
+          modal.createActions().cancel();
+          const img = $($.parseHTML(imgVirusBlack())).css({float: 'left', width: '166px', marginRight: '30px'});
+          img.insertBefore($('h2:contains(Auxílio Covid19)'));
+        };*/
+
+
+        var auxtopbar = $$1('<div>').css({
+          backgroundColor: '#c32c14',
+          padding: '0',
+          color: '#fff',
+          fontWeight: 'bold',
+          paddingTop: '0.5rem',
+          paddingBottom: '0.5rem',
+          cursor: 'pointer'
+        }).addClass('content').attr({
+          title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.',
+          id: 'auxilio-topbar'
+        }).html("".concat(imgVirus(), " Aux\xEDlio Covid19 ").concat(imgVirus()));
+        auxtopbar.mouseover(function () {
+          return auxtopbar.css('background-color', '#a92b17');
+        }).mouseleave(function () {
+          return auxtopbar.css('background-color', '#c32c14');
+        });
+        $$1('svg', auxtopbar).each(function (i, el) {
+          return $$1(el).attr({
+            width: '32px',
+            height: '20px'
+          });
+        });
+
+        auxtopbar[0].onclick = function () {
+          return auxilioCovid();
+        };
+
+        $$1('.actions .container').prepend(auxtopbar);
+      }
+
       report.gamification('brilliantIdea');
       var reportElement = report.element();
       $$1('.app-content').prepend(reportElement);
