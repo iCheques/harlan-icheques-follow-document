@@ -2,12 +2,19 @@ import {
     imgVirus
 } from "./img";
 
-const auxilioCovidAtivado = () => {
+const auxilioCovidAtivado = (firstTime=true) => {
+    const message = firstTime ? {
+        subtitle: 'AUXÍLIO ATIVADO COM SUCESSO!',
+        paragraph: 'Parabéns! O Auxílio COVID-19 foi ativado com sucesso e você poderá utilizar até o dia 31/maio!'
+    } : {
+        subtitle: 'AUXÍLIO JÁ ESTÁ ATIVADO!',
+        paragraph: 'O seu Auxílio COVID-19 já foi ativado com sucesso e você já pode utilizá-lo!'
+    }
     const modal = harlan.call('modal');
 
     modal.title('AUXÍLIO COVID-19');
-    modal.subtitle('AUXÍLIO ATIVADO COM SUCESSO!');
-    const p = modal.paragraph('Parabéns! O Auxílio COVID-19 foi ativado com sucesso e você poderá utilizar até o dia 31/maio!');
+    modal.subtitle(message.subtitle);
+    const p = modal.paragraph(message.paragraph);
     const d = $('<div>').css('text-align', 'center').insertAfter(p);
     const button1 = $($.parseHTML(`<button style="
     display: inline-block;
@@ -80,7 +87,7 @@ export const auxilioCovid = () => {
                 error: () => {
                     $('#auxilio-covid19-monitore').remove();
                     $('#auxilio-topbar').remove();
-                    auxilioCovidAtivado();
+                    auxilioCovidAtivado(false);
                 }
             })));
     });
