@@ -35102,7 +35102,7 @@
         return modalChooseCSV();
       }).addClass('credithub-button').attr('id', 'send-csv');
 
-      if (harlan$1.confs.user.tags === undefined || !harlan$1.confs.user.tags.includes('consulta-ilimitada-monitore')) {
+      if (controller.confs.user.tags === undefined || !controller.confs.user.tags.includes('consulta-ilimitada-monitore')) {
         var covid = report.button('Auxilio Covid19').html("".concat(imgVirus(), " Aux\xEDlio Covid19 ").concat(imgVirus())).css({
           backgroundColor: '#c32c14',
           cursor: 'pointer'
