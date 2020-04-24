@@ -440,7 +440,7 @@ harlan.addPlugin((controller) => {
     report.button('Monitorar Documento', () => modalFollow()).attr('id', 'monitorar-documento');
     report.button('Enviar Arquivo CSV', () => modalChooseCSV()).addClass('credithub-button').attr('id', 'send-csv');
     
-    if((harlan.confs.user.tags === undefined) || !harlan.confs.user.tags.includes('consulta-ilimitada-monitore')) {
+    if((controller.confs.user.tags === undefined) || !controller.confs.user.tags.includes('consulta-ilimitada-monitore')) {
       const covid = report.button('Auxilio Covid19').html(`${imgVirus()} Auxílio Covid19 ${imgVirus()}`).css({
         backgroundColor: '#c32c14',
         cursor: 'pointer'
