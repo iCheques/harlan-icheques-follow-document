@@ -439,26 +439,17 @@ harlan.addPlugin((controller) => {
 
     report.button('Monitorar Documento', () => modalFollow()).attr('id', 'monitorar-documento');
     report.button('Enviar Arquivo CSV', () => modalChooseCSV()).addClass('credithub-button').attr('id', 'send-csv');
-    
-    if((controller.confs.user.tags === undefined) || !controller.confs.user.tags.includes('consulta-ilimitada-monitore')) {
+
+    if ((controller.confs.user.tags === undefined) || !controller.confs.user.tags.includes('consulta-ilimitada-monitore')) {
       const covid = report.button('Auxilio Covid19').html(`${imgVirus()} Auxílio Covid19 ${imgVirus()}`).css({
         backgroundColor: '#c32c14',
-        cursor: 'pointer'
-      }).attr({id:'auxilio-covid19-monitore', title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.'});
+        cursor: 'pointer',
+      }).attr({ id: 'auxilio-covid19-monitore', title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.'});
       covid.mouseover(() => covid.css('background-color', '#a92b17')).mouseleave(() => covid.css('background-color', '#c32c14'));
-      $('svg', covid).each((i, el) => $(el).attr({width: '32px', height: '20px'}))
+      $('svg', covid).each((i, el) => $(el).attr({ width: '32px', height: '20px' }));
 
 
       covid[0].onclick = () => auxilioCovid();
-
-      /*covid[0].onclick = () => {
-        const modal = controller.call('modal');
-        modal.title('Auxílio Covid19');
-        modal.paragraph('Disponível a partir do dia 06/abril ou entre em contato conosco!');
-        modal.createActions().cancel();
-        const img = $($.parseHTML(imgVirusBlack())).css({float: 'left', width: '166px', marginRight: '30px'});
-        img.insertBefore($('h2:contains(Auxílio Covid19)'));
-      };*/
       
       const auxtopbar = $('<div>').css({
         backgroundColor: '#c32c14',
@@ -577,52 +568,15 @@ harlan.addPlugin((controller) => {
 
       modalConfirmation.createActions().cancel();
 
-      $('input[name=bate-rapido]').on('click', async (ev) => {
+      $('input[name=bate-rapido]').on('click', (ev) => {
         ev.preventDefault();
 
-        hasCredits(500 * documents.length, async () => {
+        hasCredits(500 * documents.length, () => {
           modalConfirmation.close();
           const loader = harlan.call('ccbusca::loader');
           loader.setTitle('Bate-Rápido');
           loader.setActiveStatus('Enviando Documentos');
-          $('.card-progress').remove();
-          // const insertDocumentPromises = await documents.map(insertDocument);
-          // await listDocuments().then((documentsData) => {});
-          const documentsData = await getDocuments(documents);
-
-          const uri = csvGenerator(documentsData);
-
-          // const relatorios = localStorage.relatorios ? JSON.parse(localStorage.relatorios) : [];
-
-          const date = moment();
-          const expireDate = moment().add(7, 'day').toISOString();
-          let relatorio = {
-            name: `Relatório de ${date.format('LLL')}`,
-            relatorio: uri,
-            total: documentsData.length,
-            expireDate,
-          };
-
-          // relatorios.push(relatorio);
-          const retornoDaInsercao = await insertRelatorio(relatorio);
-          relatorio = JSON.parse(retornoDaInsercao).data;
-
-          const timeline = controller.call('timeline');
-          createLine(relatorio, timeline, false);
-          const $timeline = $('.timeline', $('.content:contains(Que tal monitorar um CPF ou CNPJ?)'));
-          if (!$timeline.length) timeline.element().insertBefore($('.open:contains(Monitorar Documento)'));
-          if ($timeline.length) $timeline.append(timeline.element().find('li')[0]);
-
-          loader.searchCompleted();
-
-          controller.alert({
-            icon: 'pass',
-            title: `Parabéns! Os documentos (${documents.length}) foram recebidos com sucesso!`,
-            subtitle: 'Foi gerado um relatório bate-rápido de seus cedentes e sacados.',
-            paragraph: 'Você já pode conferir os protestos e cheques sem fundos dos documentos enviados.',
-          });
-          $(window).scrollTop($(".report:contains('Que tal monitorar um CPF ou CNPJ?'):last").offset().top);
-          // Promise.all(insertDocumentPromises).then();
+          controller.call('baterapido::insertDocuments', documents, loader);
         });
       });
 
@@ -678,22 +632,5 @@ harlan.addPlugin((controller) => {
     files.map(file => submitFile(file));
   });
 
-  function drawTimeline() {
-    try {
-      listRelatorios().then((data) => {
-        if (JSON.parse(data).data.length) {
-          localStorage.relatorios = true;
-          const timeline = controller.call('timeline');
-          timelineGenerator(timeline, data);
-          // timeline.element().insertBefore($('.open:contains(Monitorar Documento)', report.element()));
-          timeline.element().insertBefore($('.open:contains(Monitorar Documento)', renderedReport));
-        }
-      });
-    } catch (e) {
-      console.log(e);
-    }
-  }
-
   drawReport();
-  drawTimeline();
 });
