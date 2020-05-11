@@ -1,9 +1,9 @@
-(function ($$1, harlan$1, moment$1) {
+(function ($$1, harlan$1, moment) {
   'use strict';
 
   $$1 = $$1 && Object.prototype.hasOwnProperty.call($$1, 'default') ? $$1['default'] : $$1;
   harlan$1 = harlan$1 && Object.prototype.hasOwnProperty.call(harlan$1, 'default') ? harlan$1['default'] : harlan$1;
-  moment$1 = moment$1 && Object.prototype.hasOwnProperty.call(moment$1, 'default') ? moment$1['default'] : moment$1;
+  moment = moment && Object.prototype.hasOwnProperty.call(moment, 'default') ? moment['default'] : moment;
 
   function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
     try {
@@ -11118,7 +11118,7 @@
     (function (global, factory) {
        module.exports = factory(function () {
         try {
-          return moment$1;
+          return moment;
         } catch (e) {}
       }()) ;
     })(commonjsGlobal, function (moment) {
@@ -34361,183 +34361,6 @@
     });
   });
 
-  var listRelatorios = function listRelatorios() {
-    return harlan.serverCommunication.call('SELECT FROM \'HarlanBateRapido\'.\'Relatorios\'', {
-      dataType: 'json'
-    });
-  };
-
-  var insertRelatorio = function insertRelatorio(relatorio) {
-    return harlan.serverCommunication.call('INSERT INTO \'HarlanBateRapido\'.\'Relatorio\'', {
-      data: {
-        name: relatorio.name,
-        relatorio: relatorio.relatorio,
-        expireDate: relatorio.expireDate,
-        total: relatorio.total
-      },
-      dataType: 'json'
-    });
-  };
-
-  var getDocuments =
-  /*#__PURE__*/
-  function () {
-    var _ref = _asyncToGenerator(
-    /*#__PURE__*/
-    regeneratorRuntime.mark(function _callee2(documents) {
-      var serverCalls, makeCalls, promises, data;
-      return regeneratorRuntime.wrap(function _callee2$(_context2) {
-        while (1) {
-          switch (_context2.prev = _context2.next) {
-            case 0:
-              serverCalls = {
-                ccf: function ccf(documento) {
-                  return harlan.serverCommunication.call('SELECT FROM \'IEPTB\'.\'WS\'', {
-                    data: {
-                      documento: documento
-                    },
-                    cache: 'DISABLED'
-                  }).then(function (result) {
-                    return parseInt(result.getElementsByTagName('registros')[0].textContent);
-                  }, function (error) {
-                    return 0;
-                  });
-                },
-                rfb: function rfb(documento) {
-                  return harlan.serverCommunication.call('SELECT FROM \'SEEKLOC\'.\'CCF\'', {
-                    data: {
-                      documento: documento
-                    },
-                    cache: 'DISABLED'
-                  }).then(function (result) {
-                    return parseInt(result.getElementsByTagName('sumQteOcorrencias')[0].textContent);
-                  }, function (error) {
-                    return 0;
-                  });
-                }
-              };
-
-              makeCalls =
-              /*#__PURE__*/
-              function () {
-                var _ref2 = _asyncToGenerator(
-                /*#__PURE__*/
-                regeneratorRuntime.mark(function _callee(document) {
-                  return regeneratorRuntime.wrap(function _callee$(_context) {
-                    while (1) {
-                      switch (_context.prev = _context.next) {
-                        case 0:
-                          return _context.abrupt("return", Promise.all([serverCalls.ccf(document), serverCalls.rfb(document)]).then(function (states) {
-                            return {
-                              document: document,
-                              state: {
-                                protestos: states[0],
-                                ccf: states[1]
-                              }
-                            };
-                          }));
-
-                        case 1:
-                        case "end":
-                          return _context.stop();
-                      }
-                    }
-                  }, _callee);
-                }));
-
-                return function makeCalls(_x2) {
-                  return _ref2.apply(this, arguments);
-                };
-              }();
-
-              promises = documents.map(makeCalls);
-              _context2.next = 5;
-              return Promise.all(promises);
-
-            case 5:
-              data = _context2.sent;
-              return _context2.abrupt("return", data);
-
-            case 7:
-            case "end":
-              return _context2.stop();
-          }
-        }
-      }, _callee2);
-    }));
-
-    return function getDocuments(_x) {
-      return _ref.apply(this, arguments);
-    };
-  }();
-
-  var generateCSVData = function generateCSVData(data) {
-    var csvData = data.map(function (documento) {
-      return [documento.document, documento.state.protestos, documento.state.ccf];
-    });
-    csvData.unshift(['Documento', 'Protestos', 'Cheques sem Fundos']);
-    console.log('CSVData', data[0]);
-    return csvData;
-  };
-
-  var csvGenerator = function csvGenerator(data) {
-    var csvData = generateCSVData(data);
-    var csvContent = "data:text/csv;charset=utf-8,".concat(csvData.map(function (e) {
-      return e.join(',');
-    }).join('\n'));
-    console.log('CSV Content', csvContent);
-    return csvContent;
-  };
-
-  /* eslint-disable no-undef */
-  var createLine = function createLine(relatorio, timeline) {
-    var fromServer = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
-    var downloadAction = [['fa-download', 'Baixar relatório', function () {
-      var link = document.createElement('a');
-      link.setAttribute('href', encodeURI(relatorio.relatorio));
-      link.setAttribute('download', "".concat(relatorio.name, ".csv"));
-      document.body.appendChild(link);
-      link.click();
-    }], ['fa-trash', 'Remover Relatório', function () {
-      var modal = harlan.call('modal');
-      modal.title('Remover relatório');
-      modal.paragraph('Você tem certeza que deseja remover esse relatório?');
-      var form = modal.createForm();
-      form.element().submit(function (e) {
-        e.preventDefault();
-        modal.close();
-        var query = 'DELETE FROM \'HARLANBATERAPIDO\'.\'RELATORIO\'';
-        console.log('relatorio', relatorio);
-        harlan.serverCommunication.call(query, harlan.call('error::ajax', harlan.call('loader::ajax', {
-          data: {
-            id: relatorio["_id"]['$id']
-          },
-          dataType: 'json',
-          success: function success(ret) {
-            $("li:contains(".concat(relatorio.name, ")")).remove();
-            toastr.success('Relatório removido com sucesso!');
-          }
-        })));
-      });
-      form.addSubmit('deletar-relatorio', 'Remover Relatório');
-      modal.createActions().cancel();
-    }]];
-    var expireDate = fromServer ? relatorio.expireDate.sec : relatorio.expireDate;
-    timeline.add(moment(moment.unix(expireDate)).subtract(7, 'day').unix(), relatorio.name, 'O relatório só fica disponível por 7 dias após a solicitação.', downloadAction);
-  };
-
-  var timelineGenerator = function timelineGenerator(timeline, data) {
-    var relatorios = JSON.parse(data).data;
-    console.log('Relatorios', relatorios);
-    relatorios = relatorios.filter(function (relatorio) {
-      return moment() < moment.unix(relatorio.expireDate.sec);
-    });
-    localStorage.relatorios = true;
-    relatorios.map(function (relatorio) {
-      return createLine(relatorio, timeline);
-    });
-  };
-
   var hasCredits = function hasCredits(c, b) {
     return harlan.server.call("SELECT FROM 'ICHEQUES'.'IPAYTHEBILL'", harlan.call('loader::ajax', {
       dataType: 'json',
@@ -34636,6 +34459,72 @@
       marginRight: '30px'
     }).append($img);
     $virus.insertBefore($('h2:contains(COVID-19)'));
+  };
+
+  var Loading = function Loading(props) {
+    var style = {
+      backgroundColor: '#fdad30',
+      padding: '10px',
+      color: '#fff',
+      fontWeight: 'bold'
+    };
+    var parsed = $('<div>').css(style).append("<span class=\"saving\">".concat(props.message, "<span> .</span><span>.</span><span>.</span></span>"));
+    return parsed;
+  };
+
+  /* eslint-disable no-undef */
+
+  var createLine = function createLine(relatorio, timeline) {
+    var fromServer = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+    var downloadAction = !relatorio.processing ? [['fa-download', 'Baixar relatório', function () {
+      var link = document.createElement('a');
+      link.setAttribute('href', "https://baterapido.credithub.com.br/relatorio/".concat(relatorio._id, "/").concat(harlan.confs.user.apiKey));
+      link.setAttribute('download', "".concat(relatorio.name, ".csv"));
+      document.body.appendChild(link);
+      link.click();
+    }], ['fa-trash', 'Remover Relatório', function () {
+      var modal = harlan.call('modal');
+      modal.title('Remover relatório');
+      modal.paragraph('Você tem certeza que deseja remover esse relatório?');
+      var form = modal.createForm();
+      form.element().submit(function (e) {
+        e.preventDefault();
+        modal.close();
+        var query = 'DELETE FROM \'HARLANBATERAPIDO\'.\'RELATORIO\'';
+        console.log('relatorio', relatorio);
+        harlan.serverCommunication.call(query, harlan.call('error::ajax', harlan.call('loader::ajax', {
+          data: {
+            id: relatorio["_id"]['$id']
+          },
+          dataType: 'json',
+          success: function success(ret) {
+            $("li:contains(".concat(relatorio.name, ")")).remove();
+            toastr.success('Relatório removido com sucesso!');
+          }
+        })));
+      });
+      form.addSubmit('deletar-relatorio', 'Remover Relatório');
+      modal.createActions().cancel();
+    }]] : [['fa fa-spinner faa-spin animated', 'Relatório sendo processado...', function () {
+      console.log('Carregando');
+    }]];
+    var creationDate = fromServer ? relatorio.created_at.sec : relatorio.created_at;
+    timeline.add(creationDate, relatorio.name, 'O relatório só fica disponível por 7 dias após a solicitação.', downloadAction);
+  };
+
+  var timelineGenerator = function timelineGenerator(timeline, data) {
+    var relatorios = data;
+    console.log('Relatorios', relatorios);
+    relatorios.map(function (relatorio) {
+      return createLine(relatorio, timeline);
+    });
+  };
+
+  var reportShow = function reportShow(props) {
+    if ($('#baterapido-timeline .timeline').length) $('#baterapido-timeline .timeline').remove();
+    var timeline = harlan.call('timeline');
+    timelineGenerator(timeline, props.reports);
+    $('#baterapido-timeline').append(timeline.element());
   };
 
   var harmonizer = new Harmonizer_1();
@@ -35076,7 +34965,7 @@
               var element = _ref8.element;
 
               if (element.val()) {
-                return moment$1(element.val(), 'DD/MM/YYYY').isValid();
+                return moment(element.val(), 'DD/MM/YYYY').isValid();
               }
 
               return true;
@@ -35125,15 +35014,6 @@
         covid[0].onclick = function () {
           return auxilioCovid();
         };
-        /*covid[0].onclick = () => {
-          const modal = controller.call('modal');
-          modal.title('Auxílio Covid19');
-          modal.paragraph('Disponível a partir do dia 06/abril ou entre em contato conosco!');
-          modal.createActions().cancel();
-          const img = $($.parseHTML(imgVirusBlack())).css({float: 'left', width: '166px', marginRight: '30px'});
-          img.insertBefore($('h2:contains(Auxílio Covid19)'));
-        };*/
-
 
         var auxtopbar = $$1('<div>').css({
           backgroundColor: '#c32c14',
@@ -35246,11 +35126,11 @@
       function () {
         var _ref10 = _asyncToGenerator(
         /*#__PURE__*/
-        regeneratorRuntime.mark(function _callee6(_ref11) {
+        regeneratorRuntime.mark(function _callee4(_ref11) {
           var result, documents, modalConfirmation, formConfirmation, label, label2;
-          return regeneratorRuntime.wrap(function _callee6$(_context6) {
+          return regeneratorRuntime.wrap(function _callee4$(_context4) {
             while (1) {
-              switch (_context6.prev = _context6.next) {
+              switch (_context4.prev = _context4.next) {
                 case 0:
                   result = _ref11.target.result;
                   documents = result.match(/(\d{2}(.)?\d{3}(.)?\d{3}(\/)?\d{4}(.)?\d{2}|\d{3}(.)?\d{3}(.)?\d{3}(-)?\d{2})/g).filter(function (cpfCnpj) {
@@ -35258,7 +35138,7 @@
                   });
 
                   if (documents.length) {
-                    _context6.next = 5;
+                    _context4.next = 5;
                     break;
                   }
 
@@ -35267,7 +35147,7 @@
                     subtitle: 'Verifique se o seu Excel possui CPFs e CNPJs para serem monitorados.',
                     paragraph: 'É possível que o seu arquivo CSV esteja corrompido.'
                   });
-                  return _context6.abrupt("return");
+                  return _context4.abrupt("return");
 
                 case 5:
                   modalConfirmation = controller.call('modal');
@@ -35281,100 +35161,26 @@
                   formConfirmation.addSubmit('monitorar', 'Monitorar', '', '', label2).addClass('credithub-button');
                   formConfirmation.element().append(label2);
                   modalConfirmation.createActions().cancel();
-                  $$1('input[name=bate-rapido]').on('click',
+                  $$1('input[name=bate-rapido]').on('click', function (ev) {
+                    ev.preventDefault();
+                    hasCredits(500 * documents.length, function () {
+                      modalConfirmation.close();
+                      var loader = harlan$1.call('ccbusca::loader');
+                      loader.setTitle('Bate-Rápido');
+                      loader.setActiveStatus('Enviando Documentos');
+                      controller.call('baterapido::insertDocuments', documents, loader);
+                    });
+                  });
+                  $$1('input[name=monitorar]').on('click',
                   /*#__PURE__*/
                   function () {
                     var _ref12 = _asyncToGenerator(
                     /*#__PURE__*/
                     regeneratorRuntime.mark(function _callee3(ev) {
+                      var modal, progress, sended;
                       return regeneratorRuntime.wrap(function _callee3$(_context3) {
                         while (1) {
                           switch (_context3.prev = _context3.next) {
-                            case 0:
-                              ev.preventDefault();
-                              hasCredits(500 * documents.length,
-                              /*#__PURE__*/
-                              _asyncToGenerator(
-                              /*#__PURE__*/
-                              regeneratorRuntime.mark(function _callee2() {
-                                var loader, documentsData, uri, date, expireDate, relatorio, retornoDaInsercao, timeline, $timeline;
-                                return regeneratorRuntime.wrap(function _callee2$(_context2) {
-                                  while (1) {
-                                    switch (_context2.prev = _context2.next) {
-                                      case 0:
-                                        modalConfirmation.close();
-                                        loader = harlan$1.call('ccbusca::loader');
-                                        loader.setTitle('Bate-Rápido');
-                                        loader.setActiveStatus('Enviando Documentos');
-                                        $$1('.card-progress').remove(); // const insertDocumentPromises = await documents.map(insertDocument);
-                                        // await listDocuments().then((documentsData) => {});
-
-                                        _context2.next = 7;
-                                        return getDocuments(documents);
-
-                                      case 7:
-                                        documentsData = _context2.sent;
-                                        uri = csvGenerator(documentsData); // const relatorios = localStorage.relatorios ? JSON.parse(localStorage.relatorios) : [];
-
-                                        date = moment$1();
-                                        expireDate = moment$1().add(7, 'day').toISOString();
-                                        relatorio = {
-                                          name: "Relat\xF3rio de ".concat(date.format('LLL')),
-                                          relatorio: uri,
-                                          total: documentsData.length,
-                                          expireDate: expireDate
-                                        }; // relatorios.push(relatorio);
-
-                                        _context2.next = 14;
-                                        return insertRelatorio(relatorio);
-
-                                      case 14:
-                                        retornoDaInsercao = _context2.sent;
-                                        relatorio = JSON.parse(retornoDaInsercao).data;
-                                        timeline = controller.call('timeline');
-                                        createLine(relatorio, timeline, false);
-                                        $timeline = $$1('.timeline', $$1('.content:contains(Que tal monitorar um CPF ou CNPJ?)'));
-                                        if (!$timeline.length) timeline.element().insertBefore($$1('.open:contains(Monitorar Documento)'));
-                                        if ($timeline.length) $timeline.append(timeline.element().find('li')[0]);
-                                        loader.searchCompleted();
-                                        controller.alert({
-                                          icon: 'pass',
-                                          title: "Parab\xE9ns! Os documentos (".concat(documents.length, ") foram recebidos com sucesso!"),
-                                          subtitle: 'Foi gerado um relatório bate-rápido de seus cedentes e sacados.',
-                                          paragraph: 'Você já pode conferir os protestos e cheques sem fundos dos documentos enviados.'
-                                        });
-                                        $$1(window).scrollTop($$1(".report:contains('Que tal monitorar um CPF ou CNPJ?'):last").offset().top); // Promise.all(insertDocumentPromises).then();
-
-                                      case 24:
-                                      case "end":
-                                        return _context2.stop();
-                                    }
-                                  }
-                                }, _callee2);
-                              })));
-
-                            case 2:
-                            case "end":
-                              return _context3.stop();
-                          }
-                        }
-                      }, _callee3);
-                    }));
-
-                    return function (_x2) {
-                      return _ref12.apply(this, arguments);
-                    };
-                  }());
-                  $$1('input[name=monitorar]').on('click',
-                  /*#__PURE__*/
-                  function () {
-                    var _ref14 = _asyncToGenerator(
-                    /*#__PURE__*/
-                    regeneratorRuntime.mark(function _callee5(ev) {
-                      var modal, progress, sended;
-                      return regeneratorRuntime.wrap(function _callee5$(_context5) {
-                        while (1) {
-                          switch (_context5.prev = _context5.next) {
                             case 0:
                               ev.preventDefault();
                               modal = controller.call('modal');
@@ -35383,23 +35189,23 @@
                               modal.paragraph('Experimente tomar um café enquanto nossos servidores recebem seus CPFs e CNPJs.');
                               progress = modal.addProgress();
                               sended = 0;
-                              _context5.prev = 7;
-                              _context5.next = 10;
+                              _context3.prev = 7;
+                              _context3.next = 10;
                               return documents.reduce(
                               /*#__PURE__*/
                               function () {
-                                var _ref15 = _asyncToGenerator(
+                                var _ref13 = _asyncToGenerator(
                                 /*#__PURE__*/
-                                regeneratorRuntime.mark(function _callee4(promise, documento) {
-                                  return regeneratorRuntime.wrap(function _callee4$(_context4) {
+                                regeneratorRuntime.mark(function _callee2(promise, documento) {
+                                  return regeneratorRuntime.wrap(function _callee2$(_context2) {
                                     while (1) {
-                                      switch (_context4.prev = _context4.next) {
+                                      switch (_context2.prev = _context2.next) {
                                         case 0:
-                                          _context4.next = 2;
+                                          _context2.next = 2;
                                           return promise;
 
                                         case 2:
-                                          _context4.next = 4;
+                                          _context2.next = 4;
                                           return new Promise(function (resolve, reject) {
                                             return controller.server.call("INSERT INTO 'FOLLOWDOCUMENT'.'DOCUMENT'", controller.call('error::ajax', {
                                               dataType: 'json',
@@ -35419,35 +35225,35 @@
 
                                         case 4:
                                         case "end":
-                                          return _context4.stop();
+                                          return _context2.stop();
                                       }
                                     }
-                                  }, _callee4);
+                                  }, _callee2);
                                 }));
 
-                                return function (_x4, _x5) {
-                                  return _ref15.apply(this, arguments);
+                                return function (_x3, _x4) {
+                                  return _ref13.apply(this, arguments);
                                 };
                               }(), Promise.resolve());
 
                             case 10:
-                              _context5.next = 16;
+                              _context3.next = 16;
                               break;
 
                             case 12:
-                              _context5.prev = 12;
-                              _context5.t0 = _context5["catch"](7);
+                              _context3.prev = 12;
+                              _context3.t0 = _context3["catch"](7);
                               controller.alert({
                                 title: 'Uoh! Não foi possível enviar todos os documentos para monitoramento.',
                                 subtitle: 'Sua conexão com a internet pode estar com problemas, impedindo o envio de documentos.',
-                                paragraph: "Tente enviar menos documentos para que possamos realizar esta opera\xE7\xE3o (".concat(_context5.t0.toString(), ").")
+                                paragraph: "Tente enviar menos documentos para que possamos realizar esta opera\xE7\xE3o (".concat(_context3.t0.toString(), ").")
                               });
-                              return _context5.abrupt("return");
+                              return _context3.abrupt("return");
 
                             case 16:
-                              _context5.prev = 16;
+                              _context3.prev = 16;
                               modal.close();
-                              return _context5.finish(16);
+                              return _context3.finish(16);
 
                             case 19:
                               controller.alert({
@@ -35460,23 +35266,23 @@
 
                             case 21:
                             case "end":
-                              return _context5.stop();
+                              return _context3.stop();
                           }
                         }
-                      }, _callee5, null, [[7, 12, 16, 19]]);
+                      }, _callee3, null, [[7, 12, 16, 19]]);
                     }));
 
-                    return function (_x3) {
-                      return _ref14.apply(this, arguments);
+                    return function (_x2) {
+                      return _ref12.apply(this, arguments);
                     };
                   }());
 
                 case 18:
                 case "end":
-                  return _context6.stop();
+                  return _context4.stop();
               }
             }
-          }, _callee6);
+          }, _callee4);
         }));
 
         return function (_x) {
@@ -35487,8 +35293,8 @@
       reader.readAsText(file);
     }
 
-    controller.registerTrigger('dragdrop', 'followDocument', function (_ref16, callback) {
-      var files = _ref16.files;
+    controller.registerTrigger('dragdrop', 'followDocument', function (_ref14, callback) {
+      var files = _ref14.files;
       callback();
       if (!files.length) return;
       files.map(function (file) {
@@ -35496,24 +35302,167 @@
       });
     });
 
-    function drawTimeline() {
-      try {
-        listRelatorios().then(function (data) {
-          if (JSON.parse(data).data.length) {
-            localStorage.relatorios = true;
-            var timeline = controller.call('timeline');
-            timelineGenerator(timeline, data); // timeline.element().insertBefore($('.open:contains(Monitorar Documento)', report.element()));
+    var getData =
+    /*#__PURE__*/
+    function () {
+      var _ref15 = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee5() {
+        var res;
+        return regeneratorRuntime.wrap(function _callee5$(_context5) {
+          while (1) {
+            switch (_context5.prev = _context5.next) {
+              case 0:
+                _context5.prev = 0;
+                _context5.next = 3;
+                return harlan$1.serverCommunication.call('SELECT FROM \'HarlanBateRapido\'.\'RelatoriosNew\'', {
+                  dataType: 'json'
+                }).then(JSON.parse);
 
-            timeline.element().insertBefore($$1('.open:contains(Monitorar Documento)', renderedReport));
+              case 3:
+                res = _context5.sent;
+                _context5.next = 10;
+                break;
+
+              case 6:
+                _context5.prev = 6;
+                _context5.t0 = _context5["catch"](0);
+                console.log(_context5.t0);
+                res = [];
+
+              case 10:
+                return _context5.abrupt("return", res.data);
+
+              case 11:
+              case "end":
+                return _context5.stop();
+            }
           }
-        });
-      } catch (e) {
-        console.log(e);
-      }
-    }
+        }, _callee5, null, [[0, 6]]);
+      }));
 
+      return function getData() {
+        return _ref15.apply(this, arguments);
+      };
+    }(); // eslint-disable-next-line no-unused-vars
+
+
+    controller.registerCall('baterapido::timeline',
+    /*#__PURE__*/
+    function () {
+      var _ref16 = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee6(args) {
+        var $monitore, bateRapidoTimeline, loading, res;
+        return regeneratorRuntime.wrap(function _callee6$(_context6) {
+          while (1) {
+            switch (_context6.prev = _context6.next) {
+              case 0:
+                $monitore = $$1('.content:contains(Que tal monitorar um CPF ou CNPJ?) .open');
+                $$1('#baterapido-timeline').length ? $$1('#baterapido-timeline').empty() : $$1('<div id="baterapido-timeline">').insertBefore($monitore);
+                bateRapidoTimeline = $$1('#baterapido-timeline');
+                loading = Loading({
+                  message: 'Estamos verificando se existem relatórios Bate-rápido'
+                });
+                bateRapidoTimeline.append(loading);
+                _context6.next = 7;
+                return getData();
+
+              case 7:
+                res = _context6.sent;
+                loading.remove();
+                reportShow({
+                  reports: res
+                });
+
+              case 10:
+              case "end":
+                return _context6.stop();
+            }
+          }
+        }, _callee6);
+      }));
+
+      return function (_x5) {
+        return _ref16.apply(this, arguments);
+      };
+    }());
+    controller.registerCall('baterapido::insertDocuments',
+    /*#__PURE__*/
+    function () {
+      var _ref17 = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee7(documents, loader) {
+        return regeneratorRuntime.wrap(function _callee7$(_context7) {
+          while (1) {
+            switch (_context7.prev = _context7.next) {
+              case 0:
+                _context7.next = 2;
+                return axios.post('https://baterapido.credithub.com.br/', {
+                  apiKey: controller.confs.user.apiKey,
+                  documents: documents
+                });
+
+              case 2:
+                console.log({
+                  apiKey: controller.confs.user.apiKey,
+                  documents: documents
+                });
+                $$1('.card-progress').remove();
+                loader.searchCompleted();
+                controller.alert({
+                  icon: 'pass',
+                  title: "Parab\xE9ns! Os documentos (".concat(documents.length, ") foram recebidos com sucesso!"),
+                  subtitle: 'Em breve você receberá um relatório bate-rápido de seus cedentes e sacados.',
+                  paragraph: 'Você poderá conferir os protestos e cheques sem fundos dos documentos enviados em breve no painel. (Você também receberá um email com o relatório).'
+                });
+                $$1(window).scrollTop($$1(".report:contains('Que tal monitorar um CPF ou CNPJ?'):last").offset().top);
+
+              case 7:
+              case "end":
+                return _context7.stop();
+            }
+          }
+        }, _callee7);
+      }));
+
+      return function (_x6, _x7) {
+        return _ref17.apply(this, arguments);
+      };
+    }());
+    controller.registerTrigger('serverCommunication::websocket::reportBateRapido::insert', 'reportBateRapido::insert', function (data, callback) {
+      controller.call('baterapido::timeline');
+      callback();
+      /* Você sempre deve chamar o callback após terminar suas operações */
+    });
+    controller.registerTrigger('serverCommunication::websocket::reportBateRapido::update', 'reportBateRapido::update',
+    /*#__PURE__*/
+    function () {
+      var _ref18 = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee8(data, callback) {
+        return regeneratorRuntime.wrap(function _callee8$(_context8) {
+          while (1) {
+            switch (_context8.prev = _context8.next) {
+              case 0:
+                controller.call('baterapido::timeline');
+                callback();
+                /* Você sempre deve chamar o callback após terminar suas operações */
+
+              case 2:
+              case "end":
+                return _context8.stop();
+            }
+          }
+        }, _callee8);
+      }));
+
+      return function (_x8, _x9) {
+        return _ref18.apply(this, arguments);
+      };
+    }());
     drawReport();
-    drawTimeline();
+    controller.call('baterapido::timeline');
   });
 
 }($, harlan, moment));

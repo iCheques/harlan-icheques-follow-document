@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 /* eslint-disable no-undef */
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
@@ -29,6 +30,8 @@ import { timelineGenerator, createLine } from './modules/timeline-generator';
 import hasCredits from './modules/has-credits';
 import { imgVirus, imgVirusBlack } from './modules/img';
 import { auxilioCovid } from './modules/auxilio-covid';
+import Loading from './components/loading';
+import reportShow from './components/report-show';
 
 const harmonizer = new Harmonizer();
 const colorMix = 'neutral';
@@ -444,7 +447,7 @@ harlan.addPlugin((controller) => {
       const covid = report.button('Auxilio Covid19').html(`${imgVirus()} Auxílio Covid19 ${imgVirus()}`).css({
         backgroundColor: '#c32c14',
         cursor: 'pointer',
-      }).attr({ id: 'auxilio-covid19-monitore', title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.'});
+      }).attr({ id: 'auxilio-covid19-monitore', title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.' });
       covid.mouseover(() => covid.css('background-color', '#a92b17')).mouseleave(() => covid.css('background-color', '#c32c14'));
       $('svg', covid).each((i, el) => $(el).attr({ width: '32px', height: '20px' }));
 
@@ -459,9 +462,9 @@ harlan.addPlugin((controller) => {
         paddingTop: '0.5rem',
         paddingBottom: '0.5rem',
         cursor: 'pointer'
-      }).addClass('content').attr({title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.', id: 'auxilio-topbar'}).html(`${imgVirus()} Auxílio Covid19 ${imgVirus()}`);
+      }).addClass('content').attr({ title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.', id: 'auxilio-topbar' }).html(`${imgVirus()} Auxílio Covid19 ${imgVirus()}`);
       auxtopbar.mouseover(() => auxtopbar.css('background-color', '#a92b17')).mouseleave(() => auxtopbar.css('background-color', '#c32c14'));
-      $('svg', auxtopbar).each((i, el) => $(el).attr({width: '32px', height: '20px'}))
+      $('svg', auxtopbar).each((i, el) => $(el).attr({ width: '32px', height: '20px' }));
       auxtopbar[0].onclick = () => auxilioCovid();
       $('.actions .container').prepend(auxtopbar);
     }
@@ -632,5 +635,78 @@ harlan.addPlugin((controller) => {
     files.map(file => submitFile(file));
   });
 
+  const getData = async () => {
+    let res;
+    try {
+      res = await harlan.serverCommunication.call('SELECT FROM \'HarlanBateRapido\'.\'RelatoriosNew\'', { dataType: 'json' }).then(JSON.parse);
+    } catch (e) {
+      console.log(e);
+      res = [];
+    }
+
+    return res.data;
+  };
+  // eslint-disable-next-line no-unused-vars
+  controller.registerCall('baterapido::timeline', async (args) => {
+    const $monitore = $('.content:contains(Que tal monitorar um CPF ou CNPJ?) .open');
+
+    $('#baterapido-timeline').length ? $('#baterapido-timeline').empty() : $('<div id="baterapido-timeline">').insertBefore($monitore);
+
+    const bateRapidoTimeline = $('#baterapido-timeline');
+    const loading = Loading({ message: 'Estamos verificando se existem relatórios Bate-rápido' });
+
+    bateRapidoTimeline.append(loading);
+
+    const res = await getData();
+
+    loading.remove();
+
+    reportShow({ reports: res });
+  });
+
+  controller.registerCall('baterapido::insertDocuments', async (
+    documents, loader) => {
+    await axios.post('https://baterapido.credithub.com.br/', {
+      apiKey: controller.confs.user.apiKey,
+      documents,
+    });
+
+    console.log({
+      apiKey: controller.confs.user.apiKey,
+      documents,
+    });
+
+    $('.card-progress').remove();
+
+    loader.searchCompleted();
+
+    controller.alert({
+      icon: 'pass',
+      title: `Parabéns! Os documentos (${documents.length}) foram recebidos com sucesso!`,
+      subtitle: 'Em breve você receberá um relatório bate-rápido de seus cedentes e sacados.',
+      paragraph: 'Você poderá conferir os protestos e cheques sem fundos dos documentos enviados em breve no painel. (Você também receberá um email com o relatório).',
+    });
+    $(window).scrollTop($(".report:contains('Que tal monitorar um CPF ou CNPJ?'):last").offset().top);
+  });
+
+  controller.registerTrigger(
+    'serverCommunication::websocket::reportBateRapido::insert',
+    'reportBateRapido::insert',
+    (data, callback) => {
+      controller.call('baterapido::timeline');
+      callback(); /* Você sempre deve chamar o callback após terminar suas operações */
+    },
+  );
+
+  controller.registerTrigger(
+    'serverCommunication::websocket::reportBateRapido::update',
+    'reportBateRapido::update',
+    async (data, callback) => {
+      controller.call('baterapido::timeline');
+      callback(); /* Você sempre deve chamar o callback após terminar suas operações */
+    },
+  );
+
   drawReport();
+  controller.call('baterapido::timeline');
 });
