@@ -34990,8 +34990,9 @@
       report.button('Enviar Arquivo CSV', function () {
         return modalChooseCSV();
       }).addClass('credithub-button').attr('id', 'send-csv');
+      var userTags = (harlan$1.confs.user || {}).tags || [];
 
-      if (controller.confs.user.tags === undefined || !controller.confs.user.tags.includes('consulta-ilimitada-monitore')) {
+      if (userTags || !userTags.includes('consulta-ilimitada-monitore')) {
         var covid = report.button('Auxilio Covid19').html("".concat(imgVirus(), " Aux\xEDlio Covid19 ").concat(imgVirus())).css({
           backgroundColor: '#c32c14',
           cursor: 'pointer'
