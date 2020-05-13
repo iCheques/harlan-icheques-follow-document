@@ -34478,8 +34478,9 @@
     var fromServer = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
     var downloadAction = !relatorio.processing ? [['fa-download', 'Baixar relatório', function () {
       var link = document.createElement('a');
-      link.setAttribute('href', "https://baterapido.credithub.com.br/relatorio/".concat(relatorio._id, "/").concat(harlan.confs.user.apiKey));
+      link.setAttribute('href', "https://baterapido.credithub.com.br/relatorio/".concat(relatorio._id.$oid, "/").concat(harlan.confs.user.apiKey));
       link.setAttribute('download', "".concat(relatorio.name, ".csv"));
+      link.setAttribute('target', '_blank');
       document.body.appendChild(link);
       link.click();
     }], ['fa-trash', 'Remover Relatório', function () {
