@@ -21,6 +21,7 @@ const createLineProcessing = (relatorio, timeline, fromServer = true) => {
 const createLine = (relatorio, timeline, fromServer = true) => {
   const downloadAction = !relatorio.processing ? [
     ['fa-download', 'Baixar relatório', () => {
+      console.log(relatorio);
       const link = document.createElement('a');
       link.setAttribute('href', `https://baterapido.credithub.com.br/relatorio/${relatorio._id.$id}/${harlan.confs.user.apiKey}`);
       link.setAttribute('download', `${relatorio.name}.csv`);
