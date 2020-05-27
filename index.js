@@ -34423,7 +34423,7 @@
     modal.subtitle('AUXILIO FACTORING GRÁTIS');
     var paragraph = modal.paragraph('Devido ao cenário pandêmico do CORONAVIRUS, milhares de boletos estão sendo prorrogados ou vencendo. Fazer a cobrança na hora errada pode causar transtornos, gastar tempo além de trazer prejuízos inestimáveis. Com o Monitore fica fácil saber quando o sacado inadimplente recebe capital e está pagando suas dívidas para então cobrá-lo das suas. Não seja o ultimo na fila de recebimento! Receba alertas por e-mail quando o sacado que te deve começar a pagar dívidas. Grátis até o 31 de maio, favor consultar os termos antes de começar.');
     var form = modal.createForm();
-    var inputAgree = form.addCheckbox('agree', 'Eu li e aceito os <a href="https://drive.google.com/file/d/1fKSNgqgaSgh1D32a5MlEEkdZiGmxm2tO/view" target="_blank">TERMOS DO AUXILIO COVID.', false);
+    var inputAgree = form.addCheckbox('agree', 'Eu li e aceito os <a href="https://drive.google.com/file/d/1OmR2jEDssp-6cVd8Jc-5qatblAZiBa7i/view" target="_blank">TERMOS DO AUXILIO COVID.', false);
     form.addSubmit('login', 'Ativar');
     form.element().submit(function (ev) {
       ev.preventDefault();
