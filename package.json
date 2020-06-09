@@ -1,6 +1,6 @@
 {
   "name": "harlan-icheques-follow-document",
-  "version": "1.3.16",
+  "version": "1.3.17",
   "description": "Extensão que habilita o seguir documentos no Harlan.",
   "main": "index.js",
   "scripts": {
