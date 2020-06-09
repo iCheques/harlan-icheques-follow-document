@@ -88,12 +88,14 @@ const auxilioDuplicatas = () => {
 
   const form = modal.createForm();
   const inputAgree = form.addCheckbox('agree', 'Eu li e aceito os <a href="https://drive.google.com/file/d/1HFNQd9AuExwx2vH3Pr3dc0VwqYDjB87D/view" target="_blank">TERMOS DO AUXILIO Protesto + CCF para Duplicatas.', false);
+  const souFinanceira = form.addCheckbox('agree', 'Sou uma Factoring, FIDC, Securitizadora ou ESC.', false);
 
   form.addSubmit('login', 'Ativar');
   form.element().submit((ev) => {
     ev.preventDefault();
 
     if (!inputAgree[1].is(':checked')) return toastr.warning('É preciso aceitar os termos para prosseguir!');
+    if (!souFinanceira[1].is(':checked')) return toastr.warning('É preciso ser uma financeira para prosseguir!');
     harlan.serverCommunication.call('SELECT FROM \'HARLAN\'.\'ActiveDuplicatasPromo\'',
       harlan.call('error::ajax', harlan.call('loader::ajax', {
         dataType: 'json',

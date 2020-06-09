@@ -34442,10 +34442,12 @@
     modal.paragraph('Devido ao cenário pandêmico e a volta das operações de crédito, decidimos estender mais uma gratuidade para as Financeiras. Agora poderão analisar suas operações SEM CUSTO nessa época de sofrimento. Independente de quando retornam, ative seu Auxilio Covid para suas Duplicatas por um mês. Deixe a analise conosco e minimize seus custos operacionais.');
     var form = modal.createForm();
     var inputAgree = form.addCheckbox('agree', 'Eu li e aceito os <a href="https://drive.google.com/file/d/1HFNQd9AuExwx2vH3Pr3dc0VwqYDjB87D/view" target="_blank">TERMOS DO AUXILIO Protesto + CCF para Duplicatas.', false);
+    var souFinanceira = form.addCheckbox('agree', 'Sou uma Factoring, FIDC, Securitizadora ou ESC.', false);
     form.addSubmit('login', 'Ativar');
     form.element().submit(function (ev) {
       ev.preventDefault();
       if (!inputAgree[1].is(':checked')) return toastr$1.warning('É preciso aceitar os termos para prosseguir!');
+      if (!souFinanceira[1].is(':checked')) return toastr$1.warning('É preciso ser uma financeira para prosseguir!');
       harlan$1.serverCommunication.call('SELECT FROM \'HARLAN\'.\'ActiveDuplicatasPromo\'', harlan$1.call('error::ajax', harlan$1.call('loader::ajax', {
         dataType: 'json',
         success: function success() {
@@ -34842,7 +34844,7 @@
         chart = null;
         chartCanvas = null;
         graphicDataset = null;
-        chartReport.element().remove();
+        if (chartReport != null) chartReport.element().remove();
         chartReport = null;
         return;
       }
