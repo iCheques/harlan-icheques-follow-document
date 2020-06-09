@@ -254,7 +254,7 @@ harlan.addPlugin((controller) => {
       chart = null;
       chartCanvas = null;
       graphicDataset = null;
-      chartReport.element().remove();
+      if (chartReport != null) chartReport.element().remove();
       chartReport = null;
       return;
     }
