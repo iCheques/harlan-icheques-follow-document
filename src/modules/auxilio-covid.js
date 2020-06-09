@@ -190,17 +190,17 @@ const auxilioMonitore = () => {
 export const auxilioCovid = () => {
   const modal = harlan.call('modal');
   modal.title('AUXÍLIO COVID-19');
-  modal.subtitle('AUXILIO FACTORING GRÁTIS e Protestos/CCF para Duplicatas');
+  modal.subtitle('Criamos algumas gratuidades para ajudar neste momento de pandemia');
 
   const form = modal.createForm();
 
-  form.addSubmit('auxilio-monitore', 'Auxilio Monitore ilimitado').on('click', (ev) => {
+  form.addSubmit('auxilio-monitore', 'Monitore ilimitado').on('click', (ev) => {
     ev.preventDefault();
     modal.close();
     auxilioMonitore();
   });
 
-  form.addSubmit('auxilio-duplicatas', 'Auxilio Protesto + CCF para Duplicatas').on('click', (ev) => {
+  form.addSubmit('auxilio-duplicatas', 'Protesto + CCF para Duplicatas (Somente Financeiras)').on('click', (ev) => {
     ev.preventDefault();
     modal.close();
     auxilioDuplicatas();

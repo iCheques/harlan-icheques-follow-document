@@ -34532,14 +34532,14 @@
   var auxilioCovid = function auxilioCovid() {
     var modal = harlan$1.call('modal');
     modal.title('AUXÍLIO COVID-19');
-    modal.subtitle('AUXILIO FACTORING GRÁTIS e Protestos/CCF para Duplicatas');
+    modal.subtitle('Criamos algumas gratuidades para ajudar neste momento de pandemia');
     var form = modal.createForm();
-    form.addSubmit('auxilio-monitore', 'Auxilio Monitore ilimitado').on('click', function (ev) {
+    form.addSubmit('auxilio-monitore', 'Monitore ilimitado').on('click', function (ev) {
       ev.preventDefault();
       modal.close();
       auxilioMonitore();
     });
-    form.addSubmit('auxilio-duplicatas', 'Auxilio Protesto + CCF para Duplicatas').on('click', function (ev) {
+    form.addSubmit('auxilio-duplicatas', 'Protesto + CCF para Duplicatas (Somente Financeiras)').on('click', function (ev) {
       ev.preventDefault();
       modal.close();
       auxilioDuplicatas();
