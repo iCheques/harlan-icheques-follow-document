@@ -19,6 +19,7 @@ export default {
       jquery: '$',
       numeral: 'numeral',
       moment: 'moment',
+      toastr: 'toastr',
     },
   },
   plugins: [
