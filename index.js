@@ -34610,6 +34610,7 @@
 
   var reportShow = function reportShow(props) {
     if ($('#baterapido-timeline .timeline').length) $('#baterapido-timeline .timeline').remove();
+    if (props.reports === undefined) return;
     var timeline = harlan.call('timeline');
     timelineGenerator(timeline, props.reports);
     $('#baterapido-timeline').append(timeline.element());
