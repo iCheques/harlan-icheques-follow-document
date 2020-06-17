@@ -22,13 +22,8 @@ import pickBy from 'lodash/pickBy';
 
 import './list';
 // import modalChooseFile from './modules/modal-choose-file';
-import {
-  insertRelatorio, listRelatorios, getDocuments,
-} from './modules/monitore-crud';
-import csvGenerator from './modules/csv-generator';
-import { timelineGenerator, createLine } from './modules/timeline-generator';
 import hasCredits from './modules/has-credits';
-import { imgVirus, imgVirusBlack } from './modules/img';
+import { imgVirus } from './modules/img';
 import { auxilioCovid } from './modules/auxilio-covid';
 import Loading from './components/loading';
 import reportShow from './components/report-show';
@@ -359,7 +354,7 @@ harlan.addPlugin((controller) => {
       if (files.length) {
         modal.close();
         if (files[0].type === 'text/csv') return submitFile(files[0]);
-        return toastr.error('É necessário que você envie um arquivo CSV.', 'Formato de arquivo inválido!');;
+        return toastr.error('É necessário que você envie um arquivo CSV.', 'Formato de arquivo inválido!');
       }
       toastr.error('É necessário que você envie um arquivo para continuar.', 'Nenhum arquivo selecionado');
     });
