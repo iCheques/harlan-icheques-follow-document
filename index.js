@@ -34430,6 +34430,19 @@
 
     modal.createActions().cancel();
   };
+
+  var auxilioCovidDesativado = function auxilioCovidDesativado() {
+    var firstTime = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var message = firstTime ? {
+      paragraph: 'O Auxílio Monitore foi desativado!'
+    } : {
+      paragraph: 'Você ainda não ativou o auxilio monitore ilimitado, não é possível desativar!!'
+    };
+    var modal = harlan$1.call('modal');
+    modal.title('AUXÍLIO MONITORE ILIMITADO');
+    modal.paragraph(message.paragraph);
+    modal.createActions().cancel();
+  };
   /**
    * Auxilio Duplicatas
    */
@@ -34524,6 +34537,45 @@
     }).append($img);
     $virus.insertBefore($$1('h2:contains(COVID-19)'));
   };
+
+  var cancelarAuxilioMonitore = function cancelarAuxilioMonitore() {
+    var modal = harlan$1.call('modal');
+    modal.title('AUXÍLIO COVID-19');
+    modal.subtitle('Desativar Auxilio Monitore Ilimitado');
+    var form = modal.createForm();
+    form.addSubmit('desativar-monitore', 'Confirmar desativação do Monitore Ilimitado').on('click', function (ev) {
+      ev.preventDefault();
+      harlan$1.serverCommunication.call('SELECT FROM \'HARLAN\'.\'DeactivateMonitorePromo\'', harlan$1.call('error::ajax', harlan$1.call('loader::ajax', {
+        dataType: 'json',
+        success: function success() {
+          modal.close();
+          $$1('#auxilio-covid19-monitore').remove();
+          $$1('#auxilio-topbar').remove();
+          auxilioCovidDesativado();
+        },
+        error: function error() {
+          $$1('#auxilio-covid19-monitore').remove();
+          $$1('#auxilio-topbar').remove();
+          auxilioCovidDesativado(false);
+        }
+      })));
+    });
+    var $img = $$1($$1.parseHTML(imgVirus())).css({
+      float: 'left',
+      width: '166px',
+      marginLeft: '19px',
+      marginTop: '10px'
+    });
+    var $virus = $$1('<div>').css({
+      backgroundColor: '#a91d09',
+      borderRadius: '100px',
+      height: '12rem',
+      width: '200px',
+      float: 'left',
+      marginRight: '30px'
+    }).append($img);
+    $virus.insertBefore($$1('h2:contains(COVID-19)'));
+  };
   /**
    * Exibe o modal do auxilílio monitore
    */
@@ -34543,6 +34595,11 @@
       ev.preventDefault();
       modal.close();
       auxilioDuplicatas();
+    });
+    modal.createActions().add('Desativar Auxilio Monitore Ilimitado').on('click', function (ev) {
+      ev.preventDefault();
+      modal.close();
+      cancelarAuxilioMonitore();
     });
     modal.createActions().cancel();
   };

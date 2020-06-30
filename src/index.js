@@ -457,14 +457,14 @@ harlan.addPlugin((controller) => {
         fontWeight: 'bold',
         paddingTop: '0.5rem',
         paddingBottom: '0.5rem',
-        cursor: 'pointer'
+        cursor: 'pointer',
       }).addClass('content').attr({ title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.', id: 'auxilio-topbar' }).html(`${imgVirus()} Auxílio Covid19 ${imgVirus()}`);
       auxtopbar.mouseover(() => auxtopbar.css('background-color', '#a92b17')).mouseleave(() => auxtopbar.css('background-color', '#c32c14'));
       $('svg', auxtopbar).each((i, el) => $(el).attr({ width: '32px', height: '20px' }));
       auxtopbar[0].onclick = () => auxilioCovid();
       $('.actions .container').prepend(auxtopbar);
     }
-        
+
     report.gamification('brilliantIdea');
 
     const reportElement = report.element();

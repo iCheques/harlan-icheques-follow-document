@@ -75,6 +75,19 @@ const auxilioCovidAtivado = (firstTime = true) => {
 
   modal.createActions().cancel();
 };
+const auxilioCovidDesativado = (firstTime = true) => {
+  const message = firstTime ? {
+    paragraph: 'O Auxílio Monitore foi desativado!',
+  } : {
+    paragraph: 'Você ainda não ativou o auxilio monitore ilimitado, não é possível desativar!!',
+  };
+  const modal = harlan.call('modal');
+
+  modal.title('AUXÍLIO MONITORE ILIMITADO');
+  modal.paragraph(message.paragraph);
+
+  modal.createActions().cancel();
+};
 /**
  * Auxilio Duplicatas
  */
@@ -184,6 +197,50 @@ const auxilioMonitore = () => {
 
   $virus.insertBefore($('h2:contains(COVID-19)'));
 };
+
+const cancelarAuxilioMonitore = () => {
+  const modal = harlan.call('modal');
+  modal.title('AUXÍLIO COVID-19');
+  modal.subtitle('Desativar Auxilio Monitore Ilimitado');
+
+
+  const form = modal.createForm();
+  form.addSubmit('desativar-monitore', 'Confirmar desativação do Monitore Ilimitado').on('click', (ev) => {
+    ev.preventDefault();
+    harlan.serverCommunication.call('SELECT FROM \'HARLAN\'.\'DeactivateMonitorePromo\'',
+      harlan.call('error::ajax', harlan.call('loader::ajax', {
+        dataType: 'json',
+        success: () => {
+          modal.close();
+          $('#auxilio-covid19-monitore').remove();
+          $('#auxilio-topbar').remove();
+          auxilioCovidDesativado();
+        },
+        error: () => {
+          $('#auxilio-covid19-monitore').remove();
+          $('#auxilio-topbar').remove();
+          auxilioCovidDesativado(false);
+        },
+      })));
+  });
+  const $img = $($.parseHTML(imgVirus())).css({
+    float: 'left',
+    width: '166px',
+    marginLeft: '19px',
+    marginTop: '10px',
+  });
+
+  const $virus = $('<div>').css({
+    backgroundColor: '#a91d09',
+    borderRadius: '100px',
+    height: '12rem',
+    width: '200px',
+    float: 'left',
+    marginRight: '30px',
+  }).append($img);
+
+  $virus.insertBefore($('h2:contains(COVID-19)'));
+};
 /**
  * Exibe o modal do auxilílio monitore
  */
@@ -206,5 +263,10 @@ export const auxilioCovid = () => {
     auxilioDuplicatas();
   });
 
+  modal.createActions().add('Desativar Auxilio Monitore Ilimitado').on('click', (ev) => {
+    ev.preventDefault();
+    modal.close();
+    cancelarAuxilioMonitore();
+  });
   modal.createActions().cancel();
 };
