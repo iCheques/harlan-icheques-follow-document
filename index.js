@@ -34541,12 +34541,66 @@
   var cancelarAuxilioMonitore = function cancelarAuxilioMonitore() {
     var modal = harlan$1.call('modal');
     modal.title('AUXÍLIO COVID-19');
-    modal.subtitle('Desativar Auxilio Monitore Ilimitado');
+    modal.subtitle('Antes de efetuarmos o cancelamento, você deseja apagar todos os CPF/CNPJs monitorados ou gostaria de deixar por R$1,00 por mês cada?');
+
+    var hasCredits = function hasCredits(c, b) {
+      return harlan$1.server.call("SELECT FROM 'ICHEQUES'.'IPAYTHEBILL'", harlan$1.call('loader::ajax', {
+        dataType: 'json',
+        success: function success(data) {
+          if (data) {
+            harlan$1.call('credits::has', c, function () {
+              b();
+            });
+          } else {
+            b();
+          }
+        }
+      }));
+    };
+
     var form = modal.createForm();
+    form.addSubmit('desativar-monitore', 'Cancelar e manter os documentos monitorados').on('click', function (ev) {
+      ev.preventDefault();
+      harlan$1.serverCommunication.call('SELECT FROM \'FOLLOWDOCUMENT\'.\'LIST\'', {
+        dataType: 'json'
+      }).then(function (followData) {
+        var totalDocumentosMonitorados;
+
+        try {
+          totalDocumentosMonitorados = followData.length;
+        } catch (e) {
+          toastr$1.error('Não foi possível saber quantos documentos estão sendo monitorados, por favor, tente novamente');
+          return;
+        }
+
+        hasCredits(1000 * totalDocumentosMonitorados, function () {
+          return harlan$1.serverCommunication.call('SELECT FROM \'HARLAN\'.\'DeactivateMonitorePromo\'', harlan$1.call('error::ajax', harlan$1.call('loader::ajax', {
+            dataType: 'json',
+            data: {
+              monitorarDocumentos: true
+            },
+            success: function success() {
+              modal.close();
+              $$1('#auxilio-covid19-monitore').remove();
+              $$1('#auxilio-topbar').remove();
+              auxilioCovidDesativado();
+            },
+            error: function error() {
+              $$1('#auxilio-covid19-monitore').remove();
+              $$1('#auxilio-topbar').remove();
+              auxilioCovidDesativado(false);
+            }
+          })));
+        });
+      });
+    });
     form.addSubmit('desativar-monitore', 'Confirmar desativação do Monitore Ilimitado').on('click', function (ev) {
       ev.preventDefault();
       harlan$1.serverCommunication.call('SELECT FROM \'HARLAN\'.\'DeactivateMonitorePromo\'', harlan$1.call('error::ajax', harlan$1.call('loader::ajax', {
         dataType: 'json',
+        data: {
+          monitorarDocumentos: false
+        },
         success: function success() {
           modal.close();
           $$1('#auxilio-covid19-monitore').remove();
