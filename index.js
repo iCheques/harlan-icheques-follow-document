@@ -34398,46 +34398,15 @@
     modal.createActions().cancel();
   };
 
-  var auxilioCovidAtivado = function auxilioCovidAtivado() {
-    var firstTime = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-    var message = firstTime ? {
-      subtitle: 'AUXÍLIO ATIVADO COM SUCESSO!',
-      paragraph: 'Parabéns! O Auxílio COVID-19 foi ativado com sucesso e você poderá utilizar até o dia 30/julho!'
-    } : {
-      subtitle: 'AUXÍLIO JÁ ESTÁ ATIVADO!',
-      paragraph: 'O seu Auxílio COVID-19 já foi ativado com sucesso e você já pode utilizá-lo!'
-    };
-    var modal = harlan$1.call('modal');
-    modal.title('AUXÍLIO COVID-19');
-    modal.subtitle(message.subtitle);
-    var p = modal.paragraph(message.paragraph);
-    var d = $$1('<div>').css('text-align', 'center').insertAfter(p);
-    var button1 = $$1($$1.parseHTML("<button style=\"\n    display: inline-block;\n    width: auto;\n    box-shadow: none;\n    text-align: center;\n    border: none;\n    background-color: #fdad30;\n    color: #fff;\n    font-weight: 700;\n    cursor: pointer;\n    transition: background-color .2s ease-in;\n    margin: 10px 10px 0;\n\">Monitorar Documento</button>"));
-    button1.appendTo(d);
-
-    button1[0].onclick = function () {
-      modal.close();
-      $$1('#monitorar-documento').click();
-    };
-
-    var button2 = $$1($$1.parseHTML("<button style=\"\n    display: inline-block;\n    width: auto;\n    box-shadow: none;\n    text-align: center;\n    border: none;\n    background-color: #0186ef;\n    color: #fff;\n    font-weight: 700;\n    cursor: pointer;\n    transition: background-color .2s ease-in;\n    margin: 10px 10px 0;\n\">Enviar Arquivo CSV</button>"));
-    button2.appendTo(d);
-
-    button2[0].onclick = function () {
-      modal.close();
-      $$1('#send-csv').click();
-    };
-
-    modal.createActions().cancel();
-  };
-
   var auxilioCovidDesativado = function auxilioCovidDesativado() {
     var firstTime = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var manterDocumentos = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
     var message = firstTime ? {
       paragraph: 'O Auxílio Monitore foi desativado!'
     } : {
-      paragraph: 'Você ainda não ativou o auxilio monitore ilimitado, não é possível desativar!!'
+      paragraph: 'Houve algum erro e não foi possível desativar seu monitore. (Caso tenha escolhido manter os documentos, por favor verifique se possui saldo suficiente para a operação.)'
     };
+    if (manterDocumentos) message.paragraph = 'O Auxílio Monitore foi desativado e seus documentos monitorados foram mantidos!';
     var modal = harlan$1.call('modal');
     modal.title('AUXÍLIO MONITORE ILIMITADO');
     modal.paragraph(message.paragraph);
@@ -34489,117 +34458,38 @@
     }).append($img);
     $virus.insertBefore($$1('h2:contains(COVID-19)'));
   };
-  /**
-   * Auxilio Monitore
-   */
-
-
-  var auxilioMonitore = function auxilioMonitore() {
-    var modal = harlan$1.call('modal');
-    modal.title('AUXÍLIO COVID-19');
-    modal.subtitle('AUXILIO FACTORING GRÁTIS');
-    modal.paragraph('Devido ao cenário pandêmico do CORONAVIRUS, milhares de boletos estão sendo prorrogados ou vencendo. Fazer a cobrança na hora errada pode causar transtornos, gastar tempo além de trazer prejuízos inestimáveis. Com o Monitore fica fácil saber quando o sacado inadimplente recebe capital e está pagando suas dívidas para então cobrá-lo das suas. Não seja o ultimo na fila de recebimento! Receba alertas por e-mail quando o sacado que te deve começar a pagar dívidas. Grátis até o 31 de maio, favor consultar os termos antes de começar.');
-    var form = modal.createForm();
-    var inputAgree = form.addCheckbox('agree', 'Eu li e aceito os <a href="https://drive.google.com/file/d/1OmR2jEDssp-6cVd8Jc-5qatblAZiBa7i/view" target="_blank">TERMOS DO AUXILIO COVID.', false);
-    form.addSubmit('login', 'Ativar');
-    form.element().submit(function (ev) {
-      ev.preventDefault();
-      if (!inputAgree[1].is(':checked')) return toastr$1.warning('É preciso aceitar os termos para prosseguir!');
-      harlan$1.serverCommunication.call('SELECT FROM \'HARLAN\'.\'ActiveMonitorePromo\'', harlan$1.call('error::ajax', harlan$1.call('loader::ajax', {
-        dataType: 'json',
-        success: function success() {
-          modal.close();
-          $$1('#auxilio-covid19-monitore').remove();
-          $$1('#auxilio-topbar').remove();
-          auxilioCovidAtivado();
-        },
-        error: function error() {
-          $$1('#auxilio-covid19-monitore').remove();
-          $$1('#auxilio-topbar').remove();
-          auxilioCovidAtivado(false);
-        }
-      })));
-    });
-    modal.createActions().cancel();
-    var $img = $$1($$1.parseHTML(imgVirus())).css({
-      float: 'left',
-      width: '166px',
-      marginLeft: '19px',
-      marginTop: '10px'
-    });
-    var $virus = $$1('<div>').css({
-      backgroundColor: '#a91d09',
-      borderRadius: '100px',
-      height: '12rem',
-      width: '200px',
-      float: 'left',
-      marginRight: '30px'
-    }).append($img);
-    $virus.insertBefore($$1('h2:contains(COVID-19)'));
-  };
 
   var cancelarAuxilioMonitore = function cancelarAuxilioMonitore() {
     var modal = harlan$1.call('modal');
     modal.title('AUXÍLIO COVID-19');
     modal.subtitle('Antes de efetuarmos o cancelamento, você deseja apagar todos os CPF/CNPJs monitorados ou gostaria de deixar por R$1,00 por mês cada?');
-
-    var hasCredits = function hasCredits(c, b) {
-      return harlan$1.server.call("SELECT FROM 'ICHEQUES'.'IPAYTHEBILL'", harlan$1.call('loader::ajax', {
-        dataType: 'json',
-        success: function success(data) {
-          if (data) {
-            harlan$1.call('credits::has', c, function () {
-              b();
-            });
-          } else {
-            b();
-          }
-        }
-      }));
-    };
-
     var form = modal.createForm();
     form.addSubmit('desativar-monitore', 'Cancelar e manter os documentos monitorados').on('click', function (ev) {
       ev.preventDefault();
-      harlan$1.serverCommunication.call('SELECT FROM \'FOLLOWDOCUMENT\'.\'LIST\'', {
-        dataType: 'json'
-      }).then(function (followData) {
-        var totalDocumentosMonitorados;
-
-        try {
-          totalDocumentosMonitorados = followData.length;
-        } catch (e) {
-          toastr$1.error('Não foi possível saber quantos documentos estão sendo monitorados, por favor, tente novamente');
-          return;
+      harlan$1.serverCommunication.call('SELECT FROM \'HARLAN\'.\'DeactivateMonitorePromo\'', harlan$1.call('error::ajax', harlan$1.call('loader::ajax', {
+        dataType: 'json',
+        data: {
+          monitorarDocumentos: 'active'
+        },
+        success: function success() {
+          modal.close();
+          $$1('#auxilio-covid19-monitore').remove();
+          $$1('#auxilio-topbar').remove();
+          auxilioCovidDesativado(true, true);
+        },
+        error: function error() {
+          $$1('#auxilio-covid19-monitore').remove();
+          $$1('#auxilio-topbar').remove();
+          auxilioCovidDesativado(false);
         }
-
-        hasCredits(1000 * totalDocumentosMonitorados, function () {
-          return harlan$1.serverCommunication.call('SELECT FROM \'HARLAN\'.\'DeactivateMonitorePromo\'', harlan$1.call('error::ajax', harlan$1.call('loader::ajax', {
-            dataType: 'json',
-            data: {
-              monitorarDocumentos: true
-            },
-            success: function success() {
-              modal.close();
-              $$1('#auxilio-covid19-monitore').remove();
-              $$1('#auxilio-topbar').remove();
-              auxilioCovidDesativado();
-            },
-            error: function error() {
-              $$1('#auxilio-covid19-monitore').remove();
-              $$1('#auxilio-topbar').remove();
-              auxilioCovidDesativado(false);
-            }
-          })));
-        });
-      });
+      })));
     });
     form.addSubmit('desativar-monitore', 'Confirmar desativação do Monitore Ilimitado').on('click', function (ev) {
       ev.preventDefault();
       harlan$1.serverCommunication.call('SELECT FROM \'HARLAN\'.\'DeactivateMonitorePromo\'', harlan$1.call('error::ajax', harlan$1.call('loader::ajax', {
         dataType: 'json',
         data: {
-          monitorarDocumentos: false
+          monitorarDocumentos: 'disabled'
         },
         success: function success() {
           modal.close();
@@ -34640,11 +34530,6 @@
     modal.title('AUXÍLIO COVID-19');
     modal.subtitle('Criamos algumas gratuidades para ajudar neste momento de pandemia');
     var form = modal.createForm();
-    form.addSubmit('auxilio-monitore', 'Monitore ilimitado').on('click', function (ev) {
-      ev.preventDefault();
-      modal.close();
-      auxilioMonitore();
-    });
     form.addSubmit('auxilio-duplicatas', 'Protesto + CCF para Duplicatas (Somente Financeiras)').on('click', function (ev) {
       ev.preventDefault();
       modal.close();

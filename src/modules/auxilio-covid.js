@@ -279,12 +279,6 @@ export const auxilioCovid = () => {
 
   const form = modal.createForm();
 
-  form.addSubmit('auxilio-monitore', 'Monitore ilimitado').on('click', (ev) => {
-    ev.preventDefault();
-    modal.close();
-    auxilioMonitore();
-  });
-
   form.addSubmit('auxilio-duplicatas', 'Protesto + CCF para Duplicatas (Somente Financeiras)').on('click', (ev) => {
     ev.preventDefault();
     modal.close();
