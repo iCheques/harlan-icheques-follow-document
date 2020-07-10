@@ -214,7 +214,7 @@ const cancelarAuxilioMonitore = () => {
       harlan.call('error::ajax', harlan.call('loader::ajax', {
         dataType: 'json',
         data: {
-          monitorarDocumentos: 'active',
+          manterDocumentos: 'active',
         },
         success: () => {
           modal.close();
@@ -223,6 +223,7 @@ const cancelarAuxilioMonitore = () => {
           auxilioCovidDesativado(true, true);
         },
         error: () => {
+          modal.close();
           $('#auxilio-covid19-monitore').remove();
           $('#auxilio-topbar').remove();
           auxilioCovidDesativado(false);
@@ -230,13 +231,13 @@ const cancelarAuxilioMonitore = () => {
       })));
   });
 
-  form.addSubmit('desativar-monitore', 'Confirmar desativação do Monitore Ilimitado').on('click', (ev) => {
+  form.addSubmit('desativar-monitore', 'Confirmar desativação do Monitore Ilimitado e EXCLUIR documentos monitorados').on('click', (ev) => {
     ev.preventDefault();
     harlan.serverCommunication.call('SELECT FROM \'HARLAN\'.\'DeactivateMonitorePromo\'',
       harlan.call('error::ajax', harlan.call('loader::ajax', {
         dataType: 'json',
         data: {
-          monitorarDocumentos: 'disabled',
+          manterDocumentos: 'disabled',
         },
         success: () => {
           modal.close();
@@ -245,6 +246,7 @@ const cancelarAuxilioMonitore = () => {
           auxilioCovidDesativado();
         },
         error: () => {
+          modal.close();
           $('#auxilio-covid19-monitore').remove();
           $('#auxilio-topbar').remove();
           auxilioCovidDesativado(false);
@@ -257,6 +259,8 @@ const cancelarAuxilioMonitore = () => {
     marginLeft: '19px',
     marginTop: '10px',
   });
+
+  modal.createActions().cancel();
 
   const $virus = $('<div>').css({
     backgroundColor: '#a91d09',

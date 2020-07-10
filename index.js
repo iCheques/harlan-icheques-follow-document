@@ -34469,7 +34469,7 @@
       harlan$1.serverCommunication.call('SELECT FROM \'HARLAN\'.\'DeactivateMonitorePromo\'', harlan$1.call('error::ajax', harlan$1.call('loader::ajax', {
         dataType: 'json',
         data: {
-          monitorarDocumentos: 'active'
+          manterDocumentos: 'active'
         },
         success: function success() {
           modal.close();
@@ -34478,18 +34478,19 @@
           auxilioCovidDesativado(true, true);
         },
         error: function error() {
+          modal.close();
           $$1('#auxilio-covid19-monitore').remove();
           $$1('#auxilio-topbar').remove();
           auxilioCovidDesativado(false);
         }
       })));
     });
-    form.addSubmit('desativar-monitore', 'Confirmar desativação do Monitore Ilimitado').on('click', function (ev) {
+    form.addSubmit('desativar-monitore', 'Confirmar desativação do Monitore Ilimitado e EXCLUIR documentos monitorados').on('click', function (ev) {
       ev.preventDefault();
       harlan$1.serverCommunication.call('SELECT FROM \'HARLAN\'.\'DeactivateMonitorePromo\'', harlan$1.call('error::ajax', harlan$1.call('loader::ajax', {
         dataType: 'json',
         data: {
-          monitorarDocumentos: 'disabled'
+          manterDocumentos: 'disabled'
         },
         success: function success() {
           modal.close();
@@ -34498,6 +34499,7 @@
           auxilioCovidDesativado();
         },
         error: function error() {
+          modal.close();
           $$1('#auxilio-covid19-monitore').remove();
           $$1('#auxilio-topbar').remove();
           auxilioCovidDesativado(false);
@@ -34510,6 +34512,7 @@
       marginLeft: '19px',
       marginTop: '10px'
     });
+    modal.createActions().cancel();
     var $virus = $$1('<div>').css({
       backgroundColor: '#a91d09',
       borderRadius: '100px',
