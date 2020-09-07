@@ -23,8 +23,6 @@ import pickBy from 'lodash/pickBy';
 import './list';
 // import modalChooseFile from './modules/modal-choose-file';
 import hasCredits from './modules/has-credits';
-import { imgVirus } from './modules/img';
-import { auxilioCovid } from './modules/auxilio-covid';
 import Loading from './components/loading';
 import reportShow from './components/report-show';
 
@@ -437,33 +435,6 @@ harlan.addPlugin((controller) => {
 
     report.button('Monitorar Documento', () => modalFollow()).attr('id', 'monitorar-documento');
     report.button('Enviar Arquivo CSV', () => modalChooseCSV()).addClass('credithub-button').attr('id', 'send-csv');
-
-    const userTags = (harlan.confs.user || {}).tags || [];
-    if (userTags || !userTags.includes('consulta-ilimitada-monitore')) {
-      const covid = report.button('Auxilio Covid19').html(`${imgVirus()} Auxílio Covid19 ${imgVirus()}`).css({
-        backgroundColor: '#c32c14',
-        cursor: 'pointer',
-      }).attr({ id: 'auxilio-covid19-monitore', title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.' });
-      covid.mouseover(() => covid.css('background-color', '#a92b17')).mouseleave(() => covid.css('background-color', '#c32c14'));
-      $('svg', covid).each((i, el) => $(el).attr({ width: '32px', height: '20px' }));
-
-
-      covid[0].onclick = () => auxilioCovid();
-      
-      const auxtopbar = $('<div>').css({
-        backgroundColor: '#c32c14',
-        padding: '0',
-        color: '#fff',
-        fontWeight: 'bold',
-        paddingTop: '0.5rem',
-        paddingBottom: '0.5rem',
-        cursor: 'pointer',
-      }).addClass('content').attr({ title: 'Disponível a partir do dia 06/abril ou entre em contato conosco.', id: 'auxilio-topbar' }).html(`${imgVirus()} Auxílio Covid19 ${imgVirus()}`);
-      auxtopbar.mouseover(() => auxtopbar.css('background-color', '#a92b17')).mouseleave(() => auxtopbar.css('background-color', '#c32c14'));
-      $('svg', auxtopbar).each((i, el) => $(el).attr({ width: '32px', height: '20px' }));
-      auxtopbar[0].onclick = () => auxilioCovid();
-      $('.actions .container').prepend(auxtopbar);
-    }
 
     report.gamification('brilliantIdea');
 
