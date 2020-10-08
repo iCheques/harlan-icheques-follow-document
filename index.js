@@ -37345,6 +37345,7 @@
         return _ref18.apply(this, arguments);
       };
     }());
+    console.log(controller.confs.user.tags);
 
     if (!_$1.contains(controller.confs.user.tags, 'no-follow') && !_$1.contains(controller.confs.user.tags, 'no-monitore')) {
       drawReport();
