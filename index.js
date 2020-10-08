@@ -36492,6 +36492,9 @@
   var chartReport = null;
   var graphicDataset = null;
   harlan$1.addPlugin(function (controller) {
+    var tags = controller.confs.user.tags;
+    if (_$1.contains(tags, 'no-follow') || _$1.contains(tags, 'no-monitore')) return;
+
     function removeDocument(doc, after) {
       if (after) after();
       controller.server.call("DELETE FROM 'FOLLOWDOCUMENT'.'DOCUMENT'", controller.call('error::ajax', {
@@ -37345,12 +37348,8 @@
         return _ref18.apply(this, arguments);
       };
     }());
-    console.log(controller.confs.user.tags);
-
-    if (!_$1.contains(controller.confs.user.tags, 'no-follow') && !_$1.contains(controller.confs.user.tags, 'no-monitore')) {
-      drawReport();
-      controller.call('baterapido::timeline');
-    }
+    drawReport();
+    controller.call('baterapido::timeline');
   });
 
 }($, harlan, moment));
