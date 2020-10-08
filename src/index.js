@@ -675,7 +675,7 @@ harlan.addPlugin((controller) => {
     },
   );
 
-  if(!_.contains(tags, 'no-follow') && !_.contains(tags, 'no-monitore')) {
+  if(!_.contains(controller.confs.user.tags, 'no-follow') && !_.contains(controller.confs.user.tags, 'no-monitore')) {
     drawReport();
     controller.call('baterapido::timeline');
   }

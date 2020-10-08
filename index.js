@@ -37346,7 +37346,7 @@
       };
     }());
 
-    if (!_$1.contains(tags, 'no-follow') && !_$1.contains(tags, 'no-monitore')) {
+    if (!_$1.contains(controller.confs.user.tags, 'no-follow') && !_$1.contains(controller.confs.user.tags, 'no-monitore')) {
       drawReport();
       controller.call('baterapido::timeline');
     }
