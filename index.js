@@ -36491,865 +36491,869 @@
   var chartCanvas = null;
   var chartReport = null;
   var graphicDataset = null;
-  harlan$1.addPlugin(function (controller) {
-    var tags = controller.confs.user.tags;
-    if (_$1.contains(tags, 'no-follow') || _$1.contains(tags, 'no-monitore')) return;
-
-    function removeDocument(doc, after) {
-      if (after) after();
-      controller.server.call("DELETE FROM 'FOLLOWDOCUMENT'.'DOCUMENT'", controller.call('error::ajax', {
-        dataType: 'json',
-        data: {
-          documento: doc
-        },
-        success: function success() {
-          return console.log('Removido');
-        }
-      }));
-    }
-
-    controller.registerCall('followdocuments::remove', removeDocument);
-    controller.registerCall('followdocuments::database', function () {
-      return _objectSpread2({}, followedDocuments);
-    });
-
-    function modalFilter() {
-      controller.call('form', function (data) {
-        var filter = filterConfiguration;
-        filterConfiguration = data;
-
-        if (!generateData()) {
-          filterConfiguration = filter;
-          controller.call('alert', {
-            title: 'Infelizmente não há nenhum CPF ou CNPJ para exibir. ;(',
-            subtitle: 'Experimente alterar os filtros não há nenhum CPF/CNPJ cadastrado para exibição.'
-          });
-        } else {
-          updateChart();
-        }
-      }).configure({
-        title: 'Acompanhamento de CPF ou CNPJ',
-        subtitle: 'Preencha as informações corretamente para filtrar seus acompanhamentos.',
-        paragraph: 'Diariamente, verificamos por alterações junto a instituições de crédito no documento e o alertaremos caso algo mude.',
-        gamification: 'checkPoint',
-        magicLabel: true,
-        screens: [{
-          nextButton: 'Filtrar',
-          fields: [{
-            name: 'document',
-            type: 'text',
-            placeholder: 'CPF ou CNPJ',
-            labelText: 'CPF/CNPJ',
-            mask: '000.000.000-00',
-            optional: true,
-            maskOptions: {
-              onKeyPress: function onKeyPress(value, e, field, options) {
-                var masks = ['000.000.000-000', '00.000.000/0000-00'];
-                var mask = value.length > 14 ? masks[1] : masks[0];
-                field.mask(mask, options);
-              },
-              reverse: false
-            },
-            validate: function validate(_ref) {
-              var element = _ref.element;
-              var val = element.val();
-
-              if (val) {
-                return cpf_cnpj_1.isValid(val) || cpf_cnpj_2.isValid(val);
-              }
-
-              return true;
-            }
-          }, [{
-            name: 'state',
-            type: 'select',
-            optional: false,
-            value: filterConfiguration.state,
-            labelText: 'Agragador',
-            placeholder: 'Agragador',
-            list: _objectSpread2({
-              '': 'Escolha um filtro'
-            }, reference.state)
-          }, {
-            name: 'markers',
-            type: 'text',
-            optional: true,
-            labelText: 'Marcadores',
-            placeholder: 'Marcadores (Opcional)'
-          }], {
-            name: 'rfbInvalid',
-            type: 'checkbox',
-            optional: true,
-            value: 'true',
-            labelText: 'Apenas irregulares junto a Receita Federal.'
-          }, {
-            name: 'aggregateMarker',
-            type: 'checkbox',
-            optional: true,
-            checked: filterConfiguration.aggregateMarker,
-            value: true,
-            labelText: 'Agregar informações desabonadoras.'
-          }]
-        }]
+  harlan$1.registerTrigger("authentication::authenticated", 'followDocumentInit', function (args, callback) {
+    harlan$1.addPlugin(function (controller) {
+      var tags = $$1(args).find('tags').eq(0).find('tags').get().map(function (tag) {
+        return $$1(tag).text();
       });
-    }
+      if (_$1.contains(tags, 'no-follow') || _$1.contains(tags, 'no-monitore')) return;
 
-    function createChartReport() {
-      if (chartReport) return;
-      chartReport = controller.call('report', 'Relatório de Monitoramento', 'Veja a situação dos CPFs e CNPJs acompanhados por você.', 'Com o recurso de relatório você consegue identificar os comportamentos de risco dos cedentes e sacados, ' + 'reconhecendo os mais propícios a inadimplência. As informações são atualizadas diáriamente, ' + 'junto aos órgãos de crédito responsáveis.', false);
-      chartReport.action('fa-print', function () {
-        harlan$1.call('monitoramentoPDF::index');
-      });
-      chartReport.button('Filtros', function () {
-        return modalFilter();
-      });
-      chartReport.button('Gerenciar', controller.click('followdocument::modal'));
-      chartReport.newContent();
-
-      if (!renderedReport) {
-        $$1('.app-content').prepend(chartReport.element());
-      } else {
-        chartReport.element().insertAfter(renderedReport);
-      }
-
-      chartCanvas = chartReport.canvas(250, 350);
-    }
-
-    function generateData() {
-      var _filterConfiguration = filterConfiguration,
-          state = _filterConfiguration.state,
-          markers = _filterConfiguration.markers,
-          document = _filterConfiguration.document,
-          rfbInvalid = _filterConfiguration.rfbInvalid;
-      var validMarkers = markers ? markers.split(',').map(function (value) {
-        return value.trim();
-      }).filter(function (str) {
-        return !!str;
-      }) : null;
-      var database = groupBy_1(pickBy_1(values_1(followedDocuments), function (_ref2) {
-        var userMarkers = _ref2.markers,
-            userDocument = _ref2.document;
-        if (document && userDocument !== document.replace(/[^0-9]/g, '')) return false;
-        if (rfbInvalid && !('rfb-invalid' in userMarkers)) return false;
-        if (!validMarkers) return true;
-        return !difference_1(validMarkers, userMarkers).length;
-      }), function (doc) {
-        if (filterConfiguration.aggregateMarker) {
-          return uniq_1(doc.markers.filter(function (marker) {
-            return /(^has-|-invalid$)/.test(marker);
-          })).map(function (marker) {
-            return reference.markers[marker];
-          }).sort().join(', ') || 'Nada Consta';
-        }
-
-        var qtde = doc.state[state];
-        var stateReference = reference.state[state];
-        if (typeof qtde !== 'number') return 'Aguardando processamento';
-        if (qtde <= 0) return "Sem ".concat(stateReference);
-        if (qtde <= 2) return "At\xE9 2 ".concat(stateReference);
-        if (qtde <= 5) return "At\xE9 5 ".concat(stateReference);
-        if (qtde <= 10) return "At\xE9 10 ".concat(stateReference);
-        return "Mais de 10 ".concat(stateReference);
-      });
-
-      if (!Object.keys(database).length) {
-        return null;
-      }
-
-      var colors = {
-        error: harmonizer.harmonize('#ff1a53', colorMix),
-        warning: harmonizer.harmonize('#ffe500', colorMix),
-        success: harmonizer.harmonize('#00ff6b', colorMix)
-      };
-      var backgroundColor = filterConfiguration.aggregateMarker ? map_1(database, function (v, k) {
-        if (k === 'Nada Consta') return colors.success.shift();
-        return colors.error.shift();
-      }) : map_1(database, function (v) {
-        return meanBy_1(v, "state.".concat(state));
-      }).map(function (qtde) {
-        if (typeof qtde !== 'number' || Number.isNaN(qtde)) return colors.warning.shift();
-        if (qtde === 0) return colors.success.shift();
-        if (qtde <= 2) return colors.warning.shift();
-        if (qtde <= 5) return colors.warning.shift();
-        if (qtde <= 10) return colors.error.shift();
-        return colors.error.shift();
-      });
-      var data = {
-        labels: Object.keys(database),
-        datasets: [{
-          data: map_1(database, function (v) {
-            return v.length;
-          }),
-          backgroundColor: backgroundColor,
-          hoverBackgroundColor: backgroundColor.map(function (color$1) {
-            return new color(color$1).lighten(0.1).toString();
-          })
-        }]
-      };
-      graphicDataset = map_1(database, function (value) {
-        return value;
-      });
-      return data;
-    }
-
-    function updateChart() {
-      var data = generateData();
-
-      if (!data) {
-        chart = null;
-        chartCanvas = null;
-        graphicDataset = null;
-        if (chartReport != null) chartReport.element().remove();
-        chartReport = null;
-        return;
-      }
-
-      createChartReport();
-
-      if (!chart) {
-        chart = new Chart(chartCanvas.getContext('2d'), {
-          type: 'doughnut',
-          data: data,
-          options: {
-            onClick: function onClick(event, _ref3) {
-              var _ref4 = _slicedToArray(_ref3, 1),
-                  chartItem = _ref4[0];
-
-              if (!chartItem) {
-                return;
-              }
-
-              var idx = chartItem._index;
-              var maxResults = 5;
-              var results = graphicDataset[idx].slice();
-              controller.call('moreResults', maxResults).callback(function (cb) {
-                return Promise.all(results.splice(0, maxResults).map(function (_ref5) {
-                  var document = _ref5.document;
-                  return new Promise(function (resolve) {
-                    return controller.call('monitore::section', document, function (element) {
-                      return resolve(element);
-                    });
-                  }, false, true);
-                })).then(function (elements) {
-                  cb(elements.slice());
-                  if (!elements.length) return;
-                  elements.map(function (element) {
-                    return $$1('.fa.fa-minus-square-o', element).click();
-                  });
-                  $$1('html, body').animate({
-                    scrollTop: elements[0].offset().top
-                  }, 2000);
-                });
-              }).appendTo(chartReport.element()).show();
-            },
-            legend: {
-              display: true,
-              position: 'bottom'
-            }
+      function removeDocument(doc, after) {
+        if (after) after();
+        controller.server.call("DELETE FROM 'FOLLOWDOCUMENT'.'DOCUMENT'", controller.call('error::ajax', {
+          dataType: 'json',
+          data: {
+            documento: doc
+          },
+          success: function success() {
+            return console.log('Removido');
           }
-        });
-        chart.canvas.parentNode.style.height = '470px';
-        chart.canvas.parentNode.style.width = '320px';
-      } else {
-        chart.data = data;
-        chart.update();
+        }));
       }
-    }
 
-    controller.registerCall('monitore::section', function (document, callback) {
-      var followedDocument = followedDocuments[document].state;
+      controller.registerCall('followdocuments::remove', removeDocument);
+      controller.registerCall('followdocuments::database', function () {
+        return _objectSpread2({}, followedDocuments);
+      });
 
-      var _controller$call = controller.call('section', 'Busca Consolidada', "Informa\xE7\xF5es agregadas documento ".concat(document), 'Registro encontrado'),
-          _controller$call2 = _slicedToArray(_controller$call, 3),
-          $section = _controller$call2[0],
-          $results = _controller$call2[1],
-          $actions = _controller$call2[2];
+      function modalFilter() {
+        controller.call('form', function (data) {
+          var filter = filterConfiguration;
+          filterConfiguration = data;
 
-      var protestos = followedDocument.protestos > 1 ? followedDocument.protestos : 'sem';
-      var ccf = followedDocument.ccf > 0 ? followedDocument.protestos : 'sem';
-      $section.find('.results-display').text("Registro encontrado, ".concat(protestos, " protesto(s), ").concat(ccf, " cheque(s) sem fundo(s)"));
-      $actions.find('.action-resize i').on('click', function () {
-        if ($actions.find('.action-resize i').hasClass('fa-plus-square-o')) {
-          hasCredits(1500,
-          /*#__PURE__*/
-          _asyncToGenerator(
-          /*#__PURE__*/
-          regeneratorRuntime.mark(function _callee() {
-            var $resultado;
-            return regeneratorRuntime.wrap(function _callee$(_context) {
-              while (1) {
-                switch (_context.prev = _context.next) {
-                  case 0:
-                    _context.next = 2;
+          if (!generateData()) {
+            filterConfiguration = filter;
+            controller.call('alert', {
+              title: 'Infelizmente não há nenhum CPF ou CNPJ para exibir. ;(',
+              subtitle: 'Experimente alterar os filtros não há nenhum CPF/CNPJ cadastrado para exibição.'
+            });
+          } else {
+            updateChart();
+          }
+        }).configure({
+          title: 'Acompanhamento de CPF ou CNPJ',
+          subtitle: 'Preencha as informações corretamente para filtrar seus acompanhamentos.',
+          paragraph: 'Diariamente, verificamos por alterações junto a instituições de crédito no documento e o alertaremos caso algo mude.',
+          gamification: 'checkPoint',
+          magicLabel: true,
+          screens: [{
+            nextButton: 'Filtrar',
+            fields: [{
+              name: 'document',
+              type: 'text',
+              placeholder: 'CPF ou CNPJ',
+              labelText: 'CPF/CNPJ',
+              mask: '000.000.000-00',
+              optional: true,
+              maskOptions: {
+                onKeyPress: function onKeyPress(value, e, field, options) {
+                  var masks = ['000.000.000-000', '00.000.000/0000-00'];
+                  var mask = value.length > 14 ? masks[1] : masks[0];
+                  field.mask(mask, options);
+                },
+                reverse: false
+              },
+              validate: function validate(_ref) {
+                var element = _ref.element;
+                var val = element.val();
+
+                if (val) {
+                  return cpf_cnpj_1.isValid(val) || cpf_cnpj_2.isValid(val);
+                }
+
+                return true;
+              }
+            }, [{
+              name: 'state',
+              type: 'select',
+              optional: false,
+              value: filterConfiguration.state,
+              labelText: 'Agragador',
+              placeholder: 'Agragador',
+              list: _objectSpread2({
+                '': 'Escolha um filtro'
+              }, reference.state)
+            }, {
+              name: 'markers',
+              type: 'text',
+              optional: true,
+              labelText: 'Marcadores',
+              placeholder: 'Marcadores (Opcional)'
+            }], {
+              name: 'rfbInvalid',
+              type: 'checkbox',
+              optional: true,
+              value: 'true',
+              labelText: 'Apenas irregulares junto a Receita Federal.'
+            }, {
+              name: 'aggregateMarker',
+              type: 'checkbox',
+              optional: true,
+              checked: filterConfiguration.aggregateMarker,
+              value: true,
+              labelText: 'Agregar informações desabonadoras.'
+            }]
+          }]
+        });
+      }
+
+      function createChartReport() {
+        if (chartReport) return;
+        chartReport = controller.call('report', 'Relatório de Monitoramento', 'Veja a situação dos CPFs e CNPJs acompanhados por você.', 'Com o recurso de relatório você consegue identificar os comportamentos de risco dos cedentes e sacados, ' + 'reconhecendo os mais propícios a inadimplência. As informações são atualizadas diáriamente, ' + 'junto aos órgãos de crédito responsáveis.', false);
+        chartReport.action('fa-print', function () {
+          harlan$1.call('monitoramentoPDF::index');
+        });
+        chartReport.button('Filtros', function () {
+          return modalFilter();
+        });
+        chartReport.button('Gerenciar', controller.click('followdocument::modal'));
+        chartReport.newContent();
+
+        if (!renderedReport) {
+          $$1('.app-content').prepend(chartReport.element());
+        } else {
+          chartReport.element().insertAfter(renderedReport);
+        }
+
+        chartCanvas = chartReport.canvas(250, 350);
+      }
+
+      function generateData() {
+        var _filterConfiguration = filterConfiguration,
+            state = _filterConfiguration.state,
+            markers = _filterConfiguration.markers,
+            document = _filterConfiguration.document,
+            rfbInvalid = _filterConfiguration.rfbInvalid;
+        var validMarkers = markers ? markers.split(',').map(function (value) {
+          return value.trim();
+        }).filter(function (str) {
+          return !!str;
+        }) : null;
+        var database = groupBy_1(pickBy_1(values_1(followedDocuments), function (_ref2) {
+          var userMarkers = _ref2.markers,
+              userDocument = _ref2.document;
+          if (document && userDocument !== document.replace(/[^0-9]/g, '')) return false;
+          if (rfbInvalid && !('rfb-invalid' in userMarkers)) return false;
+          if (!validMarkers) return true;
+          return !difference_1(validMarkers, userMarkers).length;
+        }), function (doc) {
+          if (filterConfiguration.aggregateMarker) {
+            return uniq_1(doc.markers.filter(function (marker) {
+              return /(^has-|-invalid$)/.test(marker);
+            })).map(function (marker) {
+              return reference.markers[marker];
+            }).sort().join(', ') || 'Nada Consta';
+          }
+
+          var qtde = doc.state[state];
+          var stateReference = reference.state[state];
+          if (typeof qtde !== 'number') return 'Aguardando processamento';
+          if (qtde <= 0) return "Sem ".concat(stateReference);
+          if (qtde <= 2) return "At\xE9 2 ".concat(stateReference);
+          if (qtde <= 5) return "At\xE9 5 ".concat(stateReference);
+          if (qtde <= 10) return "At\xE9 10 ".concat(stateReference);
+          return "Mais de 10 ".concat(stateReference);
+        });
+
+        if (!Object.keys(database).length) {
+          return null;
+        }
+
+        var colors = {
+          error: harmonizer.harmonize('#ff1a53', colorMix),
+          warning: harmonizer.harmonize('#ffe500', colorMix),
+          success: harmonizer.harmonize('#00ff6b', colorMix)
+        };
+        var backgroundColor = filterConfiguration.aggregateMarker ? map_1(database, function (v, k) {
+          if (k === 'Nada Consta') return colors.success.shift();
+          return colors.error.shift();
+        }) : map_1(database, function (v) {
+          return meanBy_1(v, "state.".concat(state));
+        }).map(function (qtde) {
+          if (typeof qtde !== 'number' || Number.isNaN(qtde)) return colors.warning.shift();
+          if (qtde === 0) return colors.success.shift();
+          if (qtde <= 2) return colors.warning.shift();
+          if (qtde <= 5) return colors.warning.shift();
+          if (qtde <= 10) return colors.error.shift();
+          return colors.error.shift();
+        });
+        var data = {
+          labels: Object.keys(database),
+          datasets: [{
+            data: map_1(database, function (v) {
+              return v.length;
+            }),
+            backgroundColor: backgroundColor,
+            hoverBackgroundColor: backgroundColor.map(function (color$1) {
+              return new color(color$1).lighten(0.1).toString();
+            })
+          }]
+        };
+        graphicDataset = map_1(database, function (value) {
+          return value;
+        });
+        return data;
+      }
+
+      function updateChart() {
+        var data = generateData();
+
+        if (!data) {
+          chart = null;
+          chartCanvas = null;
+          graphicDataset = null;
+          if (chartReport != null) chartReport.element().remove();
+          chartReport = null;
+          return;
+        }
+
+        createChartReport();
+
+        if (!chart) {
+          chart = new Chart(chartCanvas.getContext('2d'), {
+            type: 'doughnut',
+            data: data,
+            options: {
+              onClick: function onClick(event, _ref3) {
+                var _ref4 = _slicedToArray(_ref3, 1),
+                    chartItem = _ref4[0];
+
+                if (!chartItem) {
+                  return;
+                }
+
+                var idx = chartItem._index;
+                var maxResults = 5;
+                var results = graphicDataset[idx].slice();
+                controller.call('moreResults', maxResults).callback(function (cb) {
+                  return Promise.all(results.splice(0, maxResults).map(function (_ref5) {
+                    var document = _ref5.document;
                     return new Promise(function (resolve) {
-                      return controller.call('ccbusca::monitore', document, function (element) {
+                      return controller.call('monitore::section', document, function (element) {
                         return resolve(element);
                       });
                     }, false, true);
-
-                  case 2:
-                    $resultado = _context.sent;
-                    $resultado.find('h3').text("INFORMA\xC7\xD5ES AGREGADAS DOCUMENTO ".concat(document));
-                    $resultado.insertBefore($section);
+                  })).then(function (elements) {
+                    cb(elements.slice());
+                    if (!elements.length) return;
+                    elements.map(function (element) {
+                      return $$1('.fa.fa-minus-square-o', element).click();
+                    });
                     $$1('html, body').animate({
-                      scrollTop: $resultado.offset().top
+                      scrollTop: elements[0].offset().top
                     }, 2000);
-                    $section.remove();
+                  });
+                }).appendTo(chartReport.element()).show();
+              },
+              legend: {
+                display: true,
+                position: 'bottom'
+              }
+            }
+          });
+          chart.canvas.parentNode.style.height = '470px';
+          chart.canvas.parentNode.style.width = '320px';
+        } else {
+          chart.data = data;
+          chart.update();
+        }
+      }
 
-                  case 7:
+      controller.registerCall('monitore::section', function (document, callback) {
+        var followedDocument = followedDocuments[document].state;
+
+        var _controller$call = controller.call('section', 'Busca Consolidada', "Informa\xE7\xF5es agregadas documento ".concat(document), 'Registro encontrado'),
+            _controller$call2 = _slicedToArray(_controller$call, 3),
+            $section = _controller$call2[0],
+            $results = _controller$call2[1],
+            $actions = _controller$call2[2];
+
+        var protestos = followedDocument.protestos > 1 ? followedDocument.protestos : 'sem';
+        var ccf = followedDocument.ccf > 0 ? followedDocument.protestos : 'sem';
+        $section.find('.results-display').text("Registro encontrado, ".concat(protestos, " protesto(s), ").concat(ccf, " cheque(s) sem fundo(s)"));
+        $actions.find('.action-resize i').on('click', function () {
+          if ($actions.find('.action-resize i').hasClass('fa-plus-square-o')) {
+            hasCredits(1500,
+            /*#__PURE__*/
+            _asyncToGenerator(
+            /*#__PURE__*/
+            regeneratorRuntime.mark(function _callee() {
+              var $resultado;
+              return regeneratorRuntime.wrap(function _callee$(_context) {
+                while (1) {
+                  switch (_context.prev = _context.next) {
+                    case 0:
+                      _context.next = 2;
+                      return new Promise(function (resolve) {
+                        return controller.call('ccbusca::monitore', document, function (element) {
+                          return resolve(element);
+                        });
+                      }, false, true);
+
+                    case 2:
+                      $resultado = _context.sent;
+                      $resultado.find('h3').text("INFORMA\xC7\xD5ES AGREGADAS DOCUMENTO ".concat(document));
+                      $resultado.insertBefore($section);
+                      $$1('html, body').animate({
+                        scrollTop: $resultado.offset().top
+                      }, 2000);
+                      $section.remove();
+
+                    case 7:
+                    case "end":
+                      return _context.stop();
+                  }
+                }
+              }, _callee);
+            })));
+          }
+        });
+        return callback($section);
+      });
+      controller.registerCall('ccbusca::monitore', function (val, callback) {
+        for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+          args[_key - 2] = arguments[_key];
+        }
+
+        var ccbuscaQuery = {
+          'q[0]': 'SELECT FROM \'FINDER\'.\'BILLING\'',
+          'q[1]': 'SELECT FROM \'SEEKLOC\'.\'CCF\'',
+          'q[2]': 'SELECT FROM \'IEPTB\'.\'WS\'',
+          documento: val
+        };
+        if (cpf_cnpj_2.isValid(val)) ccbuscaQuery['q[3]'] = 'SELECT FROM \'RFB\'.\'CERTIDAO\' WHERE \'CACHE\' = \'+1 year\'';
+        controller.serverCommunication.call('USING \'CCBUSCA\' SELECT FROM \'FINDER\'.\'BILLING\'', controller.call('error::ajax', controller.call('loader::ajax', {
+          data: ccbuscaQuery,
+          success: function success(ret) {
+            controller.call.apply(controller, ['ccbusca::parse', ret, val, callback].concat(args));
+          }
+        })));
+      });
+
+      function modalChooseCSV() {
+        var modal = controller.call('modal');
+        modal.title('Envie seu Arquivo CSV para Monitoramento/Bate-rápido');
+        modal.paragraph('Basta selecionar o arquivo para começar.');
+        var form = modal.createForm();
+        form.addInput('files', 'file', 'Selecione o arquivo CSV').attr('accept', '.csv');
+        form.addSubmit('continuar', 'Continuar').addClass('credithub-button');
+        modal.createActions().cancel();
+        $$1('input[name=continuar]').on('click', function (ev) {
+          ev.preventDefault();
+          var files = $$1('input[name=files]')[0].files;
+
+          if (files.length) {
+            modal.close();
+            if (files[0].type === 'text/csv') return submitFile(files[0]);
+            return toastr.error('É necessário que você envie um arquivo CSV.', 'Formato de arquivo inválido!');
+          }
+
+          toastr.error('É necessário que você envie um arquivo para continuar.', 'Nenhum arquivo selecionado');
+        });
+      }
+
+      function modalFollow() {
+        controller.call('form', function (data) {
+          controller.server.call("INSERT INTO 'FOLLOWDOCUMENT'.'DOCUMENT'", controller.call('error::ajax', {
+            dataType: 'json',
+            data: data,
+            success: function success() {
+              return controller.alert({
+                icon: 'pass',
+                title: 'Parabéns! O documento foi enviado para monitoramento.',
+                subtitle: 'Dentro de instantes será possível extrair um relatório de seus cedentes e sacados com este documento incluso.',
+                paragraph: 'Caso haja qualquer alteração no documento junto as instituições de crédito você será avisado.'
+              });
+            }
+          }));
+        }).configure({
+          title: 'Acompanhamento de CPF ou CNPJ',
+          subtitle: 'Preencha as informações corretamente para criar seu acompanhamento.',
+          paragraph: 'Diariamente, verificamos por alterações junto a instituições de crédito no documento e o alertaremos caso algo mude.',
+          gamification: 'checkPoint',
+          magicLabel: true,
+          screens: [{
+            nextButton: 'Acompanhar',
+            fields: [{
+              name: 'documento',
+              type: 'text',
+              placeholder: 'CPF ou CNPJ',
+              labelText: 'CPF/CNPJ',
+              mask: '000.000.000-00',
+              optional: false,
+              maskOptions: {
+                onKeyPress: function onKeyPress(value, e, field, options) {
+                  var masks = ['000.000.000-000', '00.000.000/0000-00'];
+                  var mask = value.length > 14 ? masks[1] : masks[0];
+                  field.mask(mask, options);
+                },
+                reverse: false
+              },
+              validate: function validate(_ref7) {
+                var element = _ref7.element;
+                var val = element.val();
+
+                if (val) {
+                  return cpf_cnpj_1.isValid(val) || cpf_cnpj_2.isValid(val);
+                }
+
+                return true;
+              }
+            }, [{
+              name: 'nascimento',
+              type: 'text',
+              labelText: 'Nascimento',
+              optional: true,
+              placeholder: 'Nascimento (Opcional)',
+              mask: '00/00/0000',
+              pikaday: true,
+              validate: function validate(_ref8) {
+                var element = _ref8.element;
+
+                if (element.val()) {
+                  return moment(element.val(), 'DD/MM/YYYY').isValid();
+                }
+
+                return true;
+              }
+            }, {
+              name: 'Marcadores',
+              type: 'text',
+              optional: true,
+              labelText: 'Marcadores',
+              placeholder: 'Marcadores (Opcional)'
+            }]]
+          }]
+        });
+      }
+
+      function drawReport() {
+        if (renderedReport) renderedReport.remove();
+        var report = controller.call('report', 'Que tal monitorar um CPF ou CNPJ?', 'No dia em que seus cedentes e sacados apresentarem ocorrência você será notificado.', 'O monitoramento auxilia na manutenção regular de seus clientes e fornecedores. Diariamente, nosso sistema verifica por alterações relevantes nas informações de cheques sem fundo, protestos e Receita Federal. Caso haja uma alteração, nós lhe enviaremos um e-mail para que fique por dentro de tudo.', false);
+        report.button('Monitorar Documento', function () {
+          return modalFollow();
+        }).attr('id', 'monitorar-documento');
+        report.button('Enviar Arquivo CSV', function () {
+          return modalChooseCSV();
+        }).addClass('credithub-button').attr('id', 'send-csv');
+        report.gamification('brilliantIdea');
+        var reportElement = report.element();
+        $$1('.app-content').prepend(reportElement);
+        renderedReport = reportElement;
+      }
+
+      function changeDocument(args, callback) {
+        callback();
+        var document = args.document;
+        followedDocuments[document] = args;
+        updateChart();
+      }
+
+      function deleteDocument(args, callback) {
+        callback();
+        var document = args.document;
+        delete followedDocuments[document];
+        updateChart();
+      }
+
+      function fromList(list) {
+        list.forEach(function (item) {
+          var document = item.document;
+          followedDocuments[document] = item;
+        });
+        updateChart();
+      }
+
+      function updateList() {
+        controller.server.call("SELECT FROM 'FOLLOWDOCUMENT'.'LIST'", {
+          dataType: 'json',
+          success: function success(list) {
+            return fromList(list);
+          }
+        });
+      }
+
+      controller.registerTrigger('call::authentication::loggedin', 'followDocument', function (args, callback) {
+        callback();
+        updateList();
+      });
+
+      if (!controller.serverCommunication.freeKey()) {
+        updateList();
+      }
+
+      controller.registerTrigger('serverCommunication::websocket::followDocument::insert', 'icheques::ban::register', changeDocument);
+      controller.registerTrigger('serverCommunication::websocket::followDocument::update', 'icheques::ban::register', changeDocument);
+      controller.registerTrigger('serverCommunication::websocket::followDocument::delete', 'icheques::ban::register', deleteDocument);
+      controller.registerTrigger('ccbusca::parser', 'followDocument', function (_ref9, callback) {
+        var result = _ref9.result,
+            doc = _ref9.doc;
+        callback();
+        var document = doc.replace(/[^0-9]/g, '');
+
+        if (!(document in followedDocuments)) {
+          return;
+        }
+
+        var monitoramento = null;
+        monitoramento = $$1('<button />').text('Deixar de Acompanhar').addClass('button').append($$1('<small />').text('Interromper Acompanhamento').css({
+          display: 'block',
+          'font-size': '9px'
+        }));
+        monitoramento.click(function () {
+          removeDocument(doc, function () {
+            monitoramento.remove();
+          });
+        });
+        result.addItem().prepend(monitoramento);
+      });
+
+      function submitFile(file) {
+        var reader = new FileReader();
+
+        reader.onload =
+        /*#__PURE__*/
+        function () {
+          var _ref10 = _asyncToGenerator(
+          /*#__PURE__*/
+          regeneratorRuntime.mark(function _callee4(_ref11) {
+            var result, documents, modalConfirmation, formConfirmation, label, label2;
+            return regeneratorRuntime.wrap(function _callee4$(_context4) {
+              while (1) {
+                switch (_context4.prev = _context4.next) {
+                  case 0:
+                    result = _ref11.target.result;
+                    documents = result.match(/(\d{2}(.)?\d{3}(.)?\d{3}(\/)?\d{4}(.)?\d{2}|\d{3}(.)?\d{3}(.)?\d{3}(-)?\d{2})/g).filter(function (cpfCnpj) {
+                      return cpf_cnpj_1.isValid(cpfCnpj) || cpf_cnpj_2.isValid(cpfCnpj);
+                    });
+
+                    if (documents.length) {
+                      _context4.next = 5;
+                      break;
+                    }
+
+                    controller.alert({
+                      title: 'Não foi recebido nenhum documento para monitoramento.',
+                      subtitle: 'Verifique se o seu Excel possui CPFs e CNPJs para serem monitorados.',
+                      paragraph: 'É possível que o seu arquivo CSV esteja corrompido.'
+                    });
+                    return _context4.abrupt("return");
+
+                  case 5:
+                    modalConfirmation = controller.call('modal');
+                    modalConfirmation.title('Envio de Monitoramento');
+                    modalConfirmation.subtitle('Você deseja fazer um bate-rápido ou monitorar todos os documentos?');
+                    formConfirmation = modalConfirmation.createForm();
+                    label = $$1('<label />').addClass('input-label').html('R$ 0,50/documento (Consulta rápida de CPF/CNPJ)');
+                    label2 = $$1('<label />').addClass('input-label').html('R$ 1,00/documento (Monitoramento de CPF/CNPJ)');
+                    formConfirmation.addSubmit('bate-rapido', 'Bate-rápido', '', '', label).addClass('credithub-button');
+                    formConfirmation.element().append(label);
+                    formConfirmation.addSubmit('monitorar', 'Monitorar', '', '', label2).addClass('credithub-button');
+                    formConfirmation.element().append(label2);
+                    modalConfirmation.createActions().cancel();
+                    $$1('input[name=bate-rapido]').on('click', function (ev) {
+                      ev.preventDefault();
+                      hasCredits(500 * documents.length, function () {
+                        modalConfirmation.close();
+                        var loader = harlan$1.call('ccbusca::loader');
+                        loader.setTitle('Bate-Rápido');
+                        loader.setActiveStatus('Enviando Documentos');
+                        controller.call('baterapido::insertDocuments', documents, loader);
+                      });
+                    });
+                    $$1('input[name=monitorar]').on('click',
+                    /*#__PURE__*/
+                    function () {
+                      var _ref12 = _asyncToGenerator(
+                      /*#__PURE__*/
+                      regeneratorRuntime.mark(function _callee3(ev) {
+                        var modal, progress, sended;
+                        return regeneratorRuntime.wrap(function _callee3$(_context3) {
+                          while (1) {
+                            switch (_context3.prev = _context3.next) {
+                              case 0:
+                                ev.preventDefault();
+                                modal = controller.call('modal');
+                                modal.title('Progresso de Envio de Monitoramento');
+                                modal.subtitle('O monitoramento está sendo enviado, por favor aguarde.');
+                                modal.paragraph('Experimente tomar um café enquanto nossos servidores recebem seus CPFs e CNPJs.');
+                                progress = modal.addProgress();
+                                sended = 0;
+                                _context3.prev = 7;
+                                _context3.next = 10;
+                                return documents.reduce(
+                                /*#__PURE__*/
+                                function () {
+                                  var _ref13 = _asyncToGenerator(
+                                  /*#__PURE__*/
+                                  regeneratorRuntime.mark(function _callee2(promise, documento) {
+                                    return regeneratorRuntime.wrap(function _callee2$(_context2) {
+                                      while (1) {
+                                        switch (_context2.prev = _context2.next) {
+                                          case 0:
+                                            _context2.next = 2;
+                                            return promise;
+
+                                          case 2:
+                                            _context2.next = 4;
+                                            return new Promise(function (resolve, reject) {
+                                              return controller.server.call("INSERT INTO 'FOLLOWDOCUMENT'.'DOCUMENT'", controller.call('error::ajax', {
+                                                dataType: 'json',
+                                                data: {
+                                                  documento: documento
+                                                },
+                                                success: function success() {
+                                                  sended += 1;
+                                                  progress(sended / documents.length);
+                                                  resolve();
+                                                },
+                                                error: function error(_1, _2, errorThrown) {
+                                                  return reject(new Error(errorThrown));
+                                                }
+                                              }));
+                                            });
+
+                                          case 4:
+                                          case "end":
+                                            return _context2.stop();
+                                        }
+                                      }
+                                    }, _callee2);
+                                  }));
+
+                                  return function (_x3, _x4) {
+                                    return _ref13.apply(this, arguments);
+                                  };
+                                }(), Promise.resolve());
+
+                              case 10:
+                                _context3.next = 16;
+                                break;
+
+                              case 12:
+                                _context3.prev = 12;
+                                _context3.t0 = _context3["catch"](7);
+                                controller.alert({
+                                  title: 'Uoh! Não foi possível enviar todos os documentos para monitoramento.',
+                                  subtitle: 'Sua conexão com a internet pode estar com problemas, impedindo o envio de documentos.',
+                                  paragraph: "Tente enviar menos documentos para que possamos realizar esta opera\xE7\xE3o (".concat(_context3.t0.toString(), ").")
+                                });
+                                return _context3.abrupt("return");
+
+                              case 16:
+                                _context3.prev = 16;
+                                modal.close();
+                                return _context3.finish(16);
+
+                              case 19:
+                                controller.alert({
+                                  icon: 'pass',
+                                  title: "Parab\xE9ns! Os documentos (".concat(documents.length, ") foram enviados para monitoramento."),
+                                  subtitle: 'Dentro de instantes será possível extrair um relatório de seus cedentes e sacados com este documento incluso.',
+                                  paragraph: 'Caso haja qualquer alteração no documento junto as instituições de crédito você será avisado.'
+                                });
+                                modalConfirmation.close();
+
+                              case 21:
+                              case "end":
+                                return _context3.stop();
+                            }
+                          }
+                        }, _callee3, null, [[7, 12, 16, 19]]);
+                      }));
+
+                      return function (_x2) {
+                        return _ref12.apply(this, arguments);
+                      };
+                    }());
+
+                  case 18:
                   case "end":
-                    return _context.stop();
+                    return _context4.stop();
                 }
               }
-            }, _callee);
-          })));
-        }
-      });
-      return callback($section);
-    });
-    controller.registerCall('ccbusca::monitore', function (val, callback) {
-      for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-        args[_key - 2] = arguments[_key];
+            }, _callee4);
+          }));
+
+          return function (_x) {
+            return _ref10.apply(this, arguments);
+          };
+        }();
+
+        reader.readAsText(file);
       }
 
-      var ccbuscaQuery = {
-        'q[0]': 'SELECT FROM \'FINDER\'.\'BILLING\'',
-        'q[1]': 'SELECT FROM \'SEEKLOC\'.\'CCF\'',
-        'q[2]': 'SELECT FROM \'IEPTB\'.\'WS\'',
-        documento: val
-      };
-      if (cpf_cnpj_2.isValid(val)) ccbuscaQuery['q[3]'] = 'SELECT FROM \'RFB\'.\'CERTIDAO\' WHERE \'CACHE\' = \'+1 year\'';
-      controller.serverCommunication.call('USING \'CCBUSCA\' SELECT FROM \'FINDER\'.\'BILLING\'', controller.call('error::ajax', controller.call('loader::ajax', {
-        data: ccbuscaQuery,
-        success: function success(ret) {
-          controller.call.apply(controller, ['ccbusca::parse', ret, val, callback].concat(args));
-        }
-      })));
-    });
-
-    function modalChooseCSV() {
-      var modal = controller.call('modal');
-      modal.title('Envie seu Arquivo CSV para Monitoramento/Bate-rápido');
-      modal.paragraph('Basta selecionar o arquivo para começar.');
-      var form = modal.createForm();
-      form.addInput('files', 'file', 'Selecione o arquivo CSV').attr('accept', '.csv');
-      form.addSubmit('continuar', 'Continuar').addClass('credithub-button');
-      modal.createActions().cancel();
-      $$1('input[name=continuar]').on('click', function (ev) {
-        ev.preventDefault();
-        var files = $$1('input[name=files]')[0].files;
-
-        if (files.length) {
-          modal.close();
-          if (files[0].type === 'text/csv') return submitFile(files[0]);
-          return toastr.error('É necessário que você envie um arquivo CSV.', 'Formato de arquivo inválido!');
-        }
-
-        toastr.error('É necessário que você envie um arquivo para continuar.', 'Nenhum arquivo selecionado');
-      });
-    }
-
-    function modalFollow() {
-      controller.call('form', function (data) {
-        controller.server.call("INSERT INTO 'FOLLOWDOCUMENT'.'DOCUMENT'", controller.call('error::ajax', {
-          dataType: 'json',
-          data: data,
-          success: function success() {
-            return controller.alert({
-              icon: 'pass',
-              title: 'Parabéns! O documento foi enviado para monitoramento.',
-              subtitle: 'Dentro de instantes será possível extrair um relatório de seus cedentes e sacados com este documento incluso.',
-              paragraph: 'Caso haja qualquer alteração no documento junto as instituições de crédito você será avisado.'
-            });
-          }
-        }));
-      }).configure({
-        title: 'Acompanhamento de CPF ou CNPJ',
-        subtitle: 'Preencha as informações corretamente para criar seu acompanhamento.',
-        paragraph: 'Diariamente, verificamos por alterações junto a instituições de crédito no documento e o alertaremos caso algo mude.',
-        gamification: 'checkPoint',
-        magicLabel: true,
-        screens: [{
-          nextButton: 'Acompanhar',
-          fields: [{
-            name: 'documento',
-            type: 'text',
-            placeholder: 'CPF ou CNPJ',
-            labelText: 'CPF/CNPJ',
-            mask: '000.000.000-00',
-            optional: false,
-            maskOptions: {
-              onKeyPress: function onKeyPress(value, e, field, options) {
-                var masks = ['000.000.000-000', '00.000.000/0000-00'];
-                var mask = value.length > 14 ? masks[1] : masks[0];
-                field.mask(mask, options);
-              },
-              reverse: false
-            },
-            validate: function validate(_ref7) {
-              var element = _ref7.element;
-              var val = element.val();
-
-              if (val) {
-                return cpf_cnpj_1.isValid(val) || cpf_cnpj_2.isValid(val);
-              }
-
-              return true;
-            }
-          }, [{
-            name: 'nascimento',
-            type: 'text',
-            labelText: 'Nascimento',
-            optional: true,
-            placeholder: 'Nascimento (Opcional)',
-            mask: '00/00/0000',
-            pikaday: true,
-            validate: function validate(_ref8) {
-              var element = _ref8.element;
-
-              if (element.val()) {
-                return moment(element.val(), 'DD/MM/YYYY').isValid();
-              }
-
-              return true;
-            }
-          }, {
-            name: 'Marcadores',
-            type: 'text',
-            optional: true,
-            labelText: 'Marcadores',
-            placeholder: 'Marcadores (Opcional)'
-          }]]
-        }]
-      });
-    }
-
-    function drawReport() {
-      if (renderedReport) renderedReport.remove();
-      var report = controller.call('report', 'Que tal monitorar um CPF ou CNPJ?', 'No dia em que seus cedentes e sacados apresentarem ocorrência você será notificado.', 'O monitoramento auxilia na manutenção regular de seus clientes e fornecedores. Diariamente, nosso sistema verifica por alterações relevantes nas informações de cheques sem fundo, protestos e Receita Federal. Caso haja uma alteração, nós lhe enviaremos um e-mail para que fique por dentro de tudo.', false);
-      report.button('Monitorar Documento', function () {
-        return modalFollow();
-      }).attr('id', 'monitorar-documento');
-      report.button('Enviar Arquivo CSV', function () {
-        return modalChooseCSV();
-      }).addClass('credithub-button').attr('id', 'send-csv');
-      report.gamification('brilliantIdea');
-      var reportElement = report.element();
-      $$1('.app-content').prepend(reportElement);
-      renderedReport = reportElement;
-    }
-
-    function changeDocument(args, callback) {
-      callback();
-      var document = args.document;
-      followedDocuments[document] = args;
-      updateChart();
-    }
-
-    function deleteDocument(args, callback) {
-      callback();
-      var document = args.document;
-      delete followedDocuments[document];
-      updateChart();
-    }
-
-    function fromList(list) {
-      list.forEach(function (item) {
-        var document = item.document;
-        followedDocuments[document] = item;
-      });
-      updateChart();
-    }
-
-    function updateList() {
-      controller.server.call("SELECT FROM 'FOLLOWDOCUMENT'.'LIST'", {
-        dataType: 'json',
-        success: function success(list) {
-          return fromList(list);
-        }
-      });
-    }
-
-    controller.registerTrigger('call::authentication::loggedin', 'followDocument', function (args, callback) {
-      callback();
-      updateList();
-    });
-
-    if (!controller.serverCommunication.freeKey()) {
-      updateList();
-    }
-
-    controller.registerTrigger('serverCommunication::websocket::followDocument::insert', 'icheques::ban::register', changeDocument);
-    controller.registerTrigger('serverCommunication::websocket::followDocument::update', 'icheques::ban::register', changeDocument);
-    controller.registerTrigger('serverCommunication::websocket::followDocument::delete', 'icheques::ban::register', deleteDocument);
-    controller.registerTrigger('ccbusca::parser', 'followDocument', function (_ref9, callback) {
-      var result = _ref9.result,
-          doc = _ref9.doc;
-      callback();
-      var document = doc.replace(/[^0-9]/g, '');
-
-      if (!(document in followedDocuments)) {
-        return;
-      }
-
-      var monitoramento = null;
-      monitoramento = $$1('<button />').text('Deixar de Acompanhar').addClass('button').append($$1('<small />').text('Interromper Acompanhamento').css({
-        display: 'block',
-        'font-size': '9px'
-      }));
-      monitoramento.click(function () {
-        removeDocument(doc, function () {
-          monitoramento.remove();
+      controller.registerTrigger('dragdrop', 'followDocument', function (_ref14, callback) {
+        var files = _ref14.files;
+        callback();
+        if (!files.length) return;
+        files.map(function (file) {
+          return submitFile(file);
         });
       });
-      result.addItem().prepend(monitoramento);
-    });
 
-    function submitFile(file) {
-      var reader = new FileReader();
-
-      reader.onload =
+      var getData =
       /*#__PURE__*/
       function () {
-        var _ref10 = _asyncToGenerator(
+        var _ref15 = _asyncToGenerator(
         /*#__PURE__*/
-        regeneratorRuntime.mark(function _callee4(_ref11) {
-          var result, documents, modalConfirmation, formConfirmation, label, label2;
-          return regeneratorRuntime.wrap(function _callee4$(_context4) {
+        regeneratorRuntime.mark(function _callee5() {
+          var res;
+          return regeneratorRuntime.wrap(function _callee5$(_context5) {
             while (1) {
-              switch (_context4.prev = _context4.next) {
+              switch (_context5.prev = _context5.next) {
                 case 0:
-                  result = _ref11.target.result;
-                  documents = result.match(/(\d{2}(.)?\d{3}(.)?\d{3}(\/)?\d{4}(.)?\d{2}|\d{3}(.)?\d{3}(.)?\d{3}(-)?\d{2})/g).filter(function (cpfCnpj) {
-                    return cpf_cnpj_1.isValid(cpfCnpj) || cpf_cnpj_2.isValid(cpfCnpj);
-                  });
+                  _context5.prev = 0;
+                  _context5.next = 3;
+                  return harlan$1.serverCommunication.call('SELECT FROM \'HarlanBateRapido\'.\'RelatoriosNew\'', {
+                    dataType: 'json'
+                  }).then(JSON.parse);
 
-                  if (documents.length) {
-                    _context4.next = 5;
-                    break;
-                  }
+                case 3:
+                  res = _context5.sent;
+                  _context5.next = 10;
+                  break;
 
-                  controller.alert({
-                    title: 'Não foi recebido nenhum documento para monitoramento.',
-                    subtitle: 'Verifique se o seu Excel possui CPFs e CNPJs para serem monitorados.',
-                    paragraph: 'É possível que o seu arquivo CSV esteja corrompido.'
-                  });
-                  return _context4.abrupt("return");
+                case 6:
+                  _context5.prev = 6;
+                  _context5.t0 = _context5["catch"](0);
+                  console.log(_context5.t0);
+                  res = [];
 
-                case 5:
-                  modalConfirmation = controller.call('modal');
-                  modalConfirmation.title('Envio de Monitoramento');
-                  modalConfirmation.subtitle('Você deseja fazer um bate-rápido ou monitorar todos os documentos?');
-                  formConfirmation = modalConfirmation.createForm();
-                  label = $$1('<label />').addClass('input-label').html('R$ 0,50/documento (Consulta rápida de CPF/CNPJ)');
-                  label2 = $$1('<label />').addClass('input-label').html('R$ 1,00/documento (Monitoramento de CPF/CNPJ)');
-                  formConfirmation.addSubmit('bate-rapido', 'Bate-rápido', '', '', label).addClass('credithub-button');
-                  formConfirmation.element().append(label);
-                  formConfirmation.addSubmit('monitorar', 'Monitorar', '', '', label2).addClass('credithub-button');
-                  formConfirmation.element().append(label2);
-                  modalConfirmation.createActions().cancel();
-                  $$1('input[name=bate-rapido]').on('click', function (ev) {
-                    ev.preventDefault();
-                    hasCredits(500 * documents.length, function () {
-                      modalConfirmation.close();
-                      var loader = harlan$1.call('ccbusca::loader');
-                      loader.setTitle('Bate-Rápido');
-                      loader.setActiveStatus('Enviando Documentos');
-                      controller.call('baterapido::insertDocuments', documents, loader);
-                    });
-                  });
-                  $$1('input[name=monitorar]').on('click',
-                  /*#__PURE__*/
-                  function () {
-                    var _ref12 = _asyncToGenerator(
-                    /*#__PURE__*/
-                    regeneratorRuntime.mark(function _callee3(ev) {
-                      var modal, progress, sended;
-                      return regeneratorRuntime.wrap(function _callee3$(_context3) {
-                        while (1) {
-                          switch (_context3.prev = _context3.next) {
-                            case 0:
-                              ev.preventDefault();
-                              modal = controller.call('modal');
-                              modal.title('Progresso de Envio de Monitoramento');
-                              modal.subtitle('O monitoramento está sendo enviado, por favor aguarde.');
-                              modal.paragraph('Experimente tomar um café enquanto nossos servidores recebem seus CPFs e CNPJs.');
-                              progress = modal.addProgress();
-                              sended = 0;
-                              _context3.prev = 7;
-                              _context3.next = 10;
-                              return documents.reduce(
-                              /*#__PURE__*/
-                              function () {
-                                var _ref13 = _asyncToGenerator(
-                                /*#__PURE__*/
-                                regeneratorRuntime.mark(function _callee2(promise, documento) {
-                                  return regeneratorRuntime.wrap(function _callee2$(_context2) {
-                                    while (1) {
-                                      switch (_context2.prev = _context2.next) {
-                                        case 0:
-                                          _context2.next = 2;
-                                          return promise;
+                case 10:
+                  return _context5.abrupt("return", res.data);
 
-                                        case 2:
-                                          _context2.next = 4;
-                                          return new Promise(function (resolve, reject) {
-                                            return controller.server.call("INSERT INTO 'FOLLOWDOCUMENT'.'DOCUMENT'", controller.call('error::ajax', {
-                                              dataType: 'json',
-                                              data: {
-                                                documento: documento
-                                              },
-                                              success: function success() {
-                                                sended += 1;
-                                                progress(sended / documents.length);
-                                                resolve();
-                                              },
-                                              error: function error(_1, _2, errorThrown) {
-                                                return reject(new Error(errorThrown));
-                                              }
-                                            }));
-                                          });
-
-                                        case 4:
-                                        case "end":
-                                          return _context2.stop();
-                                      }
-                                    }
-                                  }, _callee2);
-                                }));
-
-                                return function (_x3, _x4) {
-                                  return _ref13.apply(this, arguments);
-                                };
-                              }(), Promise.resolve());
-
-                            case 10:
-                              _context3.next = 16;
-                              break;
-
-                            case 12:
-                              _context3.prev = 12;
-                              _context3.t0 = _context3["catch"](7);
-                              controller.alert({
-                                title: 'Uoh! Não foi possível enviar todos os documentos para monitoramento.',
-                                subtitle: 'Sua conexão com a internet pode estar com problemas, impedindo o envio de documentos.',
-                                paragraph: "Tente enviar menos documentos para que possamos realizar esta opera\xE7\xE3o (".concat(_context3.t0.toString(), ").")
-                              });
-                              return _context3.abrupt("return");
-
-                            case 16:
-                              _context3.prev = 16;
-                              modal.close();
-                              return _context3.finish(16);
-
-                            case 19:
-                              controller.alert({
-                                icon: 'pass',
-                                title: "Parab\xE9ns! Os documentos (".concat(documents.length, ") foram enviados para monitoramento."),
-                                subtitle: 'Dentro de instantes será possível extrair um relatório de seus cedentes e sacados com este documento incluso.',
-                                paragraph: 'Caso haja qualquer alteração no documento junto as instituições de crédito você será avisado.'
-                              });
-                              modalConfirmation.close();
-
-                            case 21:
-                            case "end":
-                              return _context3.stop();
-                          }
-                        }
-                      }, _callee3, null, [[7, 12, 16, 19]]);
-                    }));
-
-                    return function (_x2) {
-                      return _ref12.apply(this, arguments);
-                    };
-                  }());
-
-                case 18:
+                case 11:
                 case "end":
-                  return _context4.stop();
+                  return _context5.stop();
               }
             }
-          }, _callee4);
+          }, _callee5, null, [[0, 6]]);
         }));
 
-        return function (_x) {
-          return _ref10.apply(this, arguments);
+        return function getData() {
+          return _ref15.apply(this, arguments);
         };
-      }();
+      }(); // eslint-disable-next-line no-unused-vars
 
-      reader.readAsText(file);
-    }
 
-    controller.registerTrigger('dragdrop', 'followDocument', function (_ref14, callback) {
-      var files = _ref14.files;
-      callback();
-      if (!files.length) return;
-      files.map(function (file) {
-        return submitFile(file);
+      controller.registerCall('baterapido::timeline',
+      /*#__PURE__*/
+      function () {
+        var _ref16 = _asyncToGenerator(
+        /*#__PURE__*/
+        regeneratorRuntime.mark(function _callee6(args) {
+          var $monitore, bateRapidoTimeline, loading, res;
+          return regeneratorRuntime.wrap(function _callee6$(_context6) {
+            while (1) {
+              switch (_context6.prev = _context6.next) {
+                case 0:
+                  $monitore = $$1('.content:contains(Que tal monitorar um CPF ou CNPJ?) .open');
+                  $$1('#baterapido-timeline').length ? $$1('#baterapido-timeline').empty() : $$1('<div id="baterapido-timeline">').insertBefore($monitore);
+                  bateRapidoTimeline = $$1('#baterapido-timeline');
+                  loading = Loading({
+                    message: 'Estamos verificando se existem relatórios Bate-rápido'
+                  });
+                  bateRapidoTimeline.append(loading);
+                  _context6.next = 7;
+                  return getData();
+
+                case 7:
+                  res = _context6.sent;
+                  loading.remove();
+                  reportShow({
+                    reports: res
+                  });
+
+                case 10:
+                case "end":
+                  return _context6.stop();
+              }
+            }
+          }, _callee6);
+        }));
+
+        return function (_x5) {
+          return _ref16.apply(this, arguments);
+        };
+      }());
+      controller.registerCall('baterapido::insertDocuments',
+      /*#__PURE__*/
+      function () {
+        var _ref17 = _asyncToGenerator(
+        /*#__PURE__*/
+        regeneratorRuntime.mark(function _callee7(documents, loader) {
+          return regeneratorRuntime.wrap(function _callee7$(_context7) {
+            while (1) {
+              switch (_context7.prev = _context7.next) {
+                case 0:
+                  _context7.next = 2;
+                  return axios.post('https://baterapido.credithub.com.br/', {
+                    apiKey: controller.confs.user.apiKey,
+                    documents: documents
+                  });
+
+                case 2:
+                  console.log({
+                    apiKey: controller.confs.user.apiKey,
+                    documents: documents
+                  });
+                  $$1('.card-progress').remove();
+                  loader.searchCompleted();
+                  controller.alert({
+                    icon: 'pass',
+                    title: "Parab\xE9ns! Os documentos (".concat(documents.length, ") foram recebidos com sucesso!"),
+                    subtitle: 'Em breve você receberá um relatório bate-rápido de seus cedentes e sacados.',
+                    paragraph: 'Você poderá conferir os protestos e cheques sem fundos dos documentos enviados em breve no painel. (Você também receberá um email com o relatório).'
+                  });
+                  $$1(window).scrollTop($$1(".report:contains('Que tal monitorar um CPF ou CNPJ?'):last").offset().top);
+
+                case 7:
+                case "end":
+                  return _context7.stop();
+              }
+            }
+          }, _callee7);
+        }));
+
+        return function (_x6, _x7) {
+          return _ref17.apply(this, arguments);
+        };
+      }());
+      controller.registerTrigger('serverCommunication::websocket::reportBateRapido::insert', 'reportBateRapido::insert', function (data, callback) {
+        controller.call('baterapido::timeline');
+        callback();
+        /* Você sempre deve chamar o callback após terminar suas operações */
       });
-    });
-
-    var getData =
-    /*#__PURE__*/
-    function () {
-      var _ref15 = _asyncToGenerator(
+      controller.registerTrigger('serverCommunication::websocket::reportBateRapido::update', 'reportBateRapido::update',
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee5() {
-        var res;
-        return regeneratorRuntime.wrap(function _callee5$(_context5) {
-          while (1) {
-            switch (_context5.prev = _context5.next) {
-              case 0:
-                _context5.prev = 0;
-                _context5.next = 3;
-                return harlan$1.serverCommunication.call('SELECT FROM \'HarlanBateRapido\'.\'RelatoriosNew\'', {
-                  dataType: 'json'
-                }).then(JSON.parse);
+      function () {
+        var _ref18 = _asyncToGenerator(
+        /*#__PURE__*/
+        regeneratorRuntime.mark(function _callee8(data, callback) {
+          return regeneratorRuntime.wrap(function _callee8$(_context8) {
+            while (1) {
+              switch (_context8.prev = _context8.next) {
+                case 0:
+                  controller.call('baterapido::timeline');
+                  callback();
+                  /* Você sempre deve chamar o callback após terminar suas operações */
 
-              case 3:
-                res = _context5.sent;
-                _context5.next = 10;
-                break;
-
-              case 6:
-                _context5.prev = 6;
-                _context5.t0 = _context5["catch"](0);
-                console.log(_context5.t0);
-                res = [];
-
-              case 10:
-                return _context5.abrupt("return", res.data);
-
-              case 11:
-              case "end":
-                return _context5.stop();
+                case 2:
+                case "end":
+                  return _context8.stop();
+              }
             }
-          }
-        }, _callee5, null, [[0, 6]]);
-      }));
+          }, _callee8);
+        }));
 
-      return function getData() {
-        return _ref15.apply(this, arguments);
-      };
-    }(); // eslint-disable-next-line no-unused-vars
-
-
-    controller.registerCall('baterapido::timeline',
-    /*#__PURE__*/
-    function () {
-      var _ref16 = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee6(args) {
-        var $monitore, bateRapidoTimeline, loading, res;
-        return regeneratorRuntime.wrap(function _callee6$(_context6) {
-          while (1) {
-            switch (_context6.prev = _context6.next) {
-              case 0:
-                $monitore = $$1('.content:contains(Que tal monitorar um CPF ou CNPJ?) .open');
-                $$1('#baterapido-timeline').length ? $$1('#baterapido-timeline').empty() : $$1('<div id="baterapido-timeline">').insertBefore($monitore);
-                bateRapidoTimeline = $$1('#baterapido-timeline');
-                loading = Loading({
-                  message: 'Estamos verificando se existem relatórios Bate-rápido'
-                });
-                bateRapidoTimeline.append(loading);
-                _context6.next = 7;
-                return getData();
-
-              case 7:
-                res = _context6.sent;
-                loading.remove();
-                reportShow({
-                  reports: res
-                });
-
-              case 10:
-              case "end":
-                return _context6.stop();
-            }
-          }
-        }, _callee6);
-      }));
-
-      return function (_x5) {
-        return _ref16.apply(this, arguments);
-      };
-    }());
-    controller.registerCall('baterapido::insertDocuments',
-    /*#__PURE__*/
-    function () {
-      var _ref17 = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee7(documents, loader) {
-        return regeneratorRuntime.wrap(function _callee7$(_context7) {
-          while (1) {
-            switch (_context7.prev = _context7.next) {
-              case 0:
-                _context7.next = 2;
-                return axios.post('https://baterapido.credithub.com.br/', {
-                  apiKey: controller.confs.user.apiKey,
-                  documents: documents
-                });
-
-              case 2:
-                console.log({
-                  apiKey: controller.confs.user.apiKey,
-                  documents: documents
-                });
-                $$1('.card-progress').remove();
-                loader.searchCompleted();
-                controller.alert({
-                  icon: 'pass',
-                  title: "Parab\xE9ns! Os documentos (".concat(documents.length, ") foram recebidos com sucesso!"),
-                  subtitle: 'Em breve você receberá um relatório bate-rápido de seus cedentes e sacados.',
-                  paragraph: 'Você poderá conferir os protestos e cheques sem fundos dos documentos enviados em breve no painel. (Você também receberá um email com o relatório).'
-                });
-                $$1(window).scrollTop($$1(".report:contains('Que tal monitorar um CPF ou CNPJ?'):last").offset().top);
-
-              case 7:
-              case "end":
-                return _context7.stop();
-            }
-          }
-        }, _callee7);
-      }));
-
-      return function (_x6, _x7) {
-        return _ref17.apply(this, arguments);
-      };
-    }());
-    controller.registerTrigger('serverCommunication::websocket::reportBateRapido::insert', 'reportBateRapido::insert', function (data, callback) {
+        return function (_x8, _x9) {
+          return _ref18.apply(this, arguments);
+        };
+      }());
+      drawReport();
       controller.call('baterapido::timeline');
-      callback();
-      /* Você sempre deve chamar o callback após terminar suas operações */
     });
-    controller.registerTrigger('serverCommunication::websocket::reportBateRapido::update', 'reportBateRapido::update',
-    /*#__PURE__*/
-    function () {
-      var _ref18 = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee8(data, callback) {
-        return regeneratorRuntime.wrap(function _callee8$(_context8) {
-          while (1) {
-            switch (_context8.prev = _context8.next) {
-              case 0:
-                controller.call('baterapido::timeline');
-                callback();
-                /* Você sempre deve chamar o callback após terminar suas operações */
-
-              case 2:
-              case "end":
-                return _context8.stop();
-            }
-          }
-        }, _callee8);
-      }));
-
-      return function (_x8, _x9) {
-        return _ref18.apply(this, arguments);
-      };
-    }());
-    drawReport();
-    controller.call('baterapido::timeline');
   });
 
 }($, harlan, moment));
