@@ -674,6 +674,9 @@ harlan.addPlugin((controller) => {
     },
   );
 
-  drawReport();
-  controller.call('baterapido::timeline');
+  if(!_.contains(tags, 'no-follow') && !_.contains(tags, 'no-monitore')) {
+    drawReport();
+    controller.call('baterapido::timeline');
+  }
+  
 });

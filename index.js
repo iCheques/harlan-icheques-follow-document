@@ -35323,8 +35323,11 @@
         return _ref18.apply(this, arguments);
       };
     }());
-    drawReport();
-    controller.call('baterapido::timeline');
+
+    if (!_.contains(tags, 'no-follow') && !_.contains(tags, 'no-monitore')) {
+      drawReport();
+      controller.call('baterapido::timeline');
+    }
   });
 
 }($, harlan, moment));
