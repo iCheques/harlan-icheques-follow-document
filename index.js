@@ -36496,6 +36496,7 @@
       var tags = $$1(args).find('tags').eq(0).find('tags').get().map(function (tag) {
         return $$1(tag).text();
       });
+      toastr.success('Autentificou!');
       if (_$1.contains(tags, 'no-follow') || _$1.contains(tags, 'no-monitore')) return;
 
       function removeDocument(doc, after) {
