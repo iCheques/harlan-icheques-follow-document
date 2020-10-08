@@ -19,6 +19,7 @@ import values from 'lodash/values';
 import uniq from 'lodash/uniq';
 import meanBy from 'lodash/meanBy';
 import pickBy from 'lodash/pickBy';
+import _ from 'underscore';
 
 import './list';
 // import modalChooseFile from './modules/modal-choose-file';
