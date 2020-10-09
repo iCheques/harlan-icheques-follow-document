@@ -170,7 +170,7 @@ harlan.addPlugin((controller) => {
     chartReport.button('Gerenciar', controller.click('followdocument::modal'));
     chartReport.newContent();
     if (!renderedReport) {
-      $('.app-content').prepend(chartReport.element());
+      $('.app-content').append(chartReport.element());
     } else {
       chartReport.element().insertAfter(renderedReport);
     }
@@ -442,7 +442,7 @@ harlan.addPlugin((controller) => {
     report.gamification('brilliantIdea');
 
     const reportElement = report.element();
-    $('.app-content').prepend(reportElement);
+    $('.app-content').append(reportElement);
     renderedReport = reportElement;
   }
 

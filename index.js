@@ -36607,7 +36607,7 @@
       chartReport.newContent();
 
       if (!renderedReport) {
-        $$1('.app-content').prepend(chartReport.element());
+        $$1('.app-content').append(chartReport.element());
       } else {
         chartReport.element().insertAfter(renderedReport);
       }
@@ -36935,7 +36935,7 @@
       }).addClass('credithub-button').attr('id', 'send-csv');
       report.gamification('brilliantIdea');
       var reportElement = report.element();
-      $$1('.app-content').prepend(reportElement);
+      $$1('.app-content').append(reportElement);
       renderedReport = reportElement;
     }
 
