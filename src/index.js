@@ -58,8 +58,7 @@ let chartReport = null;
 let graphicDataset = null;
 
 harlan.addPlugin((controller) => {
-  const tags = $(args).find('tags').eq(0).find('tags').get().map(tag => $(tag).text());
-  toastr.success('Autentificou!');
+  const tags = (controller.confs.user || {}).tags || [];
   if(_.contains(tags, 'no-follow') || _.contains(tags, 'no-monitore')) return;
   function removeDocument(doc, after) {
     if (after) after();
