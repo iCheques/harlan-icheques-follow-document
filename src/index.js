@@ -59,7 +59,7 @@ let graphicDataset = null;
 
 harlan.addPlugin((controller) => {
   const tags = (controller.confs.user || {}).tags || [];
-  if(_.contains(tags, 'no-follow') || _.contains(tags, 'no-monitore')) return;
+  if (_.contains(tags, 'no-follow') || _.contains(tags, 'no-monitore')) return;
   function removeDocument(doc, after) {
     if (after) after();
     controller.server.call("DELETE FROM 'FOLLOWDOCUMENT'.'DOCUMENT'", controller.call('error::ajax', {
@@ -677,8 +677,7 @@ harlan.addPlugin((controller) => {
     },
   );
 
-  
+
   drawReport();
   controller.call('baterapido::timeline');
-  
 });
