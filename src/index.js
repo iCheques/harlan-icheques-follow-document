@@ -354,7 +354,9 @@ harlan.addPlugin((controller) => {
       const { files } = $('input[name=files]')[0];
       if (files.length) {
         modal.close();
-        if (files[0].type === 'text/csv') return submitFile(files[0]);
+        const equalCsv = files[0].type === 'text/csv';
+        const equalExcelCsv = files[0].type === 'application/vnd.ms-excel';
+        if (equalCsv || equalExcelCsv) return submitFile(files[0]);
         return toastr.error('É necessário que você envie um arquivo CSV.', 'Formato de arquivo inválido!');
       }
       toastr.error('É necessário que você envie um arquivo para continuar.', 'Nenhum arquivo selecionado');
