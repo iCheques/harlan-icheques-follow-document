@@ -511,12 +511,61 @@ harlan.addPlugin((controller) => {
     result.addItem().prepend(monitoramento);
   });
 
+
+  function fixCPF(cpf) {
+    if (cpf.length > 10) return '';
+
+    let missingNumbers = 11 - cpf.length;
+    let cpfFixed = cpf;
+
+    while (missingNumbers > 0) {
+      cpfFixed = `0${cpfFixed}`;
+      missingNumbers -= 1;
+    }
+
+    return CPF.isValid(cpfFixed) ? cpfFixed : '';
+  }
+
+  function fixCNPJ(cnpj) {
+    if (cnpj.length > 10) return '';
+
+    let missingNumbers = 11 - cnpj.length;
+    let cnpjFixed = cnpj;
+
+    while (missingNumbers > 0) {
+      cnpjFixed = `0${cnpjFixed}`;
+      missingNumbers -= 1;
+    }
+
+    return CNPJ.isValid(cnpjFixed) ? cnpjFixed : '';
+  }
+
+
+  function fixDocument(cpfCnpj) {
+    if (CPF.isValid(cpfCnpj) || CNPJ.isValid(cpfCnpj)) return cpfCnpj;
+    const cpfCnpjToFix = cpfCnpj.replace(/[^0-9]/, '');
+
+    const cpfFixed = fixCPF(cpfCnpjToFix);
+    const cnpjFixed = fixCNPJ(cpfCnpjToFix);
+
+    if (cpfFixed) return cpfFixed;
+    if (cnpjFixed) return cnpjFixed;
+
+    return cpfCnpj;
+  }
+
   function submitFile(file) {
     const reader = new FileReader();
     reader.onload = async ({ target: { result } }) => {
-      const documents = result
-        .match(/(\d{2}(.)?\d{3}(.)?\d{3}(\/)?\d{4}(.)?\d{2}|\d{3}(.)?\d{3}(.)?\d{3}(-)?\d{2})/g)
-        .filter(cpfCnpj => CPF.isValid(cpfCnpj) || CNPJ.isValid(cpfCnpj));
+      let documents = result
+        // .match(/(\d{2}(.)?\d{3}(.)?\d{3}(\/)?\d{4}(.)?\d{2}|\d{3}(.)?\d{3}(.)?\d{3}(-)?\d{2})/g)
+        .split('\n')
+        .filter(e => e)
+        .map(fixDocument);
+
+      const invalidDocuments = documents
+        .filter(cpfCnpj => !CPF.isValid(cpfCnpj) && !CNPJ.isValid(cpfCnpj));
+      documents = documents.filter(cpfCnpj => CPF.isValid(cpfCnpj) || CNPJ.isValid(cpfCnpj));
 
       if (!documents.length) {
         controller.alert({
@@ -551,7 +600,7 @@ harlan.addPlugin((controller) => {
           const loader = harlan.call('ccbusca::loader');
           loader.setTitle('Bate-Rápido');
           loader.setActiveStatus('Enviando Documentos');
-          controller.call('baterapido::insertDocuments', documents, loader);
+          controller.call('baterapido::insertDocuments', documents, loader, invalidDocuments);
         });
       });
 
@@ -588,11 +637,19 @@ harlan.addPlugin((controller) => {
         } finally {
           modal.close();
         }
+
+        let paragraphMessage = 'Caso haja qualquer alteração no documento junto as instituições de crédito você será avisado.';
+
+        if (invalidDocuments.length) {
+          paragraphMessage = `${paragraphMessage}<br>Do total de ${documents.length + invalidDocuments.length} que você tentou enviar, em ${invalidDocuments.length} não foi possível monitorar porque os documentos não são válidos, abaixo você pode conferir os documentos:<br>
+      ${invalidDocuments.map(doc => `${doc}`).join('<br>')}`;
+        }
+
         controller.alert({
           icon: 'pass',
           title: `Parabéns! Os documentos (${documents.length}) foram enviados para monitoramento.`,
           subtitle: 'Dentro de instantes será possível extrair um relatório de seus cedentes e sacados com este documento incluso.',
-          paragraph: 'Caso haja qualquer alteração no documento junto as instituições de crédito você será avisado.',
+          paragraph: paragraphMessage,
         });
         modalConfirmation.close();
       });
@@ -637,13 +694,8 @@ harlan.addPlugin((controller) => {
   });
 
   controller.registerCall('baterapido::insertDocuments', async (
-    documents, loader) => {
+    documents, loader, invalidDocuments) => {
     await axios.post('https://baterapido.credithub.com.br/', {
-      apiKey: controller.confs.user.apiKey,
-      documents,
-    });
-
-    console.log({
       apiKey: controller.confs.user.apiKey,
       documents,
     });
@@ -652,11 +704,18 @@ harlan.addPlugin((controller) => {
 
     loader.searchCompleted();
 
+    let paragraphMessage = 'Você poderá conferir os protestos e cheques sem fundos dos documentos enviados em breve no painel. (Você também receberá um email com o relatório).';
+
+    if (invalidDocuments.length) {
+      paragraphMessage = `${paragraphMessage}<br>Do total de ${documents.length + invalidDocuments.length} que você tentou enviar, em ${invalidDocuments.length} não foi possível verificar a existência de protestos/ccf porque os documentos não são válidos (você não foi cobrado por estes documentos). Abaixo você pode conferir os documentos que não são válidos:<br>
+      ${invalidDocuments.map(doc => `— ${doc}`).join('<br>')}`;
+    }
+
     controller.alert({
       icon: 'pass',
-      title: `Parabéns! Os documentos (${documents.length}) foram recebidos com sucesso!`,
+      title: `Parabéns! ${documents.length} foram recebidos com sucesso!`,
       subtitle: 'Em breve você receberá um relatório bate-rápido de seus cedentes e sacados.',
-      paragraph: 'Você poderá conferir os protestos e cheques sem fundos dos documentos enviados em breve no painel. (Você também receberá um email com o relatório).',
+      paragraph: paragraphMessage,
     });
     $(window).scrollTop($(".report:contains('Que tal monitorar um CPF ou CNPJ?'):last").offset().top);
   });

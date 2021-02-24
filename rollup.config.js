@@ -1,6 +1,7 @@
 import babel from 'rollup-plugin-babel';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
+import { uglify } from 'rollup-plugin-uglify';
 
 export default {
   input: 'src/index.js',
@@ -23,8 +24,14 @@ export default {
     },
   },
   plugins: [
-    resolve(),
+    resolve({
+      preferBuiltins: false,
+      jsnext: true,
+      main: true,
+      browser: true,
+    }),
     commonjs(),
     babel(),
+    uglify(),
   ],
 };
