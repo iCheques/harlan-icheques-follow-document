@@ -1,11 +1,10 @@
 /* eslint-disable no-undef */
-import csvGenerator from './csv-generator'
+import csvGenerator from './csv-generator';
 
 const createLineProcessing = (relatorio, timeline, fromServer = true) => {
-
   const downloadAction = [
     ['fa fa-spinner faa-spin animated', 'Baixar relatório', () => {
-      console.log('Carregando')
+      console.log('Carregando');
     }],
   ];
 
@@ -33,18 +32,18 @@ const createLine = (relatorio, timeline, fromServer = true) => {
       const modal = harlan.call('modal');
       modal.title('Remover relatório');
       modal.paragraph(
-        'Você tem certeza que deseja remover esse relatório?');
+        'Você tem certeza que deseja remover esse relatório?',
+      );
       const form = modal.createForm();
       form.element().submit((e) => {
         e.preventDefault();
         modal.close();
-        const query =
-        'DELETE FROM \'HARLANBATERAPIDO\'.\'RELATORIO\'';
+        const query = 'DELETE FROM \'HARLANBATERAPIDO\'.\'RELATORIO\'';
         console.log('relatorio', relatorio);
         harlan.serverCommunication.call(query,
           harlan.call('error::ajax', harlan.call('loader::ajax', {
             data: {
-              id: relatorio["_id"]['$id'],
+              id: relatorio._id.$id,
             },
             dataType: 'json',
             success(ret) {
@@ -58,7 +57,33 @@ const createLine = (relatorio, timeline, fromServer = true) => {
     }],
   ] : [
     ['fa fa-spinner faa-spin animated', 'Relatório sendo processado...', () => {
-      console.log('Carregando')
+      //
+    }], ['fa-trash', 'Remover Relatório', () => {
+      const modal = harlan.call('modal');
+      modal.title('Remover relatório');
+      modal.paragraph(
+        'Você tem certeza que deseja remover esse relatório?',
+      );
+      const form = modal.createForm();
+      form.element().submit((e) => {
+        e.preventDefault();
+        modal.close();
+        const query = 'DELETE FROM \'HARLANBATERAPIDO\'.\'RELATORIO\'';
+        console.log('relatorio', relatorio);
+        harlan.serverCommunication.call(query,
+          harlan.call('error::ajax', harlan.call('loader::ajax', {
+            data: {
+              id: relatorio._id.$id,
+            },
+            dataType: 'json',
+            success(ret) {
+              $(`li:contains(${relatorio.name})`).remove();
+              toastr.success('Relatório removido com sucesso!');
+            },
+          })));
+      });
+      form.addSubmit('deletar-relatorio', 'Remover Relatório');
+      modal.createActions().cancel();
     }],
   ];
   const creationDate = fromServer ? relatorio.created_at.sec : relatorio.created_at;
@@ -69,12 +94,12 @@ const createLine = (relatorio, timeline, fromServer = true) => {
 };
 
 const timelineGenerator = (timeline, data) => {
-  let relatorios = data;
+  const relatorios = data;
   console.log('Relatorios', relatorios);
   relatorios.map(relatorio => createLine(relatorio, timeline));
 };
 
 export {
   timelineGenerator,
-  createLine
+  createLine,
 };
