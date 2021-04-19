@@ -74,6 +74,7 @@ harlan.addPlugin((controller) => {
       modal.close();
       controller.call('confirm', { title: 'Você deseja remover todos os documentos monitorados?' }, () => {
         controller.serverCommunication.call("DELETE FROM 'HARLAN'.'MonitoredDocuments'", controller.call('loader::ajax', {
+          dataType: 'json',
           success: (res) => {
             controller.alert({
               icon: 'pass',
