@@ -69,6 +69,21 @@ harlan.addPlugin((controller) => {
       modal.close();
     });
 
+    actions.add('Remover Todos').click((e) => {
+      e.preventDefault();
+      modal.close();
+      controller.call('confirm', { title: 'Você deseja remover todos os documentos monitorados?' }, () => {
+        controller.serverCommunication.call("DELETE FROM 'HARLAN'.'MonitoredDocuments'", controller.call('loader::ajax', {
+          success: (res) => {
+            controller.alert({
+              icon: 'pass',
+              title: `Todos os seus ${res.total} documentos foram removidos do monitoramento.`,
+            });
+          },
+        }));
+      });
+    });
+
     const [, protesto] = form.addCheckbox('protesto', 'Exibir apenas com protestos.', false, '1');
     const [, ccf] = form.addCheckbox('ccf', 'Exibir apenas com cheques sem fundo.', false, '1');
     const [, rfb] = form.addCheckbox('rfb', 'Exibir apenas com restrição na Receita Federal.', false, '1');
@@ -169,7 +184,7 @@ harlan.addPlugin((controller) => {
           e.preventDefault();
           controller.call('followdocuments::remove', item.document, () => {
             listItem.remove();
-          })
+          });
         });
       });
     };
